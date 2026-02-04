@@ -143,15 +143,18 @@ const SingleQuestionForm = ({
   return (
     <div className="border border-accent/20 rounded-lg p-4 bg-white shadow-sm relative">
       {!isSingle && (
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10">
            <TooltipWrapper
               place="left"
               content="Remove Question"
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-red-50 cursor-pointer text-red-500"
             >
-              <span onClick={() => remove(index)}>
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-red-50 cursor-pointer text-red-500 transition-colors"
+              >
                 <DeleteIcon variant="current" />
-              </span>
+              </button>
             </TooltipWrapper>
         </div>
       )}
