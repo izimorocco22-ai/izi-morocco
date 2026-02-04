@@ -56,7 +56,14 @@ const Settings = ({
   markStepCompleted,
 }) => {
   // Get IDs and Names from session storage
-  const sessionIds = getSessionData("currentQuestionIds");
+  const sessionIdsRaw = getSessionData("currentQuestionIds");
+  let sessionIds = [];
+  try {
+      sessionIds = sessionIdsRaw ? JSON.parse(sessionIdsRaw) : [];
+  } catch (e) {
+      sessionIds = sessionIdsRaw ? [sessionIdsRaw] : [];
+  }
+
   const singleId = getSessionData("questionId");
   
   // Normalize IDs to an array. Prioritize currentQuestionIds, fallback to single questionId.
@@ -64,7 +71,13 @@ const Settings = ({
     ? sessionIds 
     : (singleId ? [singleId] : []);
     
-  const names = getSessionData("currentQuestionNames") || [];
+  const sessionNamesRaw = getSessionData("currentQuestionNames");
+  let names = [];
+  try {
+      names = sessionNamesRaw ? JSON.parse(sessionNamesRaw) : [];
+  } catch (e) {
+      names = [];
+  }
 
   const form = useForm({
     defaultValues: {

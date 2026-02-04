@@ -437,7 +437,7 @@ const CreateUpdateQuestion = ({
              createdIds.push(getQuestionId);
              toast.success("Question updated successfully");
              // Update session storage for consistency
-             setDataInSessionStorage("currentQuestionIds", createdIds);
+             setDataInSessionStorage("currentQuestionIds", JSON.stringify(createdIds));
              
              if (isNextClicked.current) {
                 nextStepHandler();
@@ -460,10 +460,10 @@ const CreateUpdateQuestion = ({
              }
              
              if (createdIds.length > 0) {
-                 setDataInSessionStorage("currentQuestionIds", createdIds);
+                 setDataInSessionStorage("currentQuestionIds", JSON.stringify(createdIds));
                  // Store names for UX in next steps
                  const names = questionsToSubmit.map(q => q.questionName);
-                 setDataInSessionStorage("currentQuestionNames", names);
+                 setDataInSessionStorage("currentQuestionNames", JSON.stringify(names));
                  
                  toast.success(`${createdIds.length} questions created successfully`);
                 
