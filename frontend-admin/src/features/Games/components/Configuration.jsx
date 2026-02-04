@@ -71,6 +71,7 @@ function Configuration({
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [imageProcessingLoading, setImageProcessingLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const isNextClicked = useRef(false);
   const gameData = getGameInfobyIdApi?.data?.response;
 
   const tags = useMemo(() => {
@@ -265,7 +266,13 @@ function Configuration({
     data,
     error,
     setFormError: setError,
-    sideAction: () => markStepCompleted(curStep),
+    sideAction: () => {
+      if (isNextClicked.current) {
+        nextStepHandler();
+        isNextClicked.current = false;
+      }
+      markStepCompleted(curStep);
+    },
   });
 
   // console.log({ error });
@@ -275,7 +282,13 @@ function Configuration({
     data: updateGameApi.data,
     error: updateGameApi.error,
     setFormError: setError,
-    sideAction: () => markStepCompleted(curStep),
+    sideAction: () => {
+      if (isNextClicked.current) {
+        nextStepHandler();
+        isNextClicked.current = false;
+      }
+      markStepCompleted(curStep);
+    },
   });
 
   useEffect(() => {
@@ -333,6 +346,10 @@ function Configuration({
   if (getGameInfobyIdApi.isLoading) {
     return <ConfigurationSkeleton />
   }
+
+  const handleNextStep = () => {
+    isNextClicked.current = true;
+  };
 
   return (
     <>
@@ -520,10 +537,11 @@ function Configuration({
             curStep={curStep}
             resetFormHandler={reset}
             previousStepHandler={previousStepHandler}
-            nextStepHandler={nextStepHandler}
+            nextStepHandler={handleNextStep}
             isLoading={isLoading || imageProcessingLoading || isUploading}
             completedSteps={completedSteps}
             lastStep={3}
+            nextButtonType="submit"
             // isDisabledNextButton={!id}
           />
         </form>
