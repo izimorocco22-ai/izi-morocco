@@ -34,18 +34,24 @@ const getIconUrl = (iconPath) => {
 
 // --- Question Placer Canvas Component ---
 
-const QuestionPlacerCanvas = () => {
+const QuestionPlacerCanvas = ({ playgroundData }) => {
   const canvasContainerRef = useRef(null);
   const dispatch = useDispatch();
 
   const [displayPlacedQuestions, setDisplayPlacedQuestions] = useState(false);
   const { selectedQuestion, selectedQuestions, getGameInfobyIdApi } =
     useSelector((state) => state.games);
-  const playgroundImage = getGameInfobyIdApi?.data?.response?.playgroundImage
+  
+  const playgroundImage = playgroundData?.image
+    ? `${MEDIA_URL()}/${playgroundData.image}`
+    : getGameInfobyIdApi?.data?.response?.playgroundImage
     ? `${MEDIA_URL()}/${getGameInfobyIdApi.data.response?.playgroundImage}`
     : CANVAS_IMAGE_URL;
 
-  const playgroundName = getGameInfobyIdApi?.data?.response?.playgroundName || 'Untitled Playground'
+  const playgroundName =
+    playgroundData?.name ||
+    getGameInfobyIdApi?.data?.response?.playgroundName ||
+    "Untitled Playground";
 
   // --- 1. NEW REFS FOR DRAGGING ---
   // We use Refs for logic to avoid stale closures in event listeners
