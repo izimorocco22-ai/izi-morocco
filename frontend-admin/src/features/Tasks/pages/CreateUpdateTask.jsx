@@ -85,14 +85,24 @@ const CreateUpdateTask = () => {
     if (!completedSteps.includes(stepId)) {
       setCompletedSteps([...completedSteps, stepId]);
       if (stepId === totalSteps) {
-        removeSessionData(["cs", "questionId"]);
+        removeSessionData([
+          "cs",
+          "questionId",
+          "currentQuestionIds",
+          "currentQuestionNames",
+        ]);
       }
     }
   };
 
   useEffect(() => {
     return () => {
-      removeSessionData(["cs", "questionId"]);
+      removeSessionData([
+        "cs",
+        "questionId",
+        "currentQuestionIds",
+        "currentQuestionNames",
+      ]);
     };
   }, []);
 

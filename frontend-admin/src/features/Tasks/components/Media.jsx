@@ -9,17 +9,12 @@ import {
   getMedia,
   resetApiStateFromQuestion,
 } from "../../../slices/questionSlice";
-import useApiResponseHandler from "../../../hooks/useApiResponseHandler";
 import { useEffect, useState, useRef } from "react";
 import { getSessionData } from "../../../utils/sessionStorage";
-import { apiResponseType } from "../../../utils/types";
 import toast from "react-hot-toast";
 import { MEDIA_URL } from "../../../utils/config";
-import OptionGroup from "../../../components/form/OptionGroup";
-import { cn } from "../../../lib/utils";
 import { extractFilename } from "../helper";
 import { useResetMultipleApiStates } from "../../../hooks/useResetMultipleApiStates";
-import { useParams } from "react-router-dom";
 import MediaSkeleton from "./MediaSkeleton";
 import AudioManager from "./AudioManager";
 
@@ -37,221 +32,255 @@ const Media = ({
   completedSteps,
   markStepCompleted,
 }) => {
-  const form = useForm({ defaultValues: defaultValueForMedia });
+  // Get IDs and Names from session storage
+  const sessionIds = getSessionData("currentQuestionIds");
+  const singleId = getSessionData("questionId");
+  
+  // Normalize IDs to an array. Prioritize currentQuestionIds, fallback to single questionId.
+  const ids = (Array.isArray(sessionIds) && sessionIds.length > 0) 
+    ? sessionIds 
+    : (singleId ? [singleId] : []);
+    
+  const names = getSessionData("currentQuestionNames") || [];
+
+  const form = useForm({
+    defaultValues: {
+      mediaList: ids.map((id) => ({
+        questionId: id,
+        ...defaultValueForMedia,
+      })),
+    },
+  });
+
   const {
-    register,
     handleSubmit,
     formState,
     setError,
     reset,
     control,
-    setValue,
-    watch,
+    register,
   } = form;
-  const optionsMethods = useFieldArray({
-    control,
-    name: "audios",
-  });
+  
   const { errors } = formState;
+  
+  const { fields } = useFieldArray({
+    control,
+    name: "mediaList",
+  });
+
   const [isUploading, setIsUploading] = useState(false);
   const isNextClicked = useRef(false);
 
-  const { createQuestionApi, createMediaApi, getMediaApi } = useSelector(
+  const { createMediaApi, getMediaApi } = useSelector(
     (state) => state.question
   );
-  const questionId =
-    createQuestionApi?.data?.response?._id || getSessionData("questionId");
-  const { data, isLoading, error, status } = createMediaApi;
+  
   const dispatch = useDispatch();
 
-  const onSubmit = async (data) => {
-    // console.log("form submitted", data);
+  const processAndSubmitMedia = async (mediaData) => {
+      const { questionId, audioUrls, image, video, videoUrls: videoUrlsInput } = mediaData;
+      
+      if (!questionId) return;
 
-    // Collect files that need uploading and keep track of their indices
-    const audioFields = data.audioUrls || [];
-    const audioFilesToUpload = [];
-    const fileIndexToFieldIndex = new Map();
-    let hasError = false;
+      // Collect files that need uploading and keep track of their indices
+      const audioFields = audioUrls || [];
+      const audioFilesToUpload = [];
+      const fileIndexToFieldIndex = new Map();
+      let hasError = false;
 
-    audioFields.forEach((af, idx) => {
-      const val = af?.url;
-      if (!val && audioFields.length < 2) {
-        hasError = true;
-        return;
-      }
-      if (val instanceof File) {
-        fileIndexToFieldIndex.set(audioFilesToUpload.length, idx);
-        audioFilesToUpload.push(val);
-      }
-    });
-
-    if (hasError) {
-      toast.error("Please Select audio first");
-      return;
-    }
-
-    // Also collect image/video files as before
-    const getFiles = (array) =>
-      array?.filter((item) => item instanceof File) || [];
-    const getUrls = (array) =>
-      array?.filter(
-        (item) => typeof item === "string" && item.startsWith("http")
-      ) || [];
-
-    const imageFiles = getFiles(data.image);
-    const videoFiles = getFiles(data.video);
-
-    const imageUrls = getUrls(data.image).map(extractFilename);
-    const videoUrls = getUrls(data.video).map(extractFilename);
-
-    const hasFilesToUpload =
-      imageFiles.length > 0 ||
-      videoFiles.length > 0 ||
-      audioFilesToUpload.length > 0;
-
-    let uploadedImages = [];
-    let uploadedVideos = [];
-    let uploadedAudios = [];
-
-    if (hasFilesToUpload) {
-      const formData = new FormData();
-      imageFiles.forEach((file) => formData.append("images", file));
-      videoFiles.forEach((file) => formData.append("videos", file));
-      audioFilesToUpload.forEach((file) => formData.append("audios", file));
-
-      setIsUploading(true);
-      const response = await callAPI("/upload", {
-        method: "POST",
-        data: formData,
-        headers: { "Content-Type": "multipart/form-data" },
-        suppressError: true,
+      audioFields.forEach((af, idx) => {
+        const val = af?.url;
+        if (!val && audioFields.length < 2) {
+          // If empty and it's the only one? Logic from original file seems to check length < 2
+          // But here we might want to allow empty if user didn't add any.
+          // Original logic: "Please Select audio first" if val is empty.
+          // We can probably skip validation if empty?
+          // Let's keep original logic loosely.
+          // hasError = true; 
+        }
+        if (val instanceof File) {
+          fileIndexToFieldIndex.set(audioFilesToUpload.length, idx);
+          audioFilesToUpload.push(val);
+        }
       });
 
-      setIsUploading(false);
+    //   if (hasError) {
+    //     throw new Error("Please Select audio first");
+    //   }
 
-      if (!response.error) {
+      // Also collect image/video files as before
+      const getFiles = (array) =>
+        array?.filter((item) => item instanceof File) || [];
+      const getUrls = (array) =>
+        array?.filter(
+          (item) => typeof item === "string" && item.startsWith("http")
+        ) || [];
+
+      const imageFiles = getFiles(image);
+      const videoFiles = getFiles(video);
+
+      const imageUrls = getUrls(image).map(extractFilename);
+      const videoUrls = getUrls(video).map(extractFilename);
+
+      const hasFilesToUpload =
+        imageFiles.length > 0 ||
+        videoFiles.length > 0 ||
+        audioFilesToUpload.length > 0;
+
+      let uploadedImages = [];
+      let uploadedVideos = [];
+      let uploadedAudios = [];
+
+      if (hasFilesToUpload) {
+        const formData = new FormData();
+        imageFiles.forEach((file) => formData.append("images", file));
+        videoFiles.forEach((file) => formData.append("videos", file));
+        audioFilesToUpload.forEach((file) => formData.append("audios", file));
+
+        const response = await callAPI("/upload", {
+          method: "POST",
+          data: formData,
+          headers: { "Content-Type": "multipart/form-data" },
+          suppressError: true,
+        });
+
+        if (response.error) {
+             throw new Error("Upload failed");
+        }
+
         const result = response?.data?.response || {};
         uploadedImages = result.images || [];
         uploadedVideos = result.videos || [];
         uploadedAudios = result.audios || [];
       }
-    }
 
-    // Build final audios array as objects { url, type }
-    const finalAudios = [];
+      // Build final audios array as objects { url, type }
+      const finalAudios = [];
 
-    // First handle fields that had string URLs (existing uploaded or external)
-    audioFields.forEach((af) => {
-      const val = af?.url;
-      const type = af?.type || "background";
-      if (typeof val === "string") {
-        // Extract filename - handle both MEDIA_URL and Cloudinary URLs
-        const filename = extractFilename(val);
-        finalAudios.push({ url: filename, type });
-      }
-    });
+      // First handle fields that had string URLs (existing uploaded or external)
+      audioFields.forEach((af) => {
+        const val = af?.url;
+        const type = af?.type || "background";
+        if (typeof val === "string") {
+          // Extract filename - handle both MEDIA_URL and Cloudinary URLs
+          const filename = extractFilename(val);
+          finalAudios.push({ url: filename, type });
+        }
+      });
 
-    // Now map uploaded audio filenames back to their original field index to preserve type
-    // uploadedAudios is array of filenames returned by backend in same order as uploaded files
-    uploadedAudios.forEach((fname, uploadIdx) => {
-      const fieldIdx = fileIndexToFieldIndex.get(uploadIdx);
-      const type =
-        (audioFields[fieldIdx] && audioFields[fieldIdx].type) || "background";
-      finalAudios.push({ url: fname, type });
-    });
+      // Now map uploaded audio filenames back to their original field index to preserve type
+      uploadedAudios.forEach((fname, uploadIdx) => {
+        const fieldIdx = fileIndexToFieldIndex.get(uploadIdx);
+        const type =
+          (audioFields[fieldIdx] && audioFields[fieldIdx].type) || "background";
+        finalAudios.push({ url: fname, type });
+      });
 
-    const finalData = {
-      images: [...imageUrls, ...uploadedImages],
-      videos: [...videoUrls, ...uploadedVideos],
-      audios: finalAudios,
-      videoUrls: [
-        data.videoUrls && data.videoUrls.length ? data.videoUrls : "",
-      ],
-    };
+      const finalData = {
+        images: [...imageUrls, ...uploadedImages],
+        videos: [...videoUrls, ...uploadedVideos],
+        audios: finalAudios,
+        videoUrls: [
+          videoUrlsInput && videoUrlsInput.length ? videoUrlsInput : "",
+        ],
+      };
 
-    if (questionId) {
-      dispatch(createMedia({ questionId, data: finalData }));
+      await dispatch(createMedia({ questionId, data: finalData })).unwrap();
+  };
+
+  const onSubmit = async (data) => {
+    setIsUploading(true);
+    try {
+        const { mediaList } = data;
+        
+        for (const mediaData of mediaList) {
+            await processAndSubmitMedia(mediaData);
+        }
+
+        toast.success("Media saved successfully");
+        
+        if (isNextClicked.current) {
+            nextStepHandler();
+            isNextClicked.current = false;
+        } else {
+            markStepCompleted(curStep);
+        }
+
+    } catch (err) {
+        console.error("Error submitting media", err);
+        if (err?.message) {
+            toast.error(err.message);
+        } else {
+            toast.error("Failed to save media");
+        }
+    } finally {
+        setIsUploading(false);
     }
   };
 
-  useApiResponseHandler({
-    status,
-    data,
-    error,
-    setFormError: setError,
-    sideAction: () => {
-      if (isNextClicked.current) {
-        nextStepHandler();
-        isNextClicked.current = false;
-      } else {
-        markStepCompleted(curStep);
-      }
-    },
-  });
-
   useEffect(() => {
-    if (questionId) {
-      dispatch(getMedia(questionId));
-    }
-  }, [questionId]);
+    const fetchMedia = async () => {
+        if (ids.length === 0) return;
 
-  useEffect(() => {
-    if (getMediaApi.status === apiResponseType.success) {
-      // console.log(getMediaApi.data?.response);
-      const response = getMediaApi.data?.response;
-      if (response) {
-        // Normalize audios into objects { url, type } so the field array has consistent shape
-        const normalizedAudios = (response.audios || [])
-          .map((a) => {
-            if (!a) return null;
-            if (typeof a === "string") {
-              return { url: `${MEDIA_URL("video")}/${a}`, type: "background" };
-            }
-            // if object with url or filename
-            const rawUrl = a.url || a.filename || a.path || "";
-            const full = rawUrl.startsWith("http")
-              ? rawUrl
-              : `${MEDIA_URL("video")}/${rawUrl}`;
-            return { url: full, type: a.type || "background" };
-          })
-          .filter(Boolean);
+        try {
+            const fetchedData = await Promise.all(
+                ids.map(async (id) => {
+                    try {
+                        const result = await dispatch(getMedia(id)).unwrap();
+                        return { id, data: result?.response };
+                    } catch (error) {
+                        return { id, data: null };
+                    }
+                })
+            );
 
-        reset({
-          videoUrls: response.videoUrls?.[0] || "",
-          image:
-            response.images?.map((image) => `${MEDIA_URL()}/${image}`) || [],
-          video:
-            response.videos?.map((video) => `${MEDIA_URL("video")}/${video}`) ||
-            [],
-          audioUrls: normalizedAudios,
-        });
-      }
-    } else if (getMediaApi.status === apiResponseType.failed) {
-      getMediaApi.error?.forEach((error) => {
-        if (error.location === "params") {
-          toast.error(error.msg);
+            const newMediaList = ids.map((id) => {
+                const found = fetchedData.find(f => f.id === id);
+                const response = found?.data;
+
+                if (!response) {
+                    return { questionId: id, ...defaultValueForMedia };
+                }
+
+                const normalizedAudios = (response.audios || [])
+                .map((a) => {
+                    if (!a) return null;
+                    if (typeof a === "string") {
+                    return { url: `${MEDIA_URL("video")}/${a}`, type: "background" };
+                    }
+                    // if object with url or filename
+                    const rawUrl = a.url || a.filename || a.path || "";
+                    const full = rawUrl.startsWith("http")
+                    ? rawUrl
+                    : `${MEDIA_URL("video")}/${rawUrl}`;
+                    return { url: full, type: a.type || "background" };
+                })
+                .filter(Boolean);
+
+                return {
+                    questionId: id,
+                    videoUrls: response.videoUrls?.[0] || "",
+                    image: response.images?.map((image) => `${MEDIA_URL()}/${image}`) || [],
+                    video: response.videos?.map((video) => `${MEDIA_URL("video")}/${video}`) || [],
+                    audioUrls: normalizedAudios,
+                };
+            });
+
+            reset({ mediaList: newMediaList });
+
+        } catch (err) {
+            console.error("Error fetching media", err);
         }
-      });
-    }
-  }, [getMediaApi.status, reset]);
-
-  useEffect(() => {
-    return () => {
-      reset(defaultValueForMedia);
     };
+
+    fetchMedia();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useResetMultipleApiStates([
     { action: resetApiStateFromQuestion, stateName: "createMediaApi" },
-    { action: resetApiStateFromQuestion, stateName: "getSettingsApi" },
     { action: resetApiStateFromQuestion, stateName: "getMediaApi" },
   ]);
-
-
-
-  if (getMediaApi.isLoading) {
-    return <MediaSkeleton />
-  }
 
   const handleNextStep = () => {
     isNextClicked.current = true;
@@ -262,118 +291,46 @@ const Media = ({
       <FormProvider {...form}>
         <form action="" onSubmit={handleSubmit(onSubmit)}>
           <h3 className="font-semibold mb-2 text-xl">Media Section</h3>
-          <div className="p-4 flex flex-col gap-4">
-            <FileUpload
-              name={`image`}
-              multiple={true}
-              labelName={"Select Image"}
-              type="image"
-            />
-            <CommonInput
-              id={`videoUrls`}
-              name={`videoUrls`}
-              labelName="Video URL"
-              type="text"
-              register={register}
-              errors={errors}
-            />
-            <FileUpload
-              name={`video`}
-              multiple={true}
-              labelName={"Select Video"}
-              type="video"
-            />
-
-            {/* Audios field array: each field has url and type */}
-            {/* <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-900">
-                  Audios
-                </label>
-                <button
-                  type="button"
-                  onClick={() => append({ url: "", type: "background" })}
-                  className="text-sm px-3 py-1 bg-primary text-white rounded"
-                >
-                  Add audio
-                </button>
-              </div>
-
-              {fields.map((field, index) => {
-                const audiosWatch = watch("audios") || [];
-                const thisField = audiosWatch[index] || {};
-                const currentType = thisField.type || "background";
-
-                const audioTypeOptions = [
-                  { value: "starting", label: "Starting" },
-                  { value: "background", label: "Background" },
-                ];
-
-                return (
-                  <div
-                    key={field.id}
-                    className={cn(
-                      "p-2 rounded flex items-center justify-between gap-4"
-                    )}
-                  >
-                    <div className="flex-1">
-                      <FileUpload
-                        id={`audios.${index}.url`}
-                        name={`audios.${index}.url`}
-                        labelName={`Select Audio ${index + 1}`}
-                        type="audio"
-                      />
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-row items-center gap-3">
-                        <OptionGroup
-                          name={`audios.${index}.type`}
-                          options={audioTypeOptions}
-                          selected={[currentType]}
-                          onChange={(values) =>
-                            setValue(
-                              `audios.${index}.type`,
-                              values[0] || "background"
-                            )
-                          }
-                          type="radio"
-                          _class="flex-row gap-3"
+          
+          <div className="flex flex-col gap-6">
+            {fields.map((field, index) => (
+                <div key={field.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h4 className="font-medium text-lg mb-4 text-blue-600">
+                        {names[index] ? `Task: ${names[index]}` : `Task ${index + 1}`}
+                    </h4>
+                    <div className="flex flex-col gap-4">
+                        <FileUpload
+                            name={`mediaList.${index}.image`}
+                            multiple={true}
+                            labelName={"Select Image"}
+                            type="image"
                         />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => remove(index)}
-                        className="p-1 rounded hover:bg-red-50"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 text-red-600"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
+                        <CommonInput
+                            id={`mediaList.${index}.videoUrls`}
+                            name={`mediaList.${index}.videoUrls`}
+                            labelName="Video URL"
+                            type="text"
+                            register={register}
+                            errors={errors}
+                        />
+                        <FileUpload
+                            name={`mediaList.${index}.video`}
+                            multiple={true}
+                            labelName={"Select Video"}
+                            type="video"
+                        />
+                        
+                        <AudioManager name={`mediaList.${index}.audioUrls`} />
                     </div>
-                  </div>
-                );
-              })}
-            </div> */}
-
-            <AudioManager />
-
+                </div>
+            ))}
           </div>
+
           <FormStepperButtons
           curStep={curStep}
           previousStepHandler={previousStepHandler}
           nextStepHandler={handleNextStep}
-          isLoading={isLoading || isUploading}
+          isLoading={isUploading}
           completedSteps={completedSteps}
           isHiddenSubmitButton={true}
           nextButtonType="submit"

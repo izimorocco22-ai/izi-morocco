@@ -425,38 +425,64 @@ const CreateUpdateQuestion = ({
 
     try {
         const questionsToSubmit = data.questions;
+        let createdIds = [];
 
         if (getQuestionId) {
              // Update mode - only 1 question
              const pureData = await processQuestion(questionsToSubmit[0]);
-             dispatch(updateQuestion({
+             await dispatch(updateQuestion({
                 id: getQuestionId,
                 data: pureData,
-             }));
+             })).unwrap();
+             createdIds.push(getQuestionId);
+             toast.success("Question updated successfully");
+             // Update session storage for consistency
+             setDataInSessionStorage("currentQuestionIds", createdIds);
+             
+             if (isNextClicked.current) {
+                nextStepHandler();
+                isNextClicked.current = false;
+             } else {
+                markStepCompleted(curStep);
+             }
+
         } else {
-            // Create mode - handle multiple
-            if (questionsToSubmit.length === 1) {
-                const pureData = await processQuestion(questionsToSubmit[0]);
-                dispatch(createQuestion(pureData));
-            } else {
-                // Bulk create
-                // We will loop and dispatch. Note: createQuestionApi state will only reflect the last one.
-                // This is a limitation. Ideally we should have a bulk create API.
-                // For now, we will fire them sequentially.
+            // Create mode - handle multiple (or single)
+            for (const q of questionsToSubmit) {
+                const pureData = await processQuestion(q);
+                const result = await dispatch(createQuestion(pureData)).unwrap();
+                 // Assuming result structure matches createQuestionApi.data
+                 // If the slice returns response.data directly:
+                 const newId = result?.response?._id || result?._id; 
+                 if (newId) {
+                     createdIds.push(newId);
+                 }
+             }
+             
+             if (createdIds.length > 0) {
+                 setDataInSessionStorage("currentQuestionIds", createdIds);
+                 // Store names for UX in next steps
+                 const names = questionsToSubmit.map(q => q.questionName);
+                 setDataInSessionStorage("currentQuestionNames", names);
+                 
+                 toast.success(`${createdIds.length} questions created successfully`);
                 
-                for (const q of questionsToSubmit) {
-                    const pureData = await processQuestion(q);
-                    await dispatch(createQuestion(pureData)).unwrap();
+                // Navigate to next step
+                if (isNextClicked.current) {
+                    nextStepHandler();
+                    isNextClicked.current = false;
+                } else {
+                    markStepCompleted(curStep);
                 }
-                // If we get here, all succeeded (unwrap throws on error)
-                toast.success(`${questionsToSubmit.length} questions created successfully`);
-                goTo(ROUTES.TASKS);
             }
         }
     } catch (err) {
         console.error("Error submitting questions", err);
         // toast is handled by api response handler for the individual failures usually, 
-        // but since we used unwrap() for bulk, we might need to handle it here.
+        // but since we used unwrap() for bulk, we might need to handle it here if it's not a standard api error
+        if (err?.message) {
+             toast.error(err.message);
+        }
     } finally {
         setImageProcessingLoading(false);
     }

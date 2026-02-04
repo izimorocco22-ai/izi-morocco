@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import FormStepperButtons from "./FormStepperButtons";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useFieldArray } from "react-hook-form";
 import FileUpload from "../../../components/form/FileUpload";
 import CommonInput from "../../../components/form/CommonInput";
 import ColorPickerInput from "../../../components/form/AntDesign/ColorPicker";
@@ -11,11 +11,10 @@ import {
   getSettings,
   resetApiStateFromQuestion,
 } from "../../../slices/questionSlice";
-import useApiResponseHandler from "../../../hooks/useApiResponseHandler";
 import AntSearchableSelector from "../../../components/form/AntDesign/AntSearchableSelector";
 import useNavigateTo from "../../../hooks/useNavigateTo";
 import { ROUTES } from "../../../routes/helper";
-import { getSessionData } from "../../../utils/sessionStorage";
+import { getSessionData, removeSessionData } from "../../../utils/sessionStorage";
 import { apiResponseType } from "../../../utils/types";
 import { MEDIA_URL } from "../../../utils/config";
 import toast from "react-hot-toast";
@@ -39,6 +38,16 @@ const radioButtonOptions = [
   { label: "Keep until the end of the game.", value: "keep_until_end" },
 ];
 
+const defaultSettingsValue = {
+    radiusColor: "rgb(249,87,56)",
+    timeLimit: "",
+    timeUnit: "minutes",
+    iconName: "",
+    locationRadius: "",
+    behaviorOption: "remove_on_answer",
+    questionLogo: null,
+};
+
 const Settings = ({
   curStep,
   previousStepHandler,
@@ -46,19 +55,26 @@ const Settings = ({
   completedSteps,
   markStepCompleted,
 }) => {
-  const defaultValues = {
-    radiusColor: "rgb(249,87,56)",
-    timeLimit: "",
-    timeUnit: "minutes",
-    iconName: "",
-    locationRadius: "",
-    behaviorOption: "remove_on_answer",
-    durations: {
-      deactivateOnIncorrectSeconds: null,
-      deactivateAfterClosingSeconds: null,
+  // Get IDs and Names from session storage
+  const sessionIds = getSessionData("currentQuestionIds");
+  const singleId = getSessionData("questionId");
+  
+  // Normalize IDs to an array. Prioritize currentQuestionIds, fallback to single questionId.
+  const ids = (Array.isArray(sessionIds) && sessionIds.length > 0) 
+    ? sessionIds 
+    : (singleId ? [singleId] : []);
+    
+  const names = getSessionData("currentQuestionNames") || [];
+
+  const form = useForm({
+    defaultValues: {
+      settingsList: ids.map((id) => ({
+        questionId: id,
+        ...defaultSettingsValue,
+      })),
     },
-  };
-  const form = useForm({ defaultValues });
+  });
+
   const {
     register,
     handleSubmit,
@@ -67,165 +83,159 @@ const Settings = ({
     setError,
     reset,
     watch,
-    setValue,
   } = form;
   const { errors } = formState;
 
-  // console.log({ errors });
-  const { createQuestionApi, createSettingsApi, getSettingsApi } = useSelector(
+  const { fields } = useFieldArray({
+    control,
+    name: "settingsList",
+  });
+
+  const { createSettingsApi, getSettingsApi } = useSelector(
     (state) => state.question
   );
 
   const [isUploading, setIsUploading] = useState(false);
   const { id } = useParams();
-  const questionId =
-    createQuestionApi?.data?.response?._id || getSessionData("questionId");
-  const { data, isLoading, error, status } = createSettingsApi;
   const dispatch = useDispatch();
-
   const goTo = useNavigateTo();
-  // const behaviourOption = watch("behaviorOption");
+
+  const processAndSubmitSettings = async (settingsData) => {
+      const {
+        questionId,
+        timeLimit,
+        timeUnit,
+        iconName,
+        radiusColor,
+        locationRadius,
+        questionLogo,
+        behaviorOption,
+      } = settingsData;
+
+      if (!questionId) return;
+
+      let icon = null;
+      if (typeof questionLogo !== "string" && questionLogo) {
+          // Upload new logo
+          const formData = new FormData();
+          formData.append("images", questionLogo);
+
+          const response = await callAPI("/upload", {
+            method: "POST",
+            data: formData,
+            headers: { "Content-Type": "multipart/form-data" },
+            suppressError: true,
+          });
+
+          if (response.error) {
+              throw new Error("Logo upload failed");
+          }
+          
+          const { images = [] } = response?.data?.response || {};
+          icon = images[0];
+      } else {
+          // Use existing logo string
+          icon = questionLogo ? extractFilename(questionLogo) : null;
+      }
+
+      await dispatch(
+        createSettings({
+          questionId,
+          data: {
+            timeLimit,
+            timeUnit,
+            iconName,
+            radiusColor,
+            locationRadius,
+            icon,
+            behaviorOption,
+          },
+        })
+      ).unwrap();
+  };
 
   const onSubmit = async (data) => {
-    // console.log("form submitted", data);
-    const {
-      timeLimit,
-      timeUnit,
-      iconName,
-      radiusColor,
-      locationRadius,
-      questionLogo,
-      // durations,
-      behaviorOption,
-    } = data;
-    // console.log(data.questionLogo)
-    if (typeof questionLogo !== "string" && data.questionLogo) {
-      const formData = new FormData();
-      formData.append("images", data.questionLogo);
-
-      setIsUploading(true);
-      const response = await callAPI("/upload", {
-        method: "POST",
-        data: formData,
-        headers: { "Content-Type": "multipart/form-data" },
-        suppressError: true,
-      });
-
-      setIsUploading(false);
-      if (!response.error) {
-        const { images = [] } = response?.data?.response || {};
-
-        // console.log({ images });
-        if (questionId) {
-          dispatch(
-            createSettings({
-              questionId,
-              data: {
-                timeLimit,
-                timeUnit,
-                iconName,
-                radiusColor,
-                locationRadius,
-                icon: images[0],
-                behaviorOption,
-                // durations,
-              },
-            })
-          );
+    setIsUploading(true);
+    try {
+        const { settingsList } = data;
+        
+        for (const settingsData of settingsList) {
+            await processAndSubmitSettings(settingsData);
         }
-      }
-    } else {
-      if (questionId) {
-        dispatch(
-          createSettings({
-            questionId,
-            data: {
-              timeLimit,
-              timeUnit,
-              iconName,
-              radiusColor,
-              locationRadius,
-              icon: questionLogo ? extractFilename(questionLogo) : null,
-              behaviorOption,
-              // durations,
-            },
-          })
-        );
-      }
+
+        toast.success("All tasks saved successfully");
+        
+        // Clean up session storage
+        removeSessionData("currentQuestionIds");
+        removeSessionData("currentQuestionNames");
+        removeSessionData("questionId"); // Optional: clean this too if we are done
+
+        markStepCompleted(curStep);
+        goTo(ROUTES.TASKS);
+
+    } catch (err) {
+        console.error("Error submitting settings", err);
+        if (err?.message) {
+            toast.error(err.message);
+        } else {
+            toast.error("Failed to save settings");
+        }
+    } finally {
+        setIsUploading(false);
     }
   };
 
-  useApiResponseHandler({
-    status,
-    data,
-    error,
-    setFormError: setError,
-    sideAction: () => {
-      markStepCompleted(curStep);
-      goTo(ROUTES.TASKS);
-    },
-  });
-
   useEffect(() => {
-    if (questionId) {
-      dispatch(getSettings(questionId));
-    }
-  }, [questionId]);
+    const fetchSettings = async () => {
+        if (ids.length === 0) return;
 
-  useEffect(() => {
-    if (getSettingsApi.status === apiResponseType.success) {
-      // console.log(getSettingsApi.data?.response);
-      const response = getSettingsApi.data?.response;
-      if (response) {
-        reset({
-          timeLimit: response.timeLimit,
-          timeUnit: response.timeUnit,
-          iconName: response.iconName,
-          radiusColor: response.radiusColor,
-          locationRadius: response.locationRadius,
-          questionLogo: `${MEDIA_URL()}/${response.icon}`,
-          behaviorOption: response.behaviorOption || "remove_on_answer",
-          // durations: {
-          //   deactivateOnIncorrectSeconds:
-          //     response.durations?.deactivateOnIncorrectSeconds || null,
-          //   deactivateAfterClosingSeconds:
-          //     response.durations?.deactivateAfterClosingSeconds || null,
-          // },
-        });
-      }
-    } else if (getSettingsApi.status === apiResponseType.failed) {
-      getSettingsApi.error?.forEach((error) => {
-        if (error.location === "params") {
-          toast.error(error.msg);
+        try {
+            const fetchedData = await Promise.all(
+                ids.map(async (id) => {
+                    try {
+                        const result = await dispatch(getSettings(id)).unwrap();
+                        return { id, data: result?.response };
+                    } catch (error) {
+                        return { id, data: null };
+                    }
+                })
+            );
+
+            const newSettingsList = ids.map((id) => {
+                const found = fetchedData.find(f => f.id === id);
+                const response = found?.data;
+
+                if (!response) {
+                    return { questionId: id, ...defaultSettingsValue };
+                }
+
+                return {
+                    questionId: id,
+                    timeLimit: response.timeLimit,
+                    timeUnit: response.timeUnit,
+                    iconName: response.iconName,
+                    radiusColor: response.radiusColor,
+                    locationRadius: response.locationRadius,
+                    questionLogo: response.icon ? `${MEDIA_URL()}/${response.icon}` : null,
+                    behaviorOption: response.behaviorOption || "remove_on_answer",
+                };
+            });
+
+            reset({ settingsList: newSettingsList });
+
+        } catch (err) {
+            console.error("Error fetching settings", err);
         }
-      });
-    }
-  }, [getSettingsApi.status]);
-
-  // useEffect(() => {
-  //   if (behaviourOption === "keep_until_correct") {
-  //     setValue("durations.deactivateAfterClosingSeconds", null);
-  //   } else if (behaviourOption === "keep_until_end") {
-  //     setValue("durations.deactivateOnIncorrectSeconds", null);
-  //   } else if (behaviourOption === "remove_on_answer") {
-  //     setValue("durations", {
-  //       deactivateOnIncorrectSeconds: null,
-  //       deactivateAfterClosingSeconds: null,
-  //     });
-  //   }
-  // }, [behaviourOption]);
-
-  useEffect(() => {
-    return () => {
-      reset(defaultValues);
     };
+
+    fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useResetMultipleApiStates([
     { action: resetApiStateFromQuestion, stateName: "createSettingsApi" },
     { action: resetApiStateFromQuestion, stateName: "getSettingsApi" },
   ]);
-
 
   if (getSettingsApi.isLoading) {
     return <SettingsSkeleton />
@@ -236,101 +246,88 @@ const Settings = ({
       <FormProvider {...form}>
         <form action="" onSubmit={handleSubmit(onSubmit)}>
           <h3 className="font-semibold mb-2 text-xl">Settings Section</h3>
-          <div className="p-4 flex flex-col gap-4">
-            <div className="flex gap-4">
-              <CommonInput
-                placeholder="Eg. 6"
-                labelName="Time Limit"
-                id="timeLimit"
-                name="timeLimit"
-                register={register}
-                type="number"
-                errors={errors}
-                required
-              />
-              <AntSearchableSelector
-                id="timeUnit"
-                name="timeUnit"
-                labelName="Time Unit"
-                options={timeUnits}
-                control={control}
-                errors={errors}
-                required
-              />
-            </div>
-            <FileUpload
-              name={`questionLogo`}
-              labelName={"Question Logo"}
-              type="image"
-              required
-            />
-            <CommonInput
-              placeholder="Eg. IZIMorocco"
-              labelName="Logo Name"
-              id="iconName"
-              name="iconName"
-              register={register}
-              errors={errors}
-              required
-            />
-            <CommonInput
-              placeholder="Eg. 50 (in meters)"
-              labelName="Location Radius"
-              id="locationRadius"
-              name="locationRadius"
-              register={register}
-              type="number"
-              errors={errors}
-              required
-            />
-            <ColorPickerInput
-              name="radiusColor"
-              errors={errors}
-              labelName="Radius Background Color"
-              control={control}
-              defaultValue={watch("radiusColor")}
-              required
-            />
+          
+          <div className="flex flex-col gap-6">
+            {fields.map((field, index) => (
+                <div key={field.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <h4 className="font-medium text-lg mb-4 text-blue-600">
+                        {names[index] ? `Task: ${names[index]}` : `Task ${index + 1}`}
+                    </h4>
+                    <div className="flex flex-col gap-4">
+                        <div className="flex gap-4">
+                        <CommonInput
+                            placeholder="Eg. 6"
+                            labelName="Time Limit"
+                            id={`settingsList.${index}.timeLimit`}
+                            name={`settingsList.${index}.timeLimit`}
+                            register={register}
+                            type="number"
+                            errors={errors}
+                            required
+                        />
+                        <AntSearchableSelector
+                            id={`settingsList.${index}.timeUnit`}
+                            name={`settingsList.${index}.timeUnit`}
+                            labelName="Time Unit"
+                            options={timeUnits}
+                            control={control}
+                            errors={errors}
+                            required
+                        />
+                        </div>
+                        <FileUpload
+                        name={`settingsList.${index}.questionLogo`}
+                        labelName={"Question Logo"}
+                        type="image"
+                        required
+                        />
+                        <CommonInput
+                        placeholder="Eg. IZIMorocco"
+                        labelName="Logo Name"
+                        id={`settingsList.${index}.iconName`}
+                        name={`settingsList.${index}.iconName`}
+                        register={register}
+                        errors={errors}
+                        required
+                        />
+                        <CommonInput
+                        placeholder="Eg. 50 (in meters)"
+                        labelName="Location Radius"
+                        id={`settingsList.${index}.locationRadius`}
+                        name={`settingsList.${index}.locationRadius`}
+                        register={register}
+                        type="number"
+                        errors={errors}
+                        required
+                        />
+                        <ColorPickerInput
+                        name={`settingsList.${index}.radiusColor`}
+                        errors={errors}
+                        labelName="Radius Background Color"
+                        control={control}
+                        defaultValue={watch(`settingsList.${index}.radiusColor`)}
+                        required
+                        />
 
-            <OptionGroup
-              name="behaviorOption"
-              options={radioButtonOptions}
-              register={register}
-              required={true}
-              errors={errors}
-            />
-            {/* {behaviourOption === "keep_until_correct" && (
-              <CommonInput
-                placeholder="Eg. 60 (in Seconds)"
-                labelName="Deactivate location if answered incorrectly for"
-                id="durations.deactivateOnIncorrectSeconds"
-                name="durations.deactivateOnIncorrectSeconds"
-                register={register}
-                type="number"
-                errors={errors}
-                required
-              />
-            )}
-            {behaviourOption === "keep_until_end" && (
-              <CommonInput
-                placeholder="Eg. 60 (in Seconds)"
-                labelName="Deactivate location after answering for"
-                id="durations.deactivateAfterClosingSeconds"
-                name="durations.deactivateAfterClosingSeconds"
-                register={register}
-                type="number"
-                errors={errors}
-                required
-              />
-            )} */}
+                        <OptionGroup
+                        name={`settingsList.${index}.behaviorOption`}
+                        options={radioButtonOptions}
+                        register={register}
+                        required={true}
+                        errors={errors}
+                        />
+                    </div>
+                </div>
+            ))}
           </div>
+
           <FormStepperButtons
             curStep={curStep}
             previousStepHandler={previousStepHandler}
             nextStepHandler={nextStepHandler}
-            isLoading={isLoading || isUploading}
+            isLoading={isUploading}
             completedSteps={completedSteps}
-            isDisabledNextButton={!!id}
+            // isDisabledNextButton={!!id} // Removed disabling logic to allow saving
           />
         </form>
       </FormProvider>

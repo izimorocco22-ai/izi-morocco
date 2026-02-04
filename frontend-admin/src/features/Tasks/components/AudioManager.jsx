@@ -2,12 +2,12 @@ import { useFormContext, useFieldArray } from "react-hook-form";
 import FileUpload from "../../../components/form/FileUpload";
 import OptionGroup from "../../../components/form/OptionGroup";
 
-const AudioManager = () => {
-    const { control, setValue, watch, getValues,trigger } = useFormContext();
+const AudioManager = ({ name = "audioUrls" }) => {
+    const { control, setValue, watch, getValues, trigger } = useFormContext();
 
     const { fields, append, remove } = useFieldArray({
         control,
-        name: "audioUrls",
+        name: name,
     });
 
     const audioTypeOptions = [
@@ -16,7 +16,7 @@ const AudioManager = () => {
     ];
 
     // Get the current form values for audioUrls
-    const audioUrls = watch("audioUrls") || [];
+    const audioUrls = watch(name) || [];
 
     // console.log({ audioUrls })
 
@@ -35,7 +35,11 @@ const AudioManager = () => {
     
     // Get ALL current form values
     const allValues = getValues();
-    const currentAudioUrls = allValues.audioUrls || [];
+    // Access nested property if name contains dots
+    const getNestedValue = (obj, path) => {
+        return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+    }
+    const currentAudioUrls = getNestedValue(allValues, name) || [];
     
     // console.log("Current audioUrls:", currentAudioUrls);
     
@@ -46,13 +50,13 @@ const AudioManager = () => {
     // console.log("New audioUrls to set:", newAudioUrls);
     
     // Update the entire form state with the new array
-    setValue("audioUrls", newAudioUrls);
+    setValue(name, newAudioUrls);
     
     // DON'T call remove() - let setValue handle everything
     
     // Force React Hook Form to re-render
     setTimeout(() => {
-        trigger("audioUrls");
+        trigger(name);
     }, 0);
 };
 
@@ -101,12 +105,12 @@ const AudioManager = () => {
                                 Audio Type
                             </label>
                             <OptionGroup
-                                name={`audioUrls.${index}.type`}
+                                name={`${name}.${index}.type`}
                                 options={audioTypeOptions}
                                 selected={[currentType]}
                                 onChange={(values) =>
                                     setValue(
-                                        `audioUrls.${index}.type`,
+                                        `${name}.${index}.type`,
                                         values[0] || "background"
                                     )
                                 }
@@ -121,8 +125,8 @@ const AudioManager = () => {
                             {/* Option 1: File Upload */}
                             <div className="mb-3">
                                 <FileUpload
-                                    id={`audioUrls.${index}.url`}
-                                    name={`audioUrls.${index}.url`}
+                                    id={`${name}.${index}.url`}
+                                    name={`${name}.${index}.url`}
                                     labelName={`Select Audio File ${index + 1}`}
                                     type="audio"
                                 />
