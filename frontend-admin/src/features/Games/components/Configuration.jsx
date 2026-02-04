@@ -26,10 +26,6 @@ import { callAPI } from "../../../services/callApi";
 import { MEDIA_URL } from "../../../utils/config";
 import { formatDate } from "../../../utils/dateAndTime";
 import ConfigurationSkeleton from "./ConfigurationSkeleton";
-import {
-  getSessionData,
-  setDataInSessionStorage,
-} from "../../../utils/sessionStorage";
 
 const radioButtonOptions = [
   {
@@ -41,8 +37,8 @@ const radioButtonOptions = [
 
 const defaultValues = {
   title: "",
-  introMessage: { ops: [{ insert: "\n" }] },
-  finishMessage: { ops: [{ insert: "\n" }] },
+  introMessage: {},
+  finishMessage: {},
   language: "english",
   status: "active",
   username: "",
@@ -65,8 +61,7 @@ function Configuration({
   completedSteps,
   markStepCompleted,
 }) {
-  const { id: paramId } = useParams();
-  const id = paramId || getSessionData("gameId");
+  const { id } = useParams();
   const dispatch = useDispatch();
   const { getTagsApi } = useSelector((state) => state.tag);
   const { createGameApi, getGameInfobyIdApi, updateGameApi } = useSelector(
@@ -222,17 +217,6 @@ function Configuration({
           }
           uploadIndex++;
         });
-      } else {
-        // Handle upload error
-        console.error("Image upload failed", response);
-        // We should probably stop here if thumbnail upload failed as it is required
-        if (filesToUpload.some((f) => f.type === "thumbnail")) {
-          setError("root", {
-            type: "manual",
-            message: "Failed to upload thumbnail image. Please try again.",
-          });
-          return;
-        }
       }
     }
 
@@ -250,14 +234,12 @@ function Configuration({
           value: parseInt(data.duration?.value) || 0,
         },
       }),
-      introMessage:
-        processedIntroMessage && Object.keys(processedIntroMessage).length > 0
-          ? processedIntroMessage
-          : { ops: [{ insert: "\n" }] },
-      finishMessage:
-        processedFinishMessage && Object.keys(processedFinishMessage).length > 0
-          ? processedFinishMessage
-          : { ops: [{ insert: "\n" }] },
+      ...(processedIntroMessage && {
+        introMessage: processedIntroMessage,
+      }),
+      ...(processedFinishMessage && {
+        finishMessage: processedFinishMessage,
+      }),
       ...(thumbnailFilename && {
         thumbnail: thumbnailFilename,
       }),
@@ -286,15 +268,7 @@ function Configuration({
     setFormError: setError,
     sideAction: () => {
       if (isNextClicked.current) {
-        if (id) {
-          nextStepHandler();
-        } else {
-          const newId = data?.response?._id;
-          if (newId) {
-            setDataInSessionStorage("gameId", newId);
-          }
-          nextStepHandler();
-        }
+        nextStepHandler();
         isNextClicked.current = false;
       }
       markStepCompleted(curStep);
@@ -568,7 +542,6 @@ function Configuration({
             completedSteps={completedSteps}
             lastStep={3}
             nextButtonType="submit"
-            isHiddenSubmitButton={true}
             // isDisabledNextButton={!id}
           />
         </form>
