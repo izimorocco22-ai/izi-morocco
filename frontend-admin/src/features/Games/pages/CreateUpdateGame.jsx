@@ -12,7 +12,7 @@ import {
   setBlocklyData,
   setSelectedQuestions,
 } from "../../../slices/gameSlice";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useResetMultipleApiStates } from "../../../hooks/useResetMultipleApiStates";
 
 const steps = [
@@ -35,7 +35,8 @@ const steps = [
 
 export default function CreateUpdateGame() {
   const dispatch = useDispatch();
-  const [currentStep, setCurrentStep] = useState(1);
+  const location = useLocation();
+  const [currentStep, setCurrentStep] = useState(location.state?.step || 1);
   const [completedSteps, setCompletedSteps] = useState([]);
   const { id } = useParams();
   const { getGameQuestionsApi } = useSelector((state) => state.games);
@@ -127,6 +128,12 @@ export default function CreateUpdateGame() {
       }
     }
   };
+
+  useEffect(() => {
+    if (location.state?.step) {
+      setCurrentStep(location.state.step);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (id) {

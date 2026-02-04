@@ -62,6 +62,7 @@ function Configuration({
   markStepCompleted,
 }) {
   const { id } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { getTagsApi } = useSelector((state) => state.tag);
   const { createGameApi, getGameInfobyIdApi, updateGameApi } = useSelector(
@@ -268,7 +269,16 @@ function Configuration({
     setFormError: setError,
     sideAction: () => {
       if (isNextClicked.current) {
-        nextStepHandler();
+        if (id) {
+          nextStepHandler();
+        } else {
+          const newId = data?.response?._id;
+          if (newId) {
+            navigate(`/games/update/${newId}`, { state: { step: 2 } });
+          } else {
+             nextStepHandler();
+          }
+        }
         isNextClicked.current = false;
       }
       markStepCompleted(curStep);
@@ -542,6 +552,7 @@ function Configuration({
             completedSteps={completedSteps}
             lastStep={3}
             nextButtonType="submit"
+            isHiddenSubmitButton={true}
             // isDisabledNextButton={!id}
           />
         </form>
