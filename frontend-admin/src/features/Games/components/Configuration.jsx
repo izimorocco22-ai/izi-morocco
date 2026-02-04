@@ -4,7 +4,7 @@ import AntSearchableSelector from "../../../components/form/AntDesign/AntSearcha
 import AntMultiSelector from "../../../components/form/AntDesign/AntMultiSelector";
 import OptionGroup from "../../../components/form/OptionGroup";
 import RichTextEditor from "../../../components/ReactQuill";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useFieldArray } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState, useRef } from "react";
 import { processDeltaImages } from "../../../services/image-upload";
@@ -16,6 +16,9 @@ import {
   updateGame,
 } from "../../../slices/gameSlice";
 import TagIcon from "../../../components/svgs/TagIcon";
+import Button from "../../../components/Button";
+import PlusIcon from "../../../components/svgs/PlusIcon";
+import DeleteIcon from "../../../components/svgs/DeleteIcon";
 import AntDatePicker from "../../../components/form/AntDesign/AntDatePicker";
 import LabeledOptionGroup from "../../../components/LabeledOptionGroup";
 import FormStepperButtons from "../../Tasks/components/FormStepperButtons";
@@ -52,6 +55,7 @@ const defaultValues = {
   tags: [],
   thumbnail: null,
   backGroundImage: null,
+  playgrounds: [],
 };
 
 function Configuration({
@@ -90,6 +94,11 @@ function Configuration({
     reset,
     formState: { errors },
   } = form;
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "playgrounds",
+  });
 
   // Watch form values
   const watchedValues = watch();
@@ -130,8 +139,7 @@ function Configuration({
       tags,
       thumbnail,
       backGroundImage,
-      playgroundImage,
-      playgroundName
+      playgrounds,
     } = data;
 
     setImageProcessingLoading(true);
@@ -160,7 +168,6 @@ function Configuration({
     // Handle image uploads
     let thumbnailFilename = null;
     let backGroundImageFilename = null;
-    let playgroundImageFilename = null;
 
     const filesToUpload = [];
     if (thumbnail instanceof File) {
@@ -175,10 +182,23 @@ function Configuration({
       backGroundImageFilename = extractFilename(backGroundImage);
     }
 
-    if (playgroundImage instanceof File) {
-      filesToUpload.push({ file: playgroundImage, type: "playgroundImage" });
-    } else if (typeof playgroundImage === "string") {
-      playgroundImageFilename = extractFilename(playgroundImage);
+    const processedPlaygrounds = [];
+    if (playgrounds && Array.isArray(playgrounds)) {
+      playgrounds.forEach((pg, index) => {
+        let pgImage = pg.image;
+        let pgImageFilename = null;
+
+        if (pgImage instanceof File) {
+          filesToUpload.push({ file: pgImage, type: `playground_${index}` });
+        } else if (typeof pgImage === "string") {
+          pgImageFilename = extractFilename(pgImage);
+        }
+
+        processedPlaygrounds.push({
+          name: pg.name,
+          image: pgImageFilename, // Placeholder if file, actual if string
+        });
+      });
     }
 
     // Upload new files if any
@@ -209,11 +229,11 @@ function Configuration({
             uploadedImages[uploadIndex]
           ) {
             backGroundImageFilename = uploadedImages[uploadIndex];
-          } else if (
-            type === "playgroundImage" &&
-            uploadedImages[uploadIndex]
-          ) {
-            playgroundImageFilename = uploadedImages[uploadIndex];
+          } else if (type.startsWith("playground_")) {
+            const pgIndex = parseInt(type.split("_")[1]);
+            if (processedPlaygrounds[pgIndex] && uploadedImages[uploadIndex]) {
+              processedPlaygrounds[pgIndex].image = uploadedImages[uploadIndex];
+            }
           }
           uploadIndex++;
         });
@@ -246,10 +266,7 @@ function Configuration({
       ...(backGroundImageFilename && {
         backGroundImage: backGroundImageFilename,
       }),
-      ...(playgroundImageFilename && {
-        playgroundImage: playgroundImageFilename,
-      }),
-      playgroundName: playgroundName,
+      playgrounds: processedPlaygrounds,
       // Ensure tags is an array of tag IDs (strings)
       tags: Array.isArray(tags) ? tags.filter((t) => t) : [],
     };
@@ -318,7 +335,25 @@ function Configuration({
         thumbnail,
         playgroundImage,
         playgroundName,
+        playgrounds,
       } = gameData;
+
+      // Handle backward compatibility for playgrounds
+      let initialPlaygrounds = [];
+      if (playgrounds && Array.isArray(playgrounds) && playgrounds.length > 0) {
+        initialPlaygrounds = playgrounds.map((pg) => ({
+          name: pg.name,
+          image: pg.image ? `${MEDIA_URL()}/${pg.image}` : null,
+        }));
+      } else if (playgroundImage && playgroundName) {
+        initialPlaygrounds = [
+          {
+            name: playgroundName,
+            image: playgroundImage ? `${MEDIA_URL()}/${playgroundImage}` : null,
+          },
+        ];
+      }
+
       const pureData = {
         title,
         introMessage,
@@ -334,8 +369,7 @@ function Configuration({
         backGroundImage: backGroundImage
           ? `${MEDIA_URL()}/${backGroundImage}`
           : null,
-        playgroundImage,
-        playgroundName
+        playgrounds: initialPlaygrounds,
       };
       reset(pureData);
     }
@@ -400,18 +434,59 @@ function Configuration({
                 required={false}
               />
 
-              <FileUpload
-                name="playgroundImage"
-                labelName="Game Playground Image"
-                type="image"
-              />
+              <div className="flex flex-col gap-4 border p-4 rounded-lg bg-gray-50">
+                <div className="flex justify-between items-center">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Playgrounds
+                  </label>
+                  <Button
+                    type="button"
+                    variant="light"
+                    onClick={() => append({ name: "", image: null })}
+                    className="flex items-center gap-2 text-xs"
+                  >
+                    <PlusIcon className="w-4 h-4" /> Add Playground
+                  </Button>
+                </div>
 
-              <CommonInput
-                labelName="Playground Name"
-                name="playgroundName"
-                register={register}
-                errors={errors}
-              />
+                {fields.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-4 p-4 border rounded bg-white relative"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                    >
+                      <DeleteIcon className="w-5 h-5" />
+                    </button>
+
+                    <CommonInput
+                      labelName={`Playground Name ${index + 1}`}
+                      name={`playgrounds.${index}.name`}
+                      register={register}
+                      errors={errors}
+                      required={true}
+                      placeholder="Playground Name"
+                      validation={{ required: "Playground name is required" }}
+                    />
+
+                    <FileUpload
+                      name={`playgrounds.${index}.image`}
+                      labelName={`Playground Image ${index + 1}`}
+                      type="image"
+                      required={true}
+                      errors={errors}
+                    />
+                  </div>
+                ))}
+                {fields.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No playgrounds added yet.
+                  </p>
+                )}
+              </div>
 
               <RichTextEditor
                 name="introMessage"

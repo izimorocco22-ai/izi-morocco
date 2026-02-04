@@ -84,14 +84,16 @@ const GameInfoSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    playgroundImage: {
-        type: String,
-        default: null
-    },
-    playgroundName: {
-        type: String,
-        default: null
-    }
+    playgrounds: [{
+        name: {
+            type: String,
+            required: true
+        },
+        image: {
+            type: String,
+            required: true
+        }
+    }]
 }, {
     timestamps: true,
     collection: 'GameInfo',

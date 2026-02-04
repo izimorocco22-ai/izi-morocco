@@ -145,34 +145,24 @@ export const createGameInfoValidator = [
     .isString()
     .withMessage('BackGround Image must be a string'),
 
-  check('playgroundImage')
+  check('playgrounds')
     .optional()
-    .trim()
-    .isString()
-    .withMessage('PlaygroundImage must be a string')
-    .notEmpty()
-    .withMessage('PlaygroundImage cannot be empty'),
+    .isArray()
+    .withMessage('Playgrounds must be an array'),
 
-  check('playgroundName')
+  check('playgrounds.*.name')
     .optional()
-    .isString()
-    .withMessage('playgroundName must be a string')
     .notEmpty()
-    .withMessage('playgroundName cannot be empty'),
+    .withMessage('Playground name is required')
+    .isString()
+    .withMessage('Playground name must be a string'),
 
-  body().custom((value, { req }) => {
-    const { playgroundImage, playgroundName } = req.body;
-
-    const hasPlaygroundImage = playgroundImage && playgroundImage.trim() !== '';
-    const hasplaygroundName = playgroundName && playgroundName.trim() !== '';
-
-    if (hasPlaygroundImage !== hasplaygroundName) {
-      throw new Error(
-        'Both playgroundImage and playgroundName must be provided together, or neither should be provided'
-      );
-    }
-    return true;
-  }),
+  check('playgrounds.*.image')
+    .optional()
+    .notEmpty()
+    .withMessage('Playground image is required')
+    .isString()
+    .withMessage('Playground image must be a string'),
 
   (req, res, next) => validateRequest(req, res, next)
 ];
@@ -345,20 +335,24 @@ export const updateGameInfoValidator = [
     .withMessage('Background image must be a string')
     .bail(),
 
-  check('playgroundImage')
+  check('playgrounds')
     .optional()
-    .trim()
-    .isString()
-    .withMessage('PlaygroundImage must be a string')
-    .notEmpty()
-    .withMessage('PlaygroundImage cannot be empty'),
+    .isArray()
+    .withMessage('Playgrounds must be an array'),
 
-  check('playgroundName')
+  check('playgrounds.*.name')
     .optional()
-    .isString()
-    .withMessage('playgroundName must be a string')
     .notEmpty()
-    .withMessage('playgroundName cannot be empty'),
+    .withMessage('Playground name is required')
+    .isString()
+    .withMessage('Playground name must be a string'),
+
+  check('playgrounds.*.image')
+    .optional()
+    .notEmpty()
+    .withMessage('Playground image is required')
+    .isString()
+    .withMessage('Playground image must be a string'),
 
   (req, res, next) => validateRequest(req, res, next)
 ];
