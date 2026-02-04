@@ -1,4 +1,8 @@
-import toast from "react-hot-toast";
+import {
+  getSessionData,
+  removeSessionData,
+  setDataInSessionStorage,
+} from "../../../utils/sessionStorage";
 import Steps from "../../Tasks/components/Steps";
 import Configuration from "../components/Configuration";
 import { useEffect, useMemo, useState } from "react";
@@ -12,7 +16,7 @@ import {
   setBlocklyData,
   setSelectedQuestions,
 } from "../../../slices/gameSlice";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useResetMultipleApiStates } from "../../../hooks/useResetMultipleApiStates";
 
 const steps = [
@@ -35,9 +39,12 @@ const steps = [
 
 export default function CreateUpdateGame() {
   const dispatch = useDispatch();
-  const location = useLocation();
-  const [currentStep, setCurrentStep] = useState(location.state?.step || 1);
-  const [completedSteps, setCompletedSteps] = useState([]);
+  const [currentStep, setCurrentStep] = useState(
+    parseInt(getSessionData("cs_game") || "1")
+  );
+  const [completedSteps, setCompletedSteps] = useState(
+    JSON.parse(getSessionData("state_game") || "[]")
+  );
   const { id } = useParams();
   const { getGameQuestionsApi } = useSelector((state) => state.games);
   // eslint-disable-next-line no-unused-vars
@@ -88,6 +95,7 @@ export default function CreateUpdateGame() {
       }
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
+      setDataInSessionStorage("cs_game", nextStep.toString());
     }
   };
 
@@ -95,6 +103,7 @@ export default function CreateUpdateGame() {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
+      setDataInSessionStorage("cs_game", prevStep.toString());
     }
   };
 
@@ -108,6 +117,7 @@ export default function CreateUpdateGame() {
       completedSteps.includes(targetStep - 1)
     ) {
       setCurrentStep(targetStep);
+      setDataInSessionStorage("cs_game", targetStep.toString());
     } else {
       toast.error(
         `Please fill & Submit ${
@@ -121,6 +131,7 @@ export default function CreateUpdateGame() {
     if (!completedSteps.includes(stepId)) {
       setCompletedSteps([...completedSteps, stepId]);
       if (stepId === totalSteps) {
+        removeSessionData(["cs_game", "state_game", "gameId"]);
         // Optionally navigate to success page or games list
         setTimeout(() => {
           goTo("/games");
@@ -130,10 +141,10 @@ export default function CreateUpdateGame() {
   };
 
   useEffect(() => {
-    if (location.state?.step) {
-      setCurrentStep(location.state.step);
-    }
-  }, [location.state]);
+    return () => {
+      removeSessionData(["cs_game", "state_game", "gameId"]);
+    };
+  }, []);
 
   useEffect(() => {
     if (id) {

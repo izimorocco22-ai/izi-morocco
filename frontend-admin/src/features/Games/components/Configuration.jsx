@@ -20,12 +20,16 @@ import AntDatePicker from "../../../components/form/AntDesign/AntDatePicker";
 import LabeledOptionGroup from "../../../components/LabeledOptionGroup";
 import FormStepperButtons from "../../Tasks/components/FormStepperButtons";
 import useApiResponseHandler from "../../../hooks/useApiResponseHandler";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import FileUpload from "../../../components/form/FileUpload";
 import { callAPI } from "../../../services/callApi";
 import { MEDIA_URL } from "../../../utils/config";
 import { formatDate } from "../../../utils/dateAndTime";
 import ConfigurationSkeleton from "./ConfigurationSkeleton";
+import {
+  getSessionData,
+  setDataInSessionStorage,
+} from "../../../utils/sessionStorage";
 
 const radioButtonOptions = [
   {
@@ -61,8 +65,8 @@ function Configuration({
   completedSteps,
   markStepCompleted,
 }) {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id: paramId } = useParams();
+  const id = paramId || getSessionData("gameId");
   const dispatch = useDispatch();
   const { getTagsApi } = useSelector((state) => state.tag);
   const { createGameApi, getGameInfobyIdApi, updateGameApi } = useSelector(
@@ -274,10 +278,9 @@ function Configuration({
         } else {
           const newId = data?.response?._id;
           if (newId) {
-            navigate(`/games/update/${newId}`, { state: { step: 2 } });
-          } else {
-             nextStepHandler();
+            setDataInSessionStorage("gameId", newId);
           }
+          nextStepHandler();
         }
         isNextClicked.current = false;
       }
