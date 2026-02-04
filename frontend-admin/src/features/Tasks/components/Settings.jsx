@@ -179,9 +179,11 @@ const Settings = ({
         toast.success("All tasks saved successfully");
         
         // Clean up session storage
-        removeSessionData("currentQuestionIds");
-        removeSessionData("currentQuestionNames");
-        removeSessionData("questionId"); // Optional: clean this too if we are done
+        removeSessionData([
+            "currentQuestionIds",
+            "currentQuestionNames",
+            "questionId"
+        ]);
 
         markStepCompleted(curStep);
         goTo(ROUTES.TASKS);
