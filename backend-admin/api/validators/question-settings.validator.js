@@ -13,22 +13,12 @@ export const mutateQuestionSettingsValidator = [
     .withMessage('Invalid Question ID'),
 
   check('timeLimit')
-    .exists()
-    .withMessage('Time limit is required')
-    .bail()
-    .notEmpty()
-    .withMessage('Time limit cannot be empty')
-    .bail()
+    .optional({ nullable: true })
     .isInt({ min: 1 })
     .withMessage('Time limit must be a positive integer'),
 
   check('timeUnit')
-    .exists()
-    .withMessage('Time unit is required')
-    .bail()
-    .notEmpty()
-    .withMessage('Time unit cannot be empty')
-    .bail()
+    .optional({ nullable: true })
     .isString()
     .withMessage('Time unit must be a string')
     .trim()

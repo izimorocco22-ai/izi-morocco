@@ -156,9 +156,9 @@ const Settings = ({
         createSettings({
           questionId,
           data: {
-            timeLimit,
-            timeUnit,
-            iconName,
+            timeLimit: timeLimit || null,
+            timeUnit: timeUnit || null,
+            iconName: iconName || null,
             radiusColor,
             locationRadius,
             icon,
@@ -281,7 +281,6 @@ const Settings = ({
                             register={register}
                             type="number"
                             errors={errors}
-                            required
                         />
                         <AntSearchableSelector
                             id={`settingsList.${index}.timeUnit`}
@@ -290,23 +289,12 @@ const Settings = ({
                             options={timeUnits}
                             control={control}
                             errors={errors}
-                            required
                         />
                         </div>
                         <FileUpload
                         name={`settingsList.${index}.questionLogo`}
                         labelName={"Question Logo"}
                         type="image"
-                        required
-                        />
-                        <CommonInput
-                        placeholder="Eg. IZIMorocco"
-                        labelName="Logo Name"
-                        id={`settingsList.${index}.iconName`}
-                        name={`settingsList.${index}.iconName`}
-                        register={register}
-                        errors={errors}
-                        required
                         />
                         <CommonInput
                         placeholder="Eg. 50 (in meters)"
