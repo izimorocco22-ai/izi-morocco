@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   getSessionData,
   removeSessionData,
@@ -12,6 +13,8 @@ import Settings from "../components/Settings";
 import toast from "react-hot-toast";
 
 const CreateUpdateTask = () => {
+  const { id } = useParams();
+  const isUpdateMode = !!id;
   const [currentStep, setCurrentStep] = useState(
     parseInt(getSessionData("cs") || "1")
   );
@@ -131,6 +134,7 @@ const CreateUpdateTask = () => {
           completedSteps={completedSteps}
           curStep={currentStep}
           markStepCompleted={markStepCompleted}
+          isUpdateMode={isUpdateMode}
         />
       )}
       {currentStep === 3 && (
@@ -140,6 +144,7 @@ const CreateUpdateTask = () => {
           completedSteps={completedSteps}
           curStep={currentStep}
           markStepCompleted={markStepCompleted}
+          isUpdateMode={isUpdateMode}
         />
       )}
       {/* {currentStep === 4 && (
@@ -157,6 +162,7 @@ const CreateUpdateTask = () => {
           completedSteps={completedSteps}
           curStep={currentStep}
           markStepCompleted={markStepCompleted}
+          isUpdateMode={isUpdateMode}
         />
       )}
     </div>

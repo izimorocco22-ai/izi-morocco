@@ -31,6 +31,7 @@ const Media = ({
   nextStepHandler,
   completedSteps,
   markStepCompleted,
+  isUpdateMode,
 }) => {
   // Get IDs and Names from session storage
   const sessionIdsRaw = getSessionData("currentQuestionIds");
@@ -308,9 +309,11 @@ const Media = ({
           <div className="flex flex-col gap-6">
             {fields.map((field, index) => (
                 <div key={field.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                    <h4 className="font-medium text-lg mb-4 text-blue-600">
-                        {names[index] ? `Task: ${names[index]}` : `Task ${index + 1}`}
-                    </h4>
+                    {!isUpdateMode && (
+                        <h4 className="font-medium text-lg mb-4 text-blue-600">
+                            {names[index] ? `Task: ${names[index]}` : `Task ${index + 1}`}
+                        </h4>
+                    )}
                     <div className="flex flex-col gap-4">
                         <FileUpload
                             name={`mediaList.${index}.image`}
