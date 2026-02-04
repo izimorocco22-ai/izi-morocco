@@ -443,7 +443,7 @@ function Configuration({
                     type="button"
                     variant="light"
                     onClick={() => append({ name: "", image: null })}
-                    className="flex items-center gap-2 text-xs"
+                    className="flex items-center gap-2 text-xs relative z-10"
                   >
                     <PlusIcon className="w-4 h-4" /> Add Playground
                   </Button>
@@ -457,7 +457,7 @@ function Configuration({
                     <button
                       type="button"
                       onClick={() => remove(index)}
-                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700 z-10"
                     >
                       <DeleteIcon className="w-5 h-5" />
                     </button>
