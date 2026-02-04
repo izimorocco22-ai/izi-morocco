@@ -346,12 +346,22 @@ const QuestionPlacerMap = () => {
 
       markersInitializedRef.current = true;
 
+      const bounds = new mapboxgl.LngLatBounds();
+
       placedQuestions.forEach((question) => {
         if (question.lng && question.lat) {
           // Use placeQuestionOnMap but skip state update to avoid infinite loop
           placeQuestionOnMap(question.lng, question.lat, question, true);
+          bounds.extend([question.lng, question.lat]);
         }
       });
+
+      if (!bounds.isEmpty()) {
+        map.current.fitBounds(bounds, {
+          padding: 50,
+          maxZoom: 15, // Optional: limit max zoom
+        });
+      }
     }
   }, [isMapLoaded, placedQuestions, placeQuestionOnMap]);
 
