@@ -542,6 +542,7 @@ function Configuration({
             completedSteps={completedSteps}
             lastStep={3}
             nextButtonType="submit"
+            isHiddenSubmitButton={true}
             // isDisabledNextButton={!id}
           />
         </form>
