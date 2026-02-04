@@ -6,6 +6,7 @@ import gameReducer from "../slices/gameSlice";
 import puzzlesReducer from "../slices/PuzzlesSlice";
 import gameActivationsReducer from "../slices/gameActivationSlice";
 import playerReducer from "../slices/playerSlice";
+import dashboardReducer from "../slices/dashboardSlice";
 
 const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ const store = configureStore({
     puzzles: puzzlesReducer,
     gameActivation: gameActivationsReducer,
     player: playerReducer,
+    dashboard: dashboardReducer,
   },
 });
 

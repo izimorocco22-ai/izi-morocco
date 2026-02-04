@@ -14,6 +14,7 @@ import gameInfo from './game-info.routes.js'
 import gameQuestions from './game-questions.routes.js'
 import gameActivationRoutes from './game-activation.routes.js'
 import playerRoutes from './player.routes.js'
+import dashboardRoutes from './dashboard.routes.js'
 
 const v1Routes = express.Router()
 const router = express.Router()
@@ -32,6 +33,7 @@ v1Routes.use('/puzzle', puzzleRoutes)
 v1Routes.use('/game-questions', gameQuestions)
 v1Routes.use('/game-activation', gameActivationRoutes)
 v1Routes.use('/player-admin', playerRoutes)
+v1Routes.use('/dashboard', dashboardRoutes)
 
 
 
