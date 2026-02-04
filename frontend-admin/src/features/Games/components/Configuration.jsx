@@ -6,7 +6,7 @@ import OptionGroup from "../../../components/form/OptionGroup";
 import RichTextEditor from "../../../components/ReactQuill";
 import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { processDeltaImages } from "../../../services/image-upload";
 import CreateUpdateTagModal from "../../Tag/modals/CreateUpdateTagModal";
 import { getTags } from "../../../slices/tagSlice";
