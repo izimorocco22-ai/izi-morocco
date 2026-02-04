@@ -41,8 +41,8 @@ const radioButtonOptions = [
 
 const defaultValues = {
   title: "",
-  introMessage: {},
-  finishMessage: {},
+  introMessage: { ops: [{ insert: "\n" }] },
+  finishMessage: { ops: [{ insert: "\n" }] },
   language: "english",
   status: "active",
   username: "",
@@ -222,6 +222,17 @@ function Configuration({
           }
           uploadIndex++;
         });
+      } else {
+        // Handle upload error
+        console.error("Image upload failed", response);
+        // We should probably stop here if thumbnail upload failed as it is required
+        if (filesToUpload.some((f) => f.type === "thumbnail")) {
+          setError("root", {
+            type: "manual",
+            message: "Failed to upload thumbnail image. Please try again.",
+          });
+          return;
+        }
       }
     }
 
@@ -239,12 +250,14 @@ function Configuration({
           value: parseInt(data.duration?.value) || 0,
         },
       }),
-      ...(processedIntroMessage && {
-        introMessage: processedIntroMessage,
-      }),
-      ...(processedFinishMessage && {
-        finishMessage: processedFinishMessage,
-      }),
+      introMessage:
+        processedIntroMessage && Object.keys(processedIntroMessage).length > 0
+          ? processedIntroMessage
+          : { ops: [{ insert: "\n" }] },
+      finishMessage:
+        processedFinishMessage && Object.keys(processedFinishMessage).length > 0
+          ? processedFinishMessage
+          : { ops: [{ insert: "\n" }] },
       ...(thumbnailFilename && {
         thumbnail: thumbnailFilename,
       }),
