@@ -41,7 +41,7 @@ export default function RootNavigator() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (showLoading) {
+  if (showLoading || isInitLoading) {
     return <LoadingScreen />;
   }
 

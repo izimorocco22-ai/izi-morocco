@@ -35,19 +35,53 @@ export const init = createAsyncThunk('auth/init', async (_, thunkAPI) => {
   try {
     const token = await storage.getAccessToken();
     if (token) {
-      const me = await ApiService({
-        method: 'GET',
-        endpoint: apiPaths.me,
-      });
-      return {
-        token,
-        user: me?.data,
-        isVerified: me?.data?.isVerified || false,
-      }; // Add isVerified data
+      // Try to get cached user first
+      const cachedUser = await storage.getUser();
+      
+      try {
+        const me = await ApiService({
+          method: 'GET',
+          endpoint: apiPaths.me,
+        });
+        
+        // Update cached user
+        await storage.setUser(me?.data);
+
+        return {
+          token,
+          user: me?.data,
+          isVerified: me?.data?.isVerified || false,
+        }; 
+      } catch (apiError: any) {
+        console.log('Init API error:', apiError);
+        
+        // If 401/403, token is invalid, clear it
+        if (apiError?.response?.status === 401 || apiError?.response?.status === 403) {
+             await storage.clearTokens();
+             return { token: null, user: null, isVerified: false };
+        }
+
+        // For other errors (network, server), use cached user if available
+        if (cachedUser) {
+           console.log('Using cached user due to API error');
+           return {
+             token,
+             user: cachedUser,
+             isVerified: cachedUser.isVerified || false,
+           };
+        }
+        
+        // If no cache and API failed, we can't restore session fully.
+        // But we preserve the token in storage for next time.
+        throw apiError;
+      }
     }
-    // Default to false if no user
+    return { token: null, user: null, isVerified: false };
   } catch (err) {
-    await storage.clearTokens();
+    // If we reach here, it's either a storage error or a rethrown API error (no cache).
+    // We do NOT clear tokens here automatically, to prevent logout on network error.
+    // Unless we know for sure... but we handled 401 above.
+    
     return { token: null, user: null, isVerified: false };
   }
 });
