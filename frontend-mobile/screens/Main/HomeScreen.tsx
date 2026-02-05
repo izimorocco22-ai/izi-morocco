@@ -23,6 +23,7 @@ import { RFValue } from '../../utils/responsive';
 import LottieView from 'lottie-react-native';
 import { ConvertGameTime } from '../Map/utils/gameTimer';
 import { API_URL, VITE_MEDIA_URL } from '@env';
+import { getCleanImageUrl } from '../../utils/imageUtils';
 
 const HomeScreen = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -68,27 +69,6 @@ const HomeScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  const resolveThumbnailUri = (thumb?: string) => {
-    if (!thumb) return null;
-    if (/^https?:\/\//.test(thumb)) return thumb;
-
-    // Handle Cloudinary paths directly
-    if (thumb.startsWith('izi_morocco/')) {
-       return `https://res.cloudinary.com/dik1l8tqu/image/upload/${thumb}`;
-    }
-
-    if (VITE_MEDIA_URL) {
-      const mediaUrl = VITE_MEDIA_URL.trim().replace(/\/$/, '');
-      const path = thumb.startsWith('/') ? thumb.slice(1) : thumb;
-      return `${mediaUrl}/${path}`;
-    }
-
-    // Default fallback - but be careful about prepending backend URL to something that might be a relative Cloudinary path
-    const base = (API_URL || 'https://izi-morocco-1.onrender.com').replace(/\/$/, '');
-    const path = thumb.startsWith('uploads/') ? thumb : `uploads/${thumb}`;
-    return `${base}/public/${path}`;
-  };
-
   const Card = card => {
     return (
       <>
@@ -126,7 +106,7 @@ const HomeScreen = ({ navigation }) => {
                 { resizeMode: 'cover', width: '100%', height: RFValue(150) },
               ]}
               source={{
-                uri: resolveThumbnailUri(card.thumbnail) || undefined,
+                uri: getCleanImageUrl(card.thumbnail) || undefined,
               }}
             />
           ) : (
