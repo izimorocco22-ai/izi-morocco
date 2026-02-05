@@ -235,10 +235,19 @@ const Settings = ({
                     questionLogo: response.icon
                         ? (response.icon.startsWith('http')
                             ? response.icon
-                            : (response.icon.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${response.icon}` : `${MEDIA_URL()}/${response.icon}`))
+                            : (response.icon.startsWith('izi_morocco/') 
+                                ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${response.icon}` 
+                                : `${MEDIA_URL()}/${response.icon}`))
                         : null,
                     behaviorOption: response.behaviorOption || "remove_on_answer",
                 };
+            });
+            
+            // Log for debugging
+            newSettingsList.forEach(setting => {
+                if (setting.questionLogo) {
+                    console.log(`Settings Question Logo for ${setting.questionId}:`, setting.questionLogo);
+                }
             });
 
             reset({ settingsList: newSettingsList });

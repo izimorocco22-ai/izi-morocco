@@ -30,11 +30,15 @@ const colorWithOpacity = (color, opacity = 0.1) => {
 
 const getIconUrl = (iconPath) => {
   if (!iconPath) return null;
-  if (iconPath.startsWith('http')) return iconPath;
-  if (iconPath.startsWith('izi_morocco/')) {
-    return `https://res.cloudinary.com/dik1l8tqu/image/upload/${iconPath}`;
+  let finalUrl = null;
+  if (iconPath.startsWith('http')) finalUrl = iconPath;
+  else if (iconPath.startsWith('izi_morocco/')) {
+    finalUrl = `https://res.cloudinary.com/dik1l8tqu/image/upload/${iconPath}`;
+  } else {
+    finalUrl = `${MEDIA_BASE_URL}/${iconPath}`;
   }
-  return `${MEDIA_BASE_URL}/${iconPath}`;
+  console.log(`Canvas Icon URL:`, finalUrl, 'Original:', iconPath);
+  return finalUrl;
 };
 
 // --- Question Placer Canvas Component ---
@@ -56,6 +60,11 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
         ? getGameInfobyIdApi.data.response.playgroundImage
         : (getGameInfobyIdApi.data.response.playgroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${getGameInfobyIdApi.data.response.playgroundImage}` : `${MEDIA_URL()}/${getGameInfobyIdApi.data.response.playgroundImage}`))
     : CANVAS_IMAGE_URL;
+
+  // Debug log for Canvas Playground Image
+  if (playgroundImage !== CANVAS_IMAGE_URL) {
+      console.log("Canvas Playground Image URL:", playgroundImage);
+  }
 
   const playgroundName =
     playgroundData?.name ||

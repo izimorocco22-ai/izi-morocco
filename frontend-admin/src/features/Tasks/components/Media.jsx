@@ -275,14 +275,22 @@ const Media = ({
                     questionId: id,
                     videoUrls: response.videoUrls?.[0] || "",
                     image: response.images?.map((image) => {
-                        if (image.startsWith('http')) return image;
-                        if (image.startsWith('izi_morocco/')) return `https://res.cloudinary.com/dik1l8tqu/image/upload/${image}`;
-                        return `${MEDIA_URL()}/${image}`;
+                        let imgUrl = image;
+                        if (image.startsWith('http')) imgUrl = image;
+                        else if (image.startsWith('izi_morocco/')) imgUrl = `https://res.cloudinary.com/dik1l8tqu/image/upload/${image}`;
+                        else imgUrl = `${MEDIA_URL()}/${image}`;
+                        
+                        console.log(`Media Image URL for ${id}:`, imgUrl, 'Original:', image);
+                        return imgUrl;
                     }) || [],
                     video: response.videos?.map((video) => {
-                        if (video.startsWith('http')) return video;
-                        if (video.startsWith('izi_morocco/')) return `https://res.cloudinary.com/dik1l8tqu/video/upload/${video}`;
-                        return `${MEDIA_URL("video")}/${video}`;
+                        let vidUrl = video;
+                        if (video.startsWith('http')) vidUrl = video;
+                        else if (video.startsWith('izi_morocco/')) vidUrl = `https://res.cloudinary.com/dik1l8tqu/video/upload/${video}`;
+                        else vidUrl = `${MEDIA_URL("video")}/${video}`;
+                        
+                        console.log(`Media Video URL for ${id}:`, vidUrl, 'Original:', video);
+                        return vidUrl;
                     }) || [],
                     audioUrls: normalizedAudios,
                 };

@@ -340,26 +340,47 @@ function Configuration({
       // Handle backward compatibility for playgrounds
       let initialPlaygrounds = [];
       if (playgrounds && Array.isArray(playgrounds) && playgrounds.length > 0) {
-        initialPlaygrounds = playgrounds.map((pg) => ({
-          name: pg.name,
-          image: pg.image
+        initialPlaygrounds = playgrounds.map((pg) => {
+            const pgUrl = pg.image
             ? (pg.image.startsWith('http') 
                 ? pg.image 
                 : (pg.image.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${pg.image}` : `${MEDIA_URL()}/${pg.image}`))
-            : null,
-        }));
+            : null;
+            if (pgUrl) console.log(`Configuration Playground Image:`, pgUrl, 'Original:', pg.image);
+            return {
+                name: pg.name,
+                image: pgUrl,
+            };
+        });
       } else if (playgroundImage && playgroundName) {
+        const pgUrl = playgroundImage
+            ? (playgroundImage.startsWith('http')
+                ? playgroundImage
+                : (playgroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${playgroundImage}` : `${MEDIA_URL()}/${playgroundImage}`))
+            : null;
+        if (pgUrl) console.log(`Configuration Legacy Playground Image:`, pgUrl, 'Original:', playgroundImage);
+        
         initialPlaygrounds = [
           {
             name: playgroundName,
-            image: playgroundImage
-                ? (playgroundImage.startsWith('http')
-                    ? playgroundImage
-                    : (playgroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${playgroundImage}` : `${MEDIA_URL()}/${playgroundImage}`))
-                : null,
+            image: pgUrl,
           },
         ];
       }
+
+      const thumbnailSrc = thumbnail
+        ? (thumbnail.startsWith('http')
+            ? thumbnail
+            : (thumbnail.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${thumbnail}` : `${MEDIA_URL()}/${thumbnail}`))
+        : null;
+      if (thumbnailSrc) console.log(`Configuration Thumbnail:`, thumbnailSrc, 'Original:', thumbnail);
+
+      const bgSrc = backGroundImage
+        ? (backGroundImage.startsWith('http')
+            ? backGroundImage
+            : (backGroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${backGroundImage}` : `${MEDIA_URL()}/${backGroundImage}`))
+        : null;
+      if (bgSrc) console.log(`Configuration Background:`, bgSrc, 'Original:', backGroundImage);
 
       const pureData = {
         title,
@@ -372,16 +393,8 @@ function Configuration({
         endTime: formatDate(endTime, "dd-MM-yyyy HH:mm:ss"),
         // normalize tags to an array of tag IDs for AntMultiSelector (which stores values)
         tags: tags?.map((t) => t._id) || [],
-        thumbnail: thumbnail
-            ? (thumbnail.startsWith('http')
-                ? thumbnail
-                : (thumbnail.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${thumbnail}` : `${MEDIA_URL()}/${thumbnail}`))
-            : null,
-        backGroundImage: backGroundImage
-          ? (backGroundImage.startsWith('http')
-                ? backGroundImage
-                : (backGroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${backGroundImage}` : `${MEDIA_URL()}/${backGroundImage}`))
-          : null,
+        thumbnail: thumbnailSrc,
+        backGroundImage: bgSrc,
         playgrounds: initialPlaygrounds,
       };
       reset(pureData);

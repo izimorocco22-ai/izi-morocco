@@ -280,6 +280,7 @@ const TableRow = ({ data, columns, isCompressView, handleChecked }) => {
                 } else {
                   iconSrc = MEDIA_URL() + "/" + val;
                 }
+                console.log(`TableRow Icon URL for ${value}:`, iconSrc, 'Original:', val);
               }
 
               return (
