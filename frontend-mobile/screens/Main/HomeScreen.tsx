@@ -22,6 +22,7 @@ import SearchIcon from '../../assets/icons/Search';
 import { RFValue } from '../../utils/responsive';
 import LottieView from 'lottie-react-native';
 import { ConvertGameTime } from '../Map/utils/gameTimer';
+import { API_URL, VITE_MEDIA_URL } from '@env';
 
 const HomeScreen = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -67,6 +68,23 @@ const HomeScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
+  const resolveThumbnailUri = (thumb?: string) => {
+    if (!thumb) return null;
+    if (/^https?:\/\//.test(thumb)) return thumb;
+
+    if (VITE_MEDIA_URL) {
+      const mediaUrl = VITE_MEDIA_URL.trim().replace(/\/$/, '');
+      const path = thumb.startsWith('/') ? thumb.slice(1) : thumb;
+      // If thumb doesn't start with uploads/ and mediaUrl is Cloudinary, 
+      // we might need to be careful, but usually it comes as uploads/filename
+      return `${mediaUrl}/${path}`;
+    }
+
+    const base = (API_URL || 'https://izi-morocco-1.onrender.com').replace(/\/$/, '');
+    const path = thumb.startsWith('uploads/') ? thumb : `uploads/${thumb}`;
+    return `${base}/public/${path}`;
+  };
+
   const Card = card => {
     return (
       <>
@@ -104,7 +122,7 @@ const HomeScreen = ({ navigation }) => {
                 { resizeMode: 'cover', width: '100%', height: RFValue(150) },
               ]}
               source={{
-                uri: `https://res.cloudinary.com/dxoipnmx0/image/upload/v1759483737/${card.thumbnail}`,
+                uri: resolveThumbnailUri(card.thumbnail) || undefined,
               }}
             />
           ) : (
