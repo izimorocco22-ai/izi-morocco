@@ -198,7 +198,7 @@ const QuestionPlacerMap = () => {
         badge.style.width = "20px";
         badge.style.height = "20px";
         badge.style.fontSize = "10px";
-        badge.style.display = "flex";
+        badge.style.display = "none";
         badge.style.alignItems = "center";
         badge.style.justifyContent = "center";
         badge.style.fontWeight = "bold";
