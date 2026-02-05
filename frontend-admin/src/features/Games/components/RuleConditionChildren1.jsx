@@ -32,12 +32,6 @@ const RuleConditionChildren1 = () => {
         >
           Map
         </Button>
-        <Button
-          variant={tab === "canvas" ? "dark" : "light"}
-          onClick={() => setTab("canvas")}
-        >
-          Canvas
-        </Button>
         {playgrounds.map((pg, index) => (
           <Button
             key={index}
