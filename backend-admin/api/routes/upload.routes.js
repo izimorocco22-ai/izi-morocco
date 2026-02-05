@@ -13,7 +13,7 @@ const router = express.Router();
 router.use(uploadLimiter)
 
 
-const useCloudinary = process.env.USE_CLOUDINARY === 'true';
+const useCloudinary = process.env.USE_CLOUDINARY === 'true' || !!process.env.CDN_NAME;
 const useS3 = !!process.env.S3_BUCKET;
 
 let finalUploadController;

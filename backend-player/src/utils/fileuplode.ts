@@ -153,7 +153,7 @@ export const uploadFromBuffer = async (
     }
 
     const options = {
-      folder: folderName || process.env.CLOUD_FOLDER_NAME || 'Shreemanpandit',
+      folder: folderName || process.env.CLOUD_FOLDER_NAME || 'izi_morocco',
       resource_type: 'auto' as const,
       public_id: fileName ? fileName.split('.')[0] : undefined
     }

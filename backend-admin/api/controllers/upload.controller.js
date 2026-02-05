@@ -172,7 +172,7 @@ const uploadFiles = async (files) => {
   const uploadPromises = files.map((file) =>
     cloudinary.uploader
       .upload(file.path, {
-        folder: 'uploads',
+        folder: 'izi_morocco',
         resource_type: 'auto'
       })
       .then((result) => {
