@@ -61,7 +61,7 @@ export const replaceBase64WithUrls = (delta, uploadResults) => {
             newOps[result.originalIndex] = {
                 ...newOps[result.originalIndex],
                 insert: {
-                    image: `${MEDIA_URL()}/${result.url}`, // Use the result.url // The uploaded image URL
+                    image: result.url.startsWith('http') ? result.url : `${MEDIA_URL()}/${result.url}`, // Use the result.url // The uploaded image URL
                 }
             };
         }

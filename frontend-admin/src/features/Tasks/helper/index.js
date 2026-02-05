@@ -5,10 +5,9 @@ export const extractFilename = (url) => {
   if (typeof url !== "string") return url;
   if (!url.includes("/")) return url;
 
-  // Handle Cloudinary URLs - extract the relative path after /upload/vXXXXXXXXXX/
+  // Handle Cloudinary URLs - keep full URL
   if (url.includes("cloudinary.com")) {
-    const match = url.match(/\/upload\/v\d+\/(.+)$/);
-    if (match) return match[1]; // Returns "uploads/d7uaynsnefuqb5zzqi4c"
+    return url;
   }
 
   // Handle MEDIA_URL prefixed paths

@@ -153,8 +153,7 @@ function Configuration({
 
       // Handle Cloudinary URLs
       if (url.includes("cloudinary.com")) {
-        const match = url.match(/\/upload\/v\d+\/(.+)$/);
-        if (match) return match[1];
+        return url;
       }
 
       // Handle MEDIA_URL prefixed paths
