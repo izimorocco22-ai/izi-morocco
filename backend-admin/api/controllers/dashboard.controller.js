@@ -1,5 +1,6 @@
 import httpStatus from 'http-status';
-import { buildResponse, handleError } from '../utils/response.util.js';
+import buildResponse from '../utils/buildResponse.js';
+import handleError from '../utils/handleError.js';
 import GameInfo from '../models/game-info.schema.js';
 import Questions from '../models/question.schema.js';
 import Player from '../models/players.schema.js';
