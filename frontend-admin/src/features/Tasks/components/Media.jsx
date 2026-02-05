@@ -16,6 +16,7 @@ import { MEDIA_URL } from "../../../utils/config";
 import { extractFilename } from "../helper";
 import { useResetMultipleApiStates } from "../../../hooks/useResetMultipleApiStates";
 import MediaSkeleton from "./MediaSkeleton";
+import AudioManager from "./AudioManager";
 import { getCleanImageUrl, getCleanMediaUrl } from "../../../utils/common";
 
 const defaultValueForMedia = {
