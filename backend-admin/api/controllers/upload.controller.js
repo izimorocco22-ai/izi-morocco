@@ -8,6 +8,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import dotenv from 'dotenv';
 import { matchedData } from 'express-validator';
 import fs from 'fs';
+import path from 'path';
 import httpStatus from 'http-status';
 import { v2 as cloudinary } from 'cloudinary';
 import buildErrorObject from '../utils/buildErrorObject.js';
@@ -117,6 +118,43 @@ export const cloudinaryUploadController = async (req, res) => {
     }
 
     res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, response));
+  } catch (error) {
+    handleError(res, error);
+  }
+};
+
+export const localUploadController = async (req, res) => {
+  try {
+    const { images = [], videos = [], audios = [] } = req.files || {};
+    const files = [...images, ...videos, ...audios];
+
+    if (!files.length) {
+      throw buildErrorObject(httpStatus.BAD_REQUEST, 'No files uploaded');
+    }
+
+    const uploadPromises = files.map(async (file) => {
+      const targetDir = path.join('public', 'uploads');
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+      
+      // Use originalname to match S3 behavior, or generate unique name if needed
+      // To avoid conflicts, we might want to prepend timestamp or uuid, but for now let's stick to originalname
+      // as that seems to be what the system expects (based on S3 controller).
+      const fileName = file.originalname; 
+      const targetPath = path.join(targetDir, fileName);
+
+      fs.copyFileSync(file.path, targetPath);
+      fs.unlinkSync(file.path);
+
+      return `uploads/${fileName}`;
+    });
+
+    const uploadedFiles = await Promise.all(uploadPromises);
+    res.status(httpStatus.OK).json({
+      message: 'Files uploaded successfully',
+      files: uploadedFiles
+    });
   } catch (error) {
     handleError(res, error);
   }
