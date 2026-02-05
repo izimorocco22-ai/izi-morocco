@@ -365,6 +365,81 @@ const QuestionPlacerMap = () => {
     }
   }, [isMapLoaded, placedQuestions, placeQuestionOnMap]);
 
+  // Update circles and popups when selectedQuestions changes (e.g. radius update)
+  useEffect(() => {
+    if (!map.current || !isMapLoaded) return;
+
+    let circlesUpdated = false;
+
+    selectedQuestions.forEach((question) => {
+      if (question.isPlaced) {
+        const circleIndex = circlesCollectionRef.current.features.findIndex(
+          (f) => f.properties.id === question.id
+        );
+
+        if (circleIndex !== -1) {
+          const currentFeature =
+            circlesCollectionRef.current.features[circleIndex];
+          // Check if radius changed
+          if (currentFeature.properties.radius_m != question.locationRadius) {
+            const circleRadiusKm = question.locationRadius / 1000;
+            const updatedCircle = turfCircle(
+              currentFeature.properties.center,
+              circleRadiusKm,
+              {
+                steps: 64,
+                units: "kilometers",
+                properties: {
+                  ...currentFeature.properties,
+                  radius_m: question.locationRadius,
+                },
+              }
+            );
+            circlesCollectionRef.current.features[circleIndex] = updatedCircle;
+            circlesUpdated = true;
+          }
+        }
+
+        // Update marker popup content if needed
+        const markerEntry = markersRef.current.find(
+          (m) => m.id === question.id
+        );
+        if (markerEntry) {
+          // We update the stored question in markerEntry so we have latest data
+          if (markerEntry.question.locationRadius !== question.locationRadius) {
+            markerEntry.question = question; // Update reference
+
+            // Update Popup
+            const popup = markerEntry.marker.getPopup();
+            if (popup) {
+              const isDraggable = markerEntry.marker.isDraggable();
+              popup.setHTML(`
+                  <div class="p-2">
+                    <h3 class="font-bold text-sm">${question.name}</h3>
+                    <p class="text-xs text-gray-600">${question.iconName}</p>
+                    <p class="text-xs">Points: ${question.points}</p>
+                    <p class="text-xs">Radius: ${question.locationRadius}m</p>
+                    <p class="text-xs">Location: ${question.lat.toFixed(
+                      4
+                    )}, ${question.lng.toFixed(4)}</p>
+                    ${
+                      isDraggable
+                        ? '<p class="text-xs text-blue-500">Drag to move</p>'
+                        : ""
+                    }
+                  </div>
+                `);
+            }
+          }
+        }
+      }
+    });
+
+    if (circlesUpdated) {
+      updateCircleSource();
+    }
+  }, [selectedQuestions, isMapLoaded, updateCircleSource]);
+
   // Handle map click
   const handleMapClick = useCallback(
     (e) => {
