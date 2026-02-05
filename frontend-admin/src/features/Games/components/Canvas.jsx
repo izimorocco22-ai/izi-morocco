@@ -6,6 +6,7 @@ import {
   setSelectedQuestion,
   setSelectedQuestions,
 } from "../../../slices/gameSlice";
+import { MEDIA_URL } from "../../../utils/config";
 import { getCleanImageUrl } from "../../../utils/common";
 
 // --- Configuration ---
