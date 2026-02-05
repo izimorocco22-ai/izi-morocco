@@ -126,35 +126,43 @@ export const cloudinaryUploadController = async (req, res) => {
 export const localUploadController = async (req, res) => {
   try {
     const { images = [], videos = [], audios = [] } = req.files || {};
-    const files = [...images, ...videos, ...audios];
-
-    if (!files.length) {
+    
+    if (!images.length && !videos.length && !audios.length) {
       throw buildErrorObject(httpStatus.BAD_REQUEST, 'No files uploaded');
     }
 
-    const uploadPromises = files.map(async (file) => {
-      const targetDir = path.join('public', 'uploads');
-      if (!fs.existsSync(targetDir)) {
-        fs.mkdirSync(targetDir, { recursive: true });
-      }
-      
-      // Use originalname to match S3 behavior, or generate unique name if needed
-      // To avoid conflicts, we might want to prepend timestamp or uuid, but for now let's stick to originalname
-      // as that seems to be what the system expects (based on S3 controller).
-      const fileName = file.originalname; 
-      const targetPath = path.join(targetDir, fileName);
+    const response = {};
 
-      fs.copyFileSync(file.path, targetPath);
-      fs.unlinkSync(file.path);
+    const processFiles = (fileList) => {
+      return fileList.map((file) => {
+        const targetDir = path.join('public', 'uploads');
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+        
+        const fileName = file.originalname; 
+        const targetPath = path.join(targetDir, fileName);
+  
+        fs.copyFileSync(file.path, targetPath);
+        fs.unlinkSync(file.path);
+  
+        return `uploads/${fileName}`;
+      });
+    };
 
-      return `uploads/${fileName}`;
-    });
+    if (images.length > 0) {
+      response.images = processFiles(images);
+    }
 
-    const uploadedFiles = await Promise.all(uploadPromises);
-    res.status(httpStatus.OK).json({
-      message: 'Files uploaded successfully',
-      files: uploadedFiles
-    });
+    if (videos.length > 0) {
+      response.videos = processFiles(videos);
+    }
+
+    if (audios.length > 0) {
+      response.audios = processFiles(audios);
+    }
+
+    res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, response));
   } catch (error) {
     handleError(res, error);
   }
