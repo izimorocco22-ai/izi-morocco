@@ -64,18 +64,29 @@ export const uploadController = async (req, res) => {
     }
 
     const uploadPromises = files.map(async (file) => {
-      const fileStream = fs.createReadStream(file.path);
+      let body;
+      if (file.buffer) {
+        body = file.buffer;
+      } else {
+        body = fs.createReadStream(file.path);
+      }
+
       const uploadParams = {
         Bucket: bucketName,
         Key: `uploads/${file.originalname}`,
-        Body: fileStream
+        Body: body
       };
 
       const command = new PutObjectCommand(uploadParams);
       await s3.send(command);
 
-      fs.unlinkSync(file.path);
+      if (file.path) {
+        fs.unlinkSync(file.path);
+      }
 
+      // Return full S3 URL if possible, or just key
+      // User asked for Cloudinary full URL, so let's stick to key here unless requested
+      // But typically we want a URL. Let's assume S3 logic is legacy/secondary or handled elsewhere.
       return `uploads/${file.originalname}`;
     });
     const uploadedFiles = await Promise.all(uploadPromises);
@@ -143,8 +154,16 @@ export const localUploadController = async (req, res) => {
         const fileName = file.originalname; 
         const targetPath = path.join(targetDir, fileName);
   
-        fs.copyFileSync(file.path, targetPath);
-        fs.unlinkSync(file.path);
+        // If memory storage is used, file.path won't exist.
+        // But localUploadController is only used if S3 and Cloudinary are disabled.
+        // In that case, upload.routes.js falls back to diskStorage.
+        // So file.path SHOULD exist.
+        if (file.path) {
+            fs.copyFileSync(file.path, targetPath);
+            fs.unlinkSync(file.path);
+        } else if (file.buffer) {
+            fs.writeFileSync(targetPath, file.buffer);
+        }
   
         return `uploads/${fileName}`;
       });
@@ -169,21 +188,34 @@ export const localUploadController = async (req, res) => {
 };
 
 const uploadFiles = async (files) => {
-  const uploadPromises = files.map((file) =>
-    cloudinary.uploader
-      .upload(file.path, {
-        folder: 'izi_morocco',
-        resource_type: 'auto'
-      })
-      .then((result) => {
-        fs.unlinkSync(file.path); 
-        return result.public_id;
-      })
-      .catch((err) => {
-        fs.unlinkSync(file.path);
-        throw err;
-      })
-  );
+  const uploadPromises = files.map((file) => {
+    return new Promise((resolve, reject) => {
+        const options = {
+            folder: 'izi_morocco',
+            resource_type: 'auto'
+        };
+
+        if (file.buffer) {
+            const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve(result.secure_url);
+            });
+            stream.end(file.buffer);
+        } else {
+            cloudinary.uploader.upload(file.path, options)
+                .then((result) => {
+                    fs.unlinkSync(file.path); 
+                    resolve(result.secure_url);
+                })
+                .catch((err) => {
+                    fs.unlinkSync(file.path);
+                    reject(err);
+                });
+        }
+    });
+  });
 
   const uploadedFiles = await Promise.all(uploadPromises);
   return uploadedFiles;

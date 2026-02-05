@@ -72,11 +72,14 @@ const HomeScreen = ({ navigation }) => {
     if (!thumb) return null;
     if (/^https?:\/\//.test(thumb)) return thumb;
 
+    // Handle Cloudinary paths directly
+    if (thumb.startsWith('izi_morocco/')) {
+       return `https://res.cloudinary.com/dxoipnmx0/image/upload/${thumb}`;
+    }
+
     if (VITE_MEDIA_URL) {
       const mediaUrl = VITE_MEDIA_URL.trim().replace(/\/$/, '');
       const path = thumb.startsWith('/') ? thumb.slice(1) : thumb;
-      // If thumb doesn't start with uploads/ and mediaUrl is Cloudinary, 
-      // we might need to be careful, but usually it comes as uploads/filename
       return `${mediaUrl}/${path}`;
     }
 

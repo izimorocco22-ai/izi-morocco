@@ -49,10 +49,11 @@ const MediaRenderer = ({ media }) => {
 
       {/* Render Images */}
       {media?.images?.map((img, index) => {
+        const uri = (img && img.startsWith('http')) ? img : CLOUDINARY_BASE_IMAGE + img;
         return (
           <Image
             key={`img-${index}`}
-            source={{ uri: CLOUDINARY_BASE_IMAGE + img }}
+            source={{ uri }}
             style={styles.image}
             resizeMode="contain"
           />
@@ -64,10 +65,11 @@ const MediaRenderer = ({ media }) => {
 
       {/* Render Cloudinary Videos */}
       {media?.videos?.map((vid, index) => {
+        const uri = (vid && vid.startsWith('http')) ? vid : CLOUDINARY_BASE_VIDEO + vid;
         return (
           <Video
             key={`vid-${index}`}
-            source={{ uri: CLOUDINARY_BASE_VIDEO + vid }}
+            source={{ uri }}
             style={styles.video}
             controls={true}
             resizeMode="contain"

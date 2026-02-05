@@ -59,7 +59,12 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
               </Text>
             </View>
           ) : (
-            list.map((item, index) => (
+            list.map((item, index) => {
+              const icon = item?.question?.icon;
+              const uri = (icon && icon.startsWith('http')) 
+                          ? icon 
+                          : `https://res.cloudinary.com/dxoipnmx0/image/upload/v1759483737/${icon}`;
+              return (
               <>
                 <TouchableOpacity
                   onPress={() => {
@@ -84,7 +89,7 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
                   <View>
                     <Image
                       source={{
-                        uri: `https://res.cloudinary.com/dxoipnmx0/image/upload/v1759483737/${item?.question?.icon}`,
+                        uri: uri,
                       }}
                       style={{
                         width: RFValue(60),
@@ -94,7 +99,7 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
                       }}
                       resizeMode="contain"
                       onError={() =>
-                        console.warn('Image failed to load:', icon)
+                        console.warn('Image failed to load:', uri)
                       }
                     />
                   </View>
@@ -116,7 +121,7 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
                   </View>
                 </TouchableOpacity>
               </>
-            ))
+            )})
           )}
         </ScrollView>
       </View>

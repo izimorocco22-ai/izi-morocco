@@ -26,8 +26,10 @@ if (useS3) {
   finalUploadController = uploadController.localUploadController;
 }
 
+const storage = (useCloudinary || useS3) ? multer.memoryStorage() : multer({ dest: 'upload/' }).storage;
+
 const upload = multer({
-  dest: 'upload/'
+  storage: storage
 });
 
 const mediaUpload = upload.fields([
