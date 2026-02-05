@@ -270,11 +270,23 @@ const TableRow = ({ data, columns, isCompressView, handleChecked }) => {
             case HeaderType.icon:
               // console.log("Rendering icon for", value, data);
               // console.log("Icon", data?.[value]);
+              let iconSrc = null;
+              const val = data?.[value];
+              if (val) {
+                if (val.startsWith('http')) {
+                  iconSrc = val;
+                } else if (val.startsWith('izi_morocco/')) {
+                  iconSrc = `https://res.cloudinary.com/dik1l8tqu/image/upload/${val}`;
+                } else {
+                  iconSrc = MEDIA_URL() + "/" + val;
+                }
+              }
+
               return (
                 <div key={value} className={cn("flex items-center", _class)}>
-                  {data?.[value] ? (
+                  {iconSrc ? (
                     <img
-                      src={MEDIA_URL() + "/" + data?.[value]}
+                      src={iconSrc}
                       alt="icon"
                       className="w-8 h-8 object-contain"
                     />

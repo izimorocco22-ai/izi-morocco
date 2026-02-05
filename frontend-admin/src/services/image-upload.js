@@ -61,7 +61,11 @@ export const replaceBase64WithUrls = (delta, uploadResults) => {
             newOps[result.originalIndex] = {
                 ...newOps[result.originalIndex],
                 insert: {
-                    image: result.url.startsWith('http') ? result.url : `${MEDIA_URL()}/${result.url}`, // Use the result.url // The uploaded image URL
+                    image: result.url.startsWith('http') 
+                        ? result.url 
+                        : (result.url.startsWith('izi_morocco/') 
+                            ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${result.url}` 
+                            : `${MEDIA_URL()}/${result.url}`), 
                 }
             };
         }

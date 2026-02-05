@@ -274,8 +274,16 @@ const Media = ({
                 return {
                     questionId: id,
                     videoUrls: response.videoUrls?.[0] || "",
-                    image: response.images?.map((image) => image.startsWith('http') ? image : `${MEDIA_URL()}/${image}`) || [],
-                    video: response.videos?.map((video) => video.startsWith('http') ? video : `${MEDIA_URL("video")}/${video}`) || [],
+                    image: response.images?.map((image) => {
+                        if (image.startsWith('http')) return image;
+                        if (image.startsWith('izi_morocco/')) return `https://res.cloudinary.com/dik1l8tqu/image/upload/${image}`;
+                        return `${MEDIA_URL()}/${image}`;
+                    }) || [],
+                    video: response.videos?.map((video) => {
+                        if (video.startsWith('http')) return video;
+                        if (video.startsWith('izi_morocco/')) return `https://res.cloudinary.com/dik1l8tqu/video/upload/${video}`;
+                        return `${MEDIA_URL("video")}/${video}`;
+                    }) || [],
                     audioUrls: normalizedAudios,
                 };
             });

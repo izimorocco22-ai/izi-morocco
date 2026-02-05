@@ -74,7 +74,7 @@ const HomeScreen = ({ navigation }) => {
 
     // Handle Cloudinary paths directly
     if (thumb.startsWith('izi_morocco/')) {
-       return `https://res.cloudinary.com/dxoipnmx0/image/upload/${thumb}`;
+       return `https://res.cloudinary.com/dik1l8tqu/image/upload/${thumb}`;
     }
 
     if (VITE_MEDIA_URL) {
@@ -83,6 +83,7 @@ const HomeScreen = ({ navigation }) => {
       return `${mediaUrl}/${path}`;
     }
 
+    // Default fallback - but be careful about prepending backend URL to something that might be a relative Cloudinary path
     const base = (API_URL || 'https://izi-morocco-1.onrender.com').replace(/\/$/, '');
     const path = thumb.startsWith('uploads/') ? thumb : `uploads/${thumb}`;
     return `${base}/public/${path}`;

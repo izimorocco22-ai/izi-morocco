@@ -5,8 +5,8 @@ import YoutubePlayer from "react-native-youtube-iframe";
 import Video from "react-native-video";
 import { RFValue } from "../../../utils/responsive";
 
-const CLOUDINARY_BASE_IMAGE = "https://res.cloudinary.com/dxoipnmx0/image/upload/v1759483737/";
-const CLOUDINARY_BASE_VIDEO = "https://res.cloudinary.com/dxoipnmx0/video/upload/v1759483737/";
+const CLOUDINARY_BASE_IMAGE = "https://res.cloudinary.com/dik1l8tqu/image/upload/v1759483737/";
+const CLOUDINARY_BASE_VIDEO = "https://res.cloudinary.com/dik1l8tqu/video/upload/v1759483737/";
 
 const MediaRenderer = ({ media }) => {
   if (!media) return null;

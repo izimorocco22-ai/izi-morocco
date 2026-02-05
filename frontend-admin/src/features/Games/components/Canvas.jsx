@@ -29,7 +29,12 @@ const colorWithOpacity = (color, opacity = 0.1) => {
 };
 
 const getIconUrl = (iconPath) => {
-  return iconPath ? `${MEDIA_BASE_URL}/${iconPath}` : null;
+  if (!iconPath) return null;
+  if (iconPath.startsWith('http')) return iconPath;
+  if (iconPath.startsWith('izi_morocco/')) {
+    return `https://res.cloudinary.com/dik1l8tqu/image/upload/${iconPath}`;
+  }
+  return `${MEDIA_BASE_URL}/${iconPath}`;
 };
 
 // --- Question Placer Canvas Component ---
@@ -43,9 +48,13 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
     useSelector((state) => state.games);
   
   const playgroundImage = playgroundData?.image
-    ? `${MEDIA_URL()}/${playgroundData.image}`
+    ? (playgroundData.image.startsWith('http') 
+        ? playgroundData.image 
+        : (playgroundData.image.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${playgroundData.image}` : `${MEDIA_URL()}/${playgroundData.image}`))
     : getGameInfobyIdApi?.data?.response?.playgroundImage
-    ? `${MEDIA_URL()}/${getGameInfobyIdApi.data.response?.playgroundImage}`
+    ? (getGameInfobyIdApi.data.response.playgroundImage.startsWith('http')
+        ? getGameInfobyIdApi.data.response.playgroundImage
+        : (getGameInfobyIdApi.data.response.playgroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${getGameInfobyIdApi.data.response.playgroundImage}` : `${MEDIA_URL()}/${getGameInfobyIdApi.data.response.playgroundImage}`))
     : CANVAS_IMAGE_URL;
 
   const playgroundName =

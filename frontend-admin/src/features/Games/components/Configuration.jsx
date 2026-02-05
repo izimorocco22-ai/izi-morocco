@@ -342,13 +342,21 @@ function Configuration({
       if (playgrounds && Array.isArray(playgrounds) && playgrounds.length > 0) {
         initialPlaygrounds = playgrounds.map((pg) => ({
           name: pg.name,
-          image: pg.image ? `${MEDIA_URL()}/${pg.image}` : null,
+          image: pg.image
+            ? (pg.image.startsWith('http') 
+                ? pg.image 
+                : (pg.image.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${pg.image}` : `${MEDIA_URL()}/${pg.image}`))
+            : null,
         }));
       } else if (playgroundImage && playgroundName) {
         initialPlaygrounds = [
           {
             name: playgroundName,
-            image: playgroundImage ? `${MEDIA_URL()}/${playgroundImage}` : null,
+            image: playgroundImage
+                ? (playgroundImage.startsWith('http')
+                    ? playgroundImage
+                    : (playgroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${playgroundImage}` : `${MEDIA_URL()}/${playgroundImage}`))
+                : null,
           },
         ];
       }
@@ -364,9 +372,15 @@ function Configuration({
         endTime: formatDate(endTime, "dd-MM-yyyy HH:mm:ss"),
         // normalize tags to an array of tag IDs for AntMultiSelector (which stores values)
         tags: tags?.map((t) => t._id) || [],
-        thumbnail: thumbnail ? `${MEDIA_URL()}/${thumbnail}` : null,
+        thumbnail: thumbnail
+            ? (thumbnail.startsWith('http')
+                ? thumbnail
+                : (thumbnail.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${thumbnail}` : `${MEDIA_URL()}/${thumbnail}`))
+            : null,
         backGroundImage: backGroundImage
-          ? `${MEDIA_URL()}/${backGroundImage}`
+          ? (backGroundImage.startsWith('http')
+                ? backGroundImage
+                : (backGroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${backGroundImage}` : `${MEDIA_URL()}/${backGroundImage}`))
           : null,
         playgrounds: initialPlaygrounds,
       };

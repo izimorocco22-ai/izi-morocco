@@ -41,7 +41,12 @@ const QuestionPlacerMap = () => {
 
   // Get full icon URL
   const getIconUrl = (iconPath) => {
-    return iconPath ? `${MEDIA_BASE_URL}/${iconPath}` : null;
+    if (!iconPath) return null;
+    if (iconPath.startsWith('http')) return iconPath;
+    if (iconPath.startsWith('izi_morocco/')) {
+      return `https://res.cloudinary.com/dik1l8tqu/image/upload/${iconPath}`;
+    }
+    return `${MEDIA_BASE_URL}/${iconPath}`;
   };
 
   // Convert hex color to rgba with opacity

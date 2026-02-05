@@ -232,7 +232,11 @@ const Settings = ({
                     iconName: response.iconName,
                     radiusColor: response.radiusColor,
                     locationRadius: response.locationRadius,
-                    questionLogo: response.icon ? `${MEDIA_URL()}/${response.icon}` : null,
+                    questionLogo: response.icon
+                        ? (response.icon.startsWith('http')
+                            ? response.icon
+                            : (response.icon.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${response.icon}` : `${MEDIA_URL()}/${response.icon}`))
+                        : null,
                     behaviorOption: response.behaviorOption || "remove_on_answer",
                 };
             });

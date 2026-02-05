@@ -63,7 +63,7 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
               const icon = item?.question?.icon;
               const uri = (icon && icon.startsWith('http')) 
                           ? icon 
-                          : `https://res.cloudinary.com/dxoipnmx0/image/upload/v1759483737/${icon}`;
+                          : `https://res.cloudinary.com/dik1l8tqu/image/upload/v1759483737/${icon}`;
               return (
               <>
                 <TouchableOpacity
