@@ -1,5 +1,6 @@
 // services/imageUploadService.js
 import { MEDIA_URL } from '../utils/config';
+import { getCleanImageUrl } from '../utils/common';
 import { extractImagesAsFiles } from '../utils/quill';
 import { callAPI } from './callApi'; // Your existing API utility
 
@@ -61,11 +62,7 @@ export const replaceBase64WithUrls = (delta, uploadResults) => {
             newOps[result.originalIndex] = {
                 ...newOps[result.originalIndex],
                 insert: {
-                    image: result.url.startsWith('http') 
-                        ? result.url 
-                        : (result.url.startsWith('izi_morocco/') 
-                            ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${result.url}` 
-                            : `${MEDIA_URL()}/${result.url}`), 
+                    image: getCleanImageUrl(result.url),
                 }
             };
         }

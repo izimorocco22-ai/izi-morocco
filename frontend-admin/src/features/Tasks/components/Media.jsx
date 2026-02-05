@@ -16,7 +16,7 @@ import { MEDIA_URL } from "../../../utils/config";
 import { extractFilename } from "../helper";
 import { useResetMultipleApiStates } from "../../../hooks/useResetMultipleApiStates";
 import MediaSkeleton from "./MediaSkeleton";
-import AudioManager from "./AudioManager";
+import { getCleanImageUrl, getCleanMediaUrl } from "../../../utils/common";
 
 const defaultValueForMedia = {
   image: [],
@@ -275,20 +275,12 @@ const Media = ({
                     questionId: id,
                     videoUrls: response.videoUrls?.[0] || "",
                     image: response.images?.map((image) => {
-                        let imgUrl = image;
-                        if (image.startsWith('http')) imgUrl = image;
-                        else if (image.startsWith('izi_morocco/')) imgUrl = `https://res.cloudinary.com/dik1l8tqu/image/upload/${image}`;
-                        else imgUrl = `${MEDIA_URL()}/${image}`;
-                        
+                        const imgUrl = getCleanImageUrl(image);
                         console.log(`Media Image URL for ${id}:`, imgUrl, 'Original:', image);
                         return imgUrl;
                     }) || [],
                     video: response.videos?.map((video) => {
-                        let vidUrl = video;
-                        if (video.startsWith('http')) vidUrl = video;
-                        else if (video.startsWith('izi_morocco/')) vidUrl = `https://res.cloudinary.com/dik1l8tqu/video/upload/${video}`;
-                        else vidUrl = `${MEDIA_URL("video")}/${video}`;
-                        
+                        const vidUrl = getCleanMediaUrl(video, 'video');
                         console.log(`Media Video URL for ${id}:`, vidUrl, 'Original:', video);
                         return vidUrl;
                     }) || [],

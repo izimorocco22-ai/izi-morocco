@@ -6,7 +6,7 @@ import {
   setSelectedQuestion,
   setSelectedQuestions,
 } from "../../../slices/gameSlice";
-import { MEDIA_URL } from "../../../utils/config";
+import { getCleanImageUrl } from "../../../utils/common";
 
 // --- Configuration ---
 const CANVAS_IMAGE_URL =
@@ -29,14 +29,7 @@ const colorWithOpacity = (color, opacity = 0.1) => {
 };
 
 const getIconUrl = (iconPath) => {
-  if (!iconPath) return null;
-  let finalUrl = null;
-  if (iconPath.startsWith('http')) finalUrl = iconPath;
-  else if (iconPath.startsWith('izi_morocco/')) {
-    finalUrl = `https://res.cloudinary.com/dik1l8tqu/image/upload/${iconPath}`;
-  } else {
-    finalUrl = `${MEDIA_BASE_URL}/${iconPath}`;
-  }
+  const finalUrl = getCleanImageUrl(iconPath);
   console.log(`Canvas Icon URL:`, finalUrl, 'Original:', iconPath);
   return finalUrl;
 };
@@ -52,13 +45,9 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
     useSelector((state) => state.games);
   
   const playgroundImage = playgroundData?.image
-    ? (playgroundData.image.startsWith('http') 
-        ? playgroundData.image 
-        : (playgroundData.image.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${playgroundData.image}` : `${MEDIA_URL()}/${playgroundData.image}`))
+    ? getCleanImageUrl(playgroundData.image)
     : getGameInfobyIdApi?.data?.response?.playgroundImage
-    ? (getGameInfobyIdApi.data.response.playgroundImage.startsWith('http')
-        ? getGameInfobyIdApi.data.response.playgroundImage
-        : (getGameInfobyIdApi.data.response.playgroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${getGameInfobyIdApi.data.response.playgroundImage}` : `${MEDIA_URL()}/${getGameInfobyIdApi.data.response.playgroundImage}`))
+    ? getCleanImageUrl(getGameInfobyIdApi.data.response.playgroundImage)
     : CANVAS_IMAGE_URL;
 
   // Debug log for Canvas Playground Image

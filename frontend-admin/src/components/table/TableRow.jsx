@@ -8,6 +8,7 @@ import Badge from "../Badge";
 import TooltipForTags from "../TooltipForTags";
 import Toggle from "../Toggle";
 import { MEDIA_URL } from "../../utils/config";
+import { getCleanImageUrl } from "../../utils/common";
 
 const TableRow = ({ data, columns, isCompressView, handleChecked }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -273,13 +274,7 @@ const TableRow = ({ data, columns, isCompressView, handleChecked }) => {
               let iconSrc = null;
               const val = data?.[value];
               if (val) {
-                if (val.startsWith('http')) {
-                  iconSrc = val;
-                } else if (val.startsWith('izi_morocco/')) {
-                  iconSrc = `https://res.cloudinary.com/dik1l8tqu/image/upload/${val}`;
-                } else {
-                  iconSrc = MEDIA_URL() + "/" + val;
-                }
+                iconSrc = getCleanImageUrl(val);
                 console.log(`TableRow Icon URL for ${value}:`, iconSrc, 'Original:', val);
               }
 

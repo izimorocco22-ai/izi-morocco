@@ -29,6 +29,7 @@ import { callAPI } from "../../../services/callApi";
 import { MEDIA_URL } from "../../../utils/config";
 import { formatDate } from "../../../utils/dateAndTime";
 import ConfigurationSkeleton from "./ConfigurationSkeleton";
+import { getCleanImageUrl } from "../../../utils/common";
 
 const radioButtonOptions = [
   {
@@ -341,11 +342,7 @@ function Configuration({
       let initialPlaygrounds = [];
       if (playgrounds && Array.isArray(playgrounds) && playgrounds.length > 0) {
         initialPlaygrounds = playgrounds.map((pg) => {
-            const pgUrl = pg.image
-            ? (pg.image.startsWith('http') 
-                ? pg.image 
-                : (pg.image.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${pg.image}` : `${MEDIA_URL()}/${pg.image}`))
-            : null;
+            const pgUrl = getCleanImageUrl(pg.image);
             if (pgUrl) console.log(`Configuration Playground Image:`, pgUrl, 'Original:', pg.image);
             return {
                 name: pg.name,
@@ -353,11 +350,7 @@ function Configuration({
             };
         });
       } else if (playgroundImage && playgroundName) {
-        const pgUrl = playgroundImage
-            ? (playgroundImage.startsWith('http')
-                ? playgroundImage
-                : (playgroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${playgroundImage}` : `${MEDIA_URL()}/${playgroundImage}`))
-            : null;
+        const pgUrl = getCleanImageUrl(playgroundImage);
         if (pgUrl) console.log(`Configuration Legacy Playground Image:`, pgUrl, 'Original:', playgroundImage);
         
         initialPlaygrounds = [
@@ -368,18 +361,10 @@ function Configuration({
         ];
       }
 
-      const thumbnailSrc = thumbnail
-        ? (thumbnail.startsWith('http')
-            ? thumbnail
-            : (thumbnail.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${thumbnail}` : `${MEDIA_URL()}/${thumbnail}`))
-        : null;
+      const thumbnailSrc = getCleanImageUrl(thumbnail);
       if (thumbnailSrc) console.log(`Configuration Thumbnail:`, thumbnailSrc, 'Original:', thumbnail);
 
-      const bgSrc = backGroundImage
-        ? (backGroundImage.startsWith('http')
-            ? backGroundImage
-            : (backGroundImage.startsWith('izi_morocco/') ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${backGroundImage}` : `${MEDIA_URL()}/${backGroundImage}`))
-        : null;
+      const bgSrc = getCleanImageUrl(backGroundImage);
       if (bgSrc) console.log(`Configuration Background:`, bgSrc, 'Original:', backGroundImage);
 
       const pureData = {

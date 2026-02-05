@@ -23,6 +23,7 @@ import { extractFilename } from "../helper";
 import { useResetMultipleApiStates } from "../../../hooks/useResetMultipleApiStates";
 import { useParams } from "react-router-dom";
 import SettingsSkeleton from "./SettingsSkeleton";
+import { getCleanImageUrl } from "../../../utils/common";
 
 const timeUnits = [
   { value: "minutes", label: "minutes" },
@@ -232,13 +233,7 @@ const Settings = ({
                     iconName: response.iconName,
                     radiusColor: response.radiusColor,
                     locationRadius: response.locationRadius,
-                    questionLogo: response.icon
-                        ? (response.icon.startsWith('http')
-                            ? response.icon
-                            : (response.icon.startsWith('izi_morocco/') 
-                                ? `https://res.cloudinary.com/dik1l8tqu/image/upload/${response.icon}` 
-                                : `${MEDIA_URL()}/${response.icon}`))
-                        : null,
+                    questionLogo: getCleanImageUrl(response.icon),
                     behaviorOption: response.behaviorOption || "remove_on_answer",
                 };
             });

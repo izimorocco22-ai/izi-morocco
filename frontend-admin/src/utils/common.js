@@ -1,6 +1,39 @@
+import { MEDIA_URL } from "./config";
+
 export const getNestedError = (obj, path) => {
   return path?.split(".")?.reduce((o, key) => (o ? o[key] : undefined), obj);
 };
+
+export const getCleanMediaUrl = (url, type = 'image') => {
+  if (!url) return null;
+  if (typeof url !== 'string') return url;
+
+  // Decode HTML entities (basic handling)
+  let cleanUrl = url.replace(/&#x2F;/g, "/");
+
+  // Check for nested Cloudinary URL
+  const cloudinaryMatch = cleanUrl.match(/(https:\/\/res\.cloudinary\.com\/.*)/);
+  if (cloudinaryMatch) {
+    return cloudinaryMatch[1];
+  }
+
+  // Check for izi_morocco prefix
+  if (cleanUrl.startsWith('izi_morocco/')) {
+    const resourceType = type === 'video' ? 'video' : 'image';
+    return `https://res.cloudinary.com/dik1l8tqu/${resourceType}/upload/${cleanUrl}`;
+  }
+
+  // Check if it's already a full URL
+  if (cleanUrl.startsWith('http')) {
+    return cleanUrl;
+  }
+
+  // Fallback to MEDIA_URL
+  return `${MEDIA_URL(type)}/${cleanUrl}`;
+};
+
+export const getCleanImageUrl = (url) => getCleanMediaUrl(url, 'image');
+
 
 export const formatDateToReadable = (
   dateString,

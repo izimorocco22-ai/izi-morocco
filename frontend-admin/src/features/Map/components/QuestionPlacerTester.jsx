@@ -3,6 +3,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { circle as turfCircle } from "@turf/turf";
 import { MEDIA_URL } from "../../../utils/config";
+import { getCleanImageUrl } from "../../../utils/common";
 import {
   setSelectedQuestion,
   setSelectedQuestions,
@@ -41,12 +42,9 @@ const QuestionPlacerMap = () => {
 
   // Get full icon URL
   const getIconUrl = (iconPath) => {
-    if (!iconPath) return null;
-    if (iconPath.startsWith('http')) return iconPath;
-    if (iconPath.startsWith('izi_morocco/')) {
-      return `https://res.cloudinary.com/dik1l8tqu/image/upload/${iconPath}`;
-    }
-    return `${MEDIA_BASE_URL}/${iconPath}`;
+    const finalUrl = getCleanImageUrl(iconPath);
+    console.log(`QuestionPlacer Map Icon URL:`, finalUrl, 'Original:', iconPath);
+    return finalUrl;
   };
 
   // Convert hex color to rgba with opacity
