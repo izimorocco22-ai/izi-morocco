@@ -274,8 +274,8 @@ const Media = ({
                 return {
                     questionId: id,
                     videoUrls: response.videoUrls?.[0] || "",
-                    image: response.images?.map((image) => `${MEDIA_URL()}/${image}`) || [],
-                    video: response.videos?.map((video) => `${MEDIA_URL("video")}/${video}`) || [],
+                    image: response.images?.map((image) => image.startsWith('http') ? image : `${MEDIA_URL()}/${image}`) || [],
+                    video: response.videos?.map((video) => video.startsWith('http') ? video : `${MEDIA_URL("video")}/${video}`) || [],
                     audioUrls: normalizedAudios,
                 };
             });
