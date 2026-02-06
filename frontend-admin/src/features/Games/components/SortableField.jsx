@@ -49,7 +49,7 @@ export default function SortableField({
 
   const handleRadiusChange = (val) => {
     const updatedQuestions = selectedQuestions.map((field) => {
-      if (field.index === index) {
+      if (field.id === id) {
         return {
           ...field,
           locationRadius: val,
