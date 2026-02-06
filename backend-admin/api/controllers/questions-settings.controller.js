@@ -35,6 +35,8 @@ export const mutateQuestionsSettings = async (req, res) => {
       }
     });
 
+    console.log('Mutate Question Settings:', { id, updateData, validatedData });
+
     await QuestionSettings.findOneAndUpdate(
       { questionId: id },
       updateData,

@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { useDispatch, useSelector } from "react-redux";
 import { useRef, useCallback } from "react";
+import toast from "react-hot-toast";
 import {
   setSelectedQuestionFromQuestions,
   setSelectedQuestions,
@@ -42,7 +43,15 @@ export default function SortableField({
   const debouncedUpdateSettings = useCallback((val) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      dispatch(createSettings({ questionId: id, data: { locationRadius: val } }));
+      dispatch(createSettings({ questionId: id, data: { locationRadius: val } }))
+        .unwrap()
+        .then(() => {
+             // console.log("Settings updated successfully");
+        })
+        .catch((err) => {
+          console.error("Failed to update settings:", err);
+          toast.error("Failed to update task settings");
+        });
     }, 1000);
   }, [dispatch, id]);
 
