@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import ApiService from '../utils/apiService';
 import { apiPaths } from '../utils/apiPaths';
+import { offlineManager } from '../utils/offlineManager';
 
 type GameState = {
   isLoading: boolean;
@@ -76,6 +77,17 @@ export const finishGame = createAsyncThunk(
       return res;
     } catch (err: any) {
       console.log({ err });
+
+      // If network error (no response) or explicitly offline, save locally
+      if (!err.response) {
+          const saved = await offlineManager.savePendingResult({
+              gameId, activationCode, playerId, status, questions, score
+          });
+          if (saved) {
+             return { message: 'Game result saved offline. It will be synced when you are online.', isOffline: true };
+          }
+      }
+
       if (err?.response?.data) {
         return rejectWithValue(err.response.data);
       }
@@ -96,6 +108,12 @@ export const gameLogin = createAsyncThunk(
         data: { activationCode: activeCode, gameId },
       });
       console.log({ res });
+      
+      // Save for offline use
+      if (res) {
+        await offlineManager.saveGame(gameId, res);
+      }
+
       return res;
     } catch (err: any) {
       // handle backend validation or auth errors

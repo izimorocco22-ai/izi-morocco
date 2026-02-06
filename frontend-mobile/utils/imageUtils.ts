@@ -3,6 +3,7 @@ import { API_URL, VITE_MEDIA_URL } from '@env';
 export const getCleanMediaUrl = (url: string | undefined | null, type: 'image' | 'video' = 'image') => {
   if (!url) return null;
   if (typeof url !== 'string') return url;
+  if (url.startsWith('file://')) return url;
 
   // Decode HTML entities (basic handling)
   let cleanUrl = url.replace(/&#x2F;/g, "/");

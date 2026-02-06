@@ -11,6 +11,7 @@ import ScreenWrapper from '../../components/ScreenWrapper';
 import { useDispatch } from 'react-redux';
 import { gameLogin } from '../../store/gameSlice';
 import { ToastAndroid } from 'react-native';
+import { offlineManager } from '../../utils/offlineManager';
 
 const { height } = Dimensions.get('window');
 
@@ -39,6 +40,24 @@ export default function GameLogin({ navigation, route }) {
         gameId,
       });
     } catch (error) {
+      // Check offline capability
+      try {
+        const offlineGame = await offlineManager.loadGame(gameId);
+        if (offlineGame) {
+           ToastAndroid.show('Playing in Offline Mode', ToastAndroid.LONG);
+           navigation.navigate('Map', {
+             questions: offlineGame?.game?.questions || [],
+             game: offlineGame?.game,
+             activeCode,
+             gameId,
+           });
+           setLoading(false);
+           return;
+        }
+      } catch (e) {
+        console.log('Offline load failed', e);
+      }
+
       // Try to read backend message
       const errorMessage = error?.message || 'Login failed. Please try again.';
       console.log({ error });

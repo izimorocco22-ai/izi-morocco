@@ -56,7 +56,9 @@ const QuestionModal = ({
         return onComplete(); // finish → start background
       }
 
-      const fullUrl = `https://res.cloudinary.com/dxoipnmx0/video/upload/v1759483737/${current.url}`;
+      const fullUrl = (current.url && (current.url.startsWith('http') || current.url.startsWith('file:'))) 
+        ? current.url 
+        : `https://res.cloudinary.com/dxoipnmx0/video/upload/v1759483737/${current.url}`;
 
       const sound = new Sound(fullUrl, null, error => {
         if (error) return playNext(); // skip invalid audio
@@ -80,7 +82,9 @@ const QuestionModal = ({
   const playBackgroundAudio = backgroundAudio => {
     if (!backgroundAudio) return;
 
-    const fullUrl = `https://res.cloudinary.com/dxoipnmx0/video/upload/v1759483737/${backgroundAudio.url}`;
+    const fullUrl = (backgroundAudio.url && (backgroundAudio.url.startsWith('http') || backgroundAudio.url.startsWith('file:'))) 
+      ? backgroundAudio.url 
+      : `https://res.cloudinary.com/dxoipnmx0/video/upload/v1759483737/${backgroundAudio.url}`;
 
     const sound = new Sound(fullUrl, null, error => {
       if (error) return;
@@ -140,6 +144,7 @@ const QuestionModal = ({
           <View style={styles.whiteBox}>
             {questionData && questionData?.answerType === 'puzzle' ? (
               <View style={styles.webviewContainer}>
+                 {/* Puzzles rely on external WebView and may not work offline */}
                 <WebView
                   source={{
                     uri: 'https://izimorocco-jeux.online/Puzzle-mots-croises.html',

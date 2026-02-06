@@ -24,6 +24,9 @@ import LottieView from 'lottie-react-native';
 import { ConvertGameTime } from '../Map/utils/gameTimer';
 import { API_URL, VITE_MEDIA_URL } from '@env';
 import { getCleanImageUrl } from '../../utils/imageUtils';
+import ApiService from '../../utils/apiService';
+import { apiPaths } from '../../utils/apiPaths';
+import { offlineManager } from '../../utils/offlineManager';
 
 const HomeScreen = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -39,19 +42,69 @@ const HomeScreen = ({ navigation }) => {
   );
 
   const fetchGames = async (newPage = 1) => {
-    const res = await dispatch(getGame({ page: newPage, limit: 10 })).unwrap();
-    const newGames = res?.data?.docs || [];
+    try {
+      const res = await dispatch(getGame({ page: newPage, limit: 10 })).unwrap();
+      const newGames = res?.data?.docs || [];
 
-    if (newPage === 1) {
-      setGamesList(newGames);
-    } else {
-      setGamesList((prev: any) => [...prev, ...newGames]);
+      if (newPage === 1) {
+        setGamesList(newGames);
+        // Save the first page of games for offline display
+        await offlineManager.saveGamesList(newGames);
+      } else {
+        setGamesList((prev: any) => [...prev, ...newGames]);
+      }
+      setHasMore(res?.data?.hasNextPage);
+    } catch (error) {
+      console.log('Error fetching games, trying offline load:', error);
+      // If network fails and it's the first page, try to load from offline storage
+      if (newPage === 1) {
+        const offlineGames = await offlineManager.loadGamesList();
+        if (offlineGames && offlineGames.length > 0) {
+          setGamesList(offlineGames);
+          // Assuming we can't paginate offline easily or just show what we have
+          setHasMore(false); 
+        }
+      }
     }
-    setHasMore(res?.data?.hasNextPage);
   };
 
   useEffect(() => {
     fetchGames();
+    
+    // Sync offline results
+    const syncResults = async () => {
+      const pending = await offlineManager.getPendingResults();
+      if (pending.length > 0) {
+        console.log('Syncing pending results...', pending.length);
+        const syncedIds: string[] = [];
+        
+        for (const result of pending) {
+          try {
+             await ApiService({
+                method: 'PUT',
+                endpoint: apiPaths.getGame,
+                data: { 
+                    gameId: result.gameId, 
+                    activationCode: result.activationCode, 
+                    playerId: result.playerId, 
+                    status: result.status, 
+                    questions: result.questions, 
+                    score: result.score 
+                },
+             });
+             syncedIds.push(result.id);
+          } catch (e) {
+             console.log('Sync failed for', result.id);
+          }
+        }
+        
+        if (syncedIds.length > 0) {
+           await offlineManager.removePendingResults(syncedIds);
+           console.log('Synced results removed.');
+        }
+      }
+    };
+    syncResults();
   }, []);
 
   const handleLoadMore = () => {
