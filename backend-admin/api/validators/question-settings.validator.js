@@ -34,24 +34,14 @@ export const mutateQuestionSettingsValidator = [
     .escape(),
 
   check('radiusColor')
-    .exists()
-    .withMessage('Radius color is required')
-    .bail()
-    .notEmpty()
-    .withMessage('Radius color cannot be empty')
-    .bail()
+    .optional({ nullable: true })
     .isString()
     .withMessage('Radius color must be a string')
     .trim()
     .escape(),
 
   check('locationRadius')
-    .exists()
-    .withMessage('Location radius is required')
-    .bail()
-    .notEmpty()
-    .withMessage('Location radius cannot be empty')
-    .bail()
+    .optional({ nullable: true })
     .isInt({ min: 0 })
     .withMessage('Location radius must be a non-negative number'),
 
