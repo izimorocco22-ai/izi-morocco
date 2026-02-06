@@ -45,8 +45,16 @@ export default function CreateUpdateGame() {
   const getQuestionsData = useMemo(() => {
     return (
       data?.response?.questions?.map((q) => {
-        const { _id, questionName, points, tags, icon, iconName, radiusColor } =
-          q.question;
+        const {
+          _id,
+          questionName,
+          points,
+          tags,
+          icon,
+          iconName,
+          radiusColor,
+          locationRadius,
+        } = q.question;
         return {
           id: _id,
           name: questionName,
@@ -55,7 +63,7 @@ export default function CreateUpdateGame() {
           index: q.order,
           icon: icon,
           iconName: iconName,
-          locationRadius: q.radius,
+          locationRadius: locationRadius ?? q.radius,
           radiusColor: radiusColor,
           isSelected: false,
           isPlaced: q.isPlaced || false,
