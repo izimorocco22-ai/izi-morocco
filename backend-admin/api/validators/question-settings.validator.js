@@ -62,9 +62,7 @@ export const mutateQuestionSettingsValidator = [
     .trim(),
 
   check('behaviorOption')
-    .exists()
-    .withMessage('Behavior option is required')
-    .bail()
+    .optional({ nullable: true })
     .isIn(['remove_on_answer', 'keep_until_correct', 'keep_until_end'])
     .withMessage('Invalid behavior option'),
 

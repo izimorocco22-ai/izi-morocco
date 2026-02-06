@@ -7,18 +7,8 @@ import { matchedData } from 'express-validator';
 import QuestionSettings from '../models/questions-settings.schema.js';
 export const mutateQuestionsSettings = async (req, res) => {
   try {
-    const {
-      id,
-      icon = null,
-      iconName = null,
-      timeLimit,
-      timeUnit,
-      radiusColor,
-      locationRadius,
-      behaviorOption,
-      // durations ,
-      language
-    } = matchedData(req);
+    const validatedData = matchedData(req);
+    const { id } = validatedData;
 
     const questionExist = await Questions.findById(id);
 
@@ -26,20 +16,24 @@ export const mutateQuestionsSettings = async (req, res) => {
       throw buildErrorObject(httpStatus.NOT_FOUND, 'Question not found');
     }
 
-    const updateData = {
-      icon,
-      iconName,
-      timeLimit,
-      timeUnit,
-      radiusColor,
-      locationRadius,
-      behaviorOption,
-      // durations: {
-      //   deactivateOnIncorrectSeconds: durations?.deactivateOnIncorrectSeconds || null,
-      //   deactivateAfterClosingSeconds: durations?.deactivateAfterClosingSeconds || null
-      // } ,
-      language
-    };
+    // Filter out undefined values from updateData
+    const updateData = {};
+    const allowedFields = [
+      'icon',
+      'iconName',
+      'timeLimit',
+      'timeUnit',
+      'radiusColor',
+      'locationRadius',
+      'behaviorOption',
+      'language'
+    ];
+
+    allowedFields.forEach(field => {
+      if (validatedData[field] !== undefined) {
+        updateData[field] = validatedData[field];
+      }
+    });
 
     await QuestionSettings.findOneAndUpdate(
       { questionId: id },

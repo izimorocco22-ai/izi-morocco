@@ -1,9 +1,11 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { useDispatch, useSelector } from "react-redux";
+import { useRef, useCallback } from "react";
 import {
   setSelectedQuestionFromQuestions,
   setSelectedQuestions,
 } from "../../../slices/gameSlice";
+import { createSettings } from "../../../slices/questionSlice";
 import TooltipWrapper from "../../../components/TooltipWrapper";
 import CrossIcon from "../../../components/svgs/CrossIcon";
 import TooltipForTags from "../../../components/TooltipForTags";
@@ -30,11 +32,19 @@ export default function SortableField({
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id });
   const dispatch = useDispatch();
+  const debounceRef = useRef(null);
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  const debouncedUpdateSettings = useCallback((val) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      dispatch(createSettings({ questionId: id, data: { locationRadius: val } }));
+    }, 1000);
+  }, [dispatch, id]);
 
   const handleCheckboxChange = (index = -1) => {
     const updatedQuestions = selectedQuestions.map((field) => {
@@ -58,6 +68,7 @@ export default function SortableField({
       return field;
     });
     dispatch(setSelectedQuestions(updatedQuestions));
+    debouncedUpdateSettings(val);
   };
 
   return (
