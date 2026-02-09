@@ -72,6 +72,18 @@ const answerTypes = [
     value: "puzzle",
     label: "Puzzle",
   },
+  {
+    value: "take_photo",
+    label: "Take a photo",
+  },
+  {
+    value: "record_video",
+    label: "Record a video",
+  },
+  {
+    value: "augmented_photo",
+    label: "Capture an augmented photo",
+  },
 ];
 
 const SingleQuestionForm = ({
@@ -121,7 +133,7 @@ const SingleQuestionForm = ({
   };
 
   useEffect(() => {
-    if (answerType === "no_answer" || answerType === "puzzle") {
+    if (["no_answer", "puzzle", "take_photo", "record_video", "augmented_photo"].includes(answerType)) {
       setValue(`questions.${index}.correctAnswers`, []);
     } else if (answerType === "mcq" || answerType === "multiple") {
       setValue(

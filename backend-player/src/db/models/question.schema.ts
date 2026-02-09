@@ -17,7 +17,7 @@ const QuestionSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    enum: ["text", "mcq", "number", "multiple", "no_answer", "puzzle"],
+    enum: ["text", "mcq", "number", "multiple", "no_answer", "puzzle", "take_photo", "record_video", "augmented_photo"],
     default: "text"
   },
 
@@ -31,7 +31,7 @@ const QuestionSchema = new mongoose.Schema({
   correctAnswers: { 
     type: [mongoose.Schema.Types.Mixed], 
     required: function() {
-      return this.answerType !== 'no_answer' && this.answerType !== 'puzzle';
+      return !['no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'].includes(this.answerType);
     },
     default: []
   },
@@ -74,7 +74,7 @@ const QuestionSchema = new mongoose.Schema({
 
 
 QuestionSchema.pre('save', function(next) {
-  if (this.answerType === 'no_answer') {
+  if (['no_answer', 'take_photo', 'record_video', 'augmented_photo'].includes(this.answerType)) {
     this.correctAnswers = [];
     this.puzzle = undefined;
   }

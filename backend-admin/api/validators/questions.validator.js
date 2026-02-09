@@ -94,9 +94,9 @@ export const createQuestionValidator = [
   check('answerType')
     .exists()
     .withMessage('Answer Type is required')
-    .isIn(['text', 'mcq', 'number', 'multiple', 'no_answer', 'puzzle'])
+    .isIn(['text', 'mcq', 'number', 'multiple', 'no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'])
     .withMessage(
-      'Answer Type must be text, mcq, multiple, number, no_answer, or puzzle'
+      'Answer Type must be text, mcq, multiple, number, no_answer, puzzle, take_photo, record_video, or augmented_photo'
     ),
 
   check('points')
@@ -129,29 +129,29 @@ export const createQuestionValidator = [
 
   check('options')
     .if((value, { req }) =>
-      ['text', 'number', 'no_answer', 'puzzle'].includes(req.body.answerType)
+      ['text', 'number', 'no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'].includes(req.body.answerType)
     )
     .not()
     .exists()
     .withMessage(
-      'Options should not be provided for text/number/no_answer/puzzle answer types'
+      'Options should not be provided for text/number/no_answer/puzzle/media answer types'
     ),
 
   check('correctAnswers')
-    .if((value, { req }) => req.body.answerType === 'no_answer')
+    .if((value, { req }) => ['no_answer', 'take_photo', 'record_video', 'augmented_photo'].includes(req.body.answerType))
     .optional()
     .isArray()
-    .withMessage('correctAnswers must be an array for no_answer type')
+    .withMessage('correctAnswers must be an array for no_answer/media type')
     .custom((value) => {
       if (value && value.length > 0) {
-        throw new Error('correctAnswers must be empty for no_answer type');
+        throw new Error('correctAnswers must be empty for no_answer/media type');
       }
       return true;
     }),
 
   check('correctAnswers')
     .if(
-      (value, { req }) => !['no_answer', 'puzzle'].includes(req.body.answerType)
+      (value, { req }) => !['no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'].includes(req.body.answerType)
     )
     .exists()
     .withMessage('correctAnswers are required')
@@ -225,9 +225,9 @@ export const editQuestionValidator = [
 
   check('answerType')
     .optional()
-    .isIn(['text', 'mcq', 'number', 'multiple', 'no_answer', 'puzzle'])
+    .isIn(['text', 'mcq', 'number', 'multiple', 'no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'])
     .withMessage(
-      'Answer Type must be text, mcq, multiple, number, no_answer, or puzzle'
+      'Answer Type must be text, mcq, multiple, number, no_answer, puzzle, take_photo, record_video, or augmented_photo'
     ),
 
   check('points')
@@ -282,7 +282,7 @@ export const getQuestionsValidator = [
 
   query('answerType')
     .optional()
-    .isIn(['text', 'mcq', 'number', 'multiple', 'no_answer', 'puzzle'])
+    .isIn(['text', 'mcq', 'number', 'multiple', 'no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'])
     .withMessage('Invalid answer type'),
 
   query('tags')
