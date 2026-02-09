@@ -79,18 +79,6 @@ const QuestionRenderer = ({
         />
       )}
 
-      {/* For PUZZLE (URL Input) */}
-      {question.answerType === 'puzzle' && (
-        <CustomInput
-          error={null}
-          placeholder="Enter the solution URL"
-          value={inputAnswer}
-          onChangeText={setInputAnswer}
-          autoCapitalize="none"
-          keyboardType="url"
-        />
-      )}
-
       {/* For NO ANSWER */}
       {/* {question.answerType === 'no_answer' && (
         <Text style={[commonStyles.pText]}>

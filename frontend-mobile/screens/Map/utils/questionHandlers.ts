@@ -27,34 +27,6 @@ export const handleSubmitAnswer = (
     isCorrect =
       stateRef.current.inputAnswer.trim().toLowerCase() ===
       correctAnswers[0]?.trim().toLowerCase();
-  } else if (answerType === 'puzzle') {
-    const inputStr = stateRef.current.inputAnswer.trim();
-    const config = currentQuestion.puzzleConfig || { matchType: 'exact' };
-
-    const parseUrl = (url: string) => {
-      let clean = url.replace(/^(?:f|ht)tps?:\/\//i, '');
-      clean = clean.split('?')[0].split('#')[0];
-      const parts = clean.split('/');
-      const host = parts[0].toLowerCase();
-      const rawPath = '/' + parts.slice(1).join('/');
-      const path = rawPath.endsWith('/') && rawPath.length > 1 ? rawPath.slice(0, -1) : rawPath;
-      return { host, path, full: host + path };
-    };
-
-    const inputParsed = parseUrl(inputStr);
-
-    isCorrect = correctAnswers.some((ans: string) => {
-      const correctParsed = parseUrl(ans.trim());
-      
-      if (config.matchType === 'domain') {
-        return inputParsed.host === correctParsed.host;
-      }
-      if (config.matchType === 'path') {
-        return inputParsed.path === correctParsed.path;
-      }
-      // exact
-      return inputParsed.full === correctParsed.full;
-    });
   } else isCorrect = true;
   console.log({ submit: stateRef.current });
   console.log({ questionId: currentQuestion._id });
