@@ -23,7 +23,7 @@ export const handleSubmitAnswer = (
   } else if (answerType === 'number') {
     isCorrect =
       stateRef.current.inputAnswer.trim() === correctAnswers[0]?.trim();
-  } else if (answerType === 'text') {
+  } else if (answerType === 'text' || answerType === 'code_box') {
     isCorrect =
       stateRef.current.inputAnswer.trim().toLowerCase() ===
       correctAnswers[0]?.trim().toLowerCase();

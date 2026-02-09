@@ -45,6 +45,10 @@ const defaultValueForQuestion = {
   tags: [],
   points: 0,
   puzzle: "",
+  codeBoxConfig: {
+    length: 4,
+    mode: "alphanumeric"
+  }
 };
 
 const answerTypes = [
@@ -55,6 +59,10 @@ const answerTypes = [
   {
     value: "text",
     label: "Text",
+  },
+  {
+    value: "code_box",
+    label: "Code Box",
   },
   {
     value: "mcq",
@@ -84,6 +92,12 @@ const answerTypes = [
     value: "augmented_photo",
     label: "Capture an augmented photo",
   },
+];
+
+const codeBoxModes = [
+  { value: 'numeric', label: 'Numeric' },
+  { value: 'alpha', label: 'Letters Only' },
+  { value: 'alphanumeric', label: 'Alphanumeric' },
 ];
 
 const SingleQuestionForm = ({
@@ -196,6 +210,32 @@ const SingleQuestionForm = ({
           errors={errors}
           required
         />
+        {answerType === "code_box" && (
+          <div className="flex gap-4">
+             <div className="w-1/2">
+                <CommonInput
+                  labelName="Code Box Length"
+                  id={`questions.${index}.codeBoxConfig.length`}
+                  name={`questions.${index}.codeBoxConfig.length`}
+                  register={register}
+                  type="number"
+                  errors={errors}
+                  required
+                />
+             </div>
+             <div className="w-1/2">
+                <AntSearchableSelector
+                  id={`questions.${index}.codeBoxConfig.mode`}
+                  name={`questions.${index}.codeBoxConfig.mode`}
+                  labelName="Input Mode"
+                  options={codeBoxModes}
+                  control={control}
+                  errors={errors}
+                  required
+                />
+             </div>
+          </div>
+        )}
         {(answerType === "mcq" || answerType === "multiple") && (
           <div className="border border-accent/25 rounded-lg p-4 flex flex-col gap-1">
             {errors?.questions?.[index]?.options?.message && (
@@ -261,7 +301,7 @@ const SingleQuestionForm = ({
             ))}
           </div>
         )}
-        {["number", "text"].includes(answerType) && (
+        {["number", "text", "code_box"].includes(answerType) && (
           <CommonInput
             labelName="Correct Answer"
             id={`questions.${index}.correctAnswers`}
@@ -414,6 +454,7 @@ const CreateUpdateQuestion = ({
             points,
             options,
             puzzle,
+            codeBoxConfig,
         } = qData;
         
         const pureData = { answerType, tags, points };
@@ -422,6 +463,12 @@ const CreateUpdateQuestion = ({
         }
         if (answerType === "puzzle") {
             pureData.puzzle = puzzle;
+        }
+        if (answerType === "code_box") {
+            pureData.codeBoxConfig = {
+                length: Number(codeBoxConfig?.length) || 4,
+                mode: codeBoxConfig?.mode || 'alphanumeric'
+            };
         }
         
         if (Array.isArray(correctAnswers)) {
@@ -574,6 +621,7 @@ const CreateUpdateQuestion = ({
             })),
             // response.puzzle may be populated object or ObjectId — prefer _id if present
             puzzle: response?.puzzle?._id || response?.puzzle || "",
+            codeBoxConfig: response?.codeBoxConfig || { length: 4, mode: 'alphanumeric' },
         }]
       });
     } else if (getQuestionByIdApi.status === apiResponseType.failed) {

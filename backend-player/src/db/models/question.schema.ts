@@ -17,8 +17,17 @@ const QuestionSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true,
-    enum: ["text", "mcq", "number", "multiple", "no_answer", "puzzle", "take_photo", "record_video", "augmented_photo"],
+    enum: ["text", "mcq", "number", "multiple", "no_answer", "puzzle", "take_photo", "record_video", "augmented_photo", "code_box"],
     default: "text"
+  },
+
+  codeBoxConfig: {
+    length: { type: Number, default: 4 },
+    mode: { 
+      type: String, 
+      enum: ['numeric', 'alpha', 'alphanumeric'], 
+      default: 'alphanumeric' 
+    }
   },
 
   options: [

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import CustomInput from '../../../components/CustomInput';
+import CodeBoxInput from '../../../components/CodeBoxInput';
 import colors from '../../../styles/colors';
 import commonStyles from '../../../styles/commonStyles';
 
@@ -65,6 +66,16 @@ const QuestionRenderer = ({
           keyboardType="numeric"
           value={inputAnswer}
           onChangeText={setInputAnswer}
+        />
+      )}
+
+      {/* For CODE BOX */}
+      {question.answerType === 'code_box' && (
+        <CodeBoxInput
+          length={question.codeBoxConfig?.length || 4}
+          mode={question.codeBoxConfig?.mode || 'alphanumeric'}
+          value={inputAnswer}
+          onChange={setInputAnswer}
         />
       )}
 
