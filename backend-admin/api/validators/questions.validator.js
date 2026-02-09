@@ -33,7 +33,7 @@ const validateCorrectAnswersUniqueness = (answers) => {
 const validateCorrectAnswersMatchOptions = (answers, { req }) => {
   const answerType = req.body.answerType;
 
-  if (answerType === 'text' || answerType === 'number' || answerType === 'code_box') {
+  if (answerType === 'text' || answerType === 'number' || answerType === 'code_box' || answerType === 'puzzle') {
     return true;
   }
 
@@ -129,12 +129,12 @@ export const createQuestionValidator = [
 
   check('options')
     .if((value, { req }) =>
-      ['text', 'number', 'no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo', 'code_box'].includes(req.body.answerType)
+      ['text', 'number', 'no_answer', 'take_photo', 'record_video', 'augmented_photo', 'code_box'].includes(req.body.answerType)
     )
     .not()
     .exists()
     .withMessage(
-      'Options should not be provided for text/number/no_answer/puzzle/media/code_box answer types'
+      'Options should not be provided for text/number/no_answer/media/code_box answer types'
     ),
 
   check('correctAnswers')
@@ -151,7 +151,7 @@ export const createQuestionValidator = [
 
   check('correctAnswers')
     .if(
-      (value, { req }) => !['no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'].includes(req.body.answerType)
+      (value, { req }) => !['no_answer', 'take_photo', 'record_video', 'augmented_photo'].includes(req.body.answerType)
     )
     .exists()
     .withMessage('correctAnswers are required')
@@ -180,6 +180,19 @@ export const createQuestionValidator = [
       }
       if (!value.mode || !['numeric', 'alpha', 'alphanumeric'].includes(value.mode)) {
         throw new Error('Code Box mode must be numeric, alpha, or alphanumeric');
+      }
+      return true;
+    }),
+
+  check('puzzleConfig')
+    .if((value, { req }) => req.body.answerType === 'puzzle')
+    .optional()
+    .custom((value) => {
+      if (value && (typeof value !== 'object' || value === null)) {
+        throw new Error('Puzzle configuration must be an object');
+      }
+      if (value && value.matchType && !['exact', 'domain', 'path'].includes(value.matchType)) {
+        throw new Error('Puzzle match type must be exact, domain, or path');
       }
       return true;
     }),

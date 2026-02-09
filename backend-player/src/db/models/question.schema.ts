@@ -30,6 +30,14 @@ const QuestionSchema = new mongoose.Schema({
     }
   },
 
+  puzzleConfig: {
+    matchType: { 
+      type: String, 
+      enum: ['exact', 'domain', 'path'], 
+      default: 'exact' 
+    }
+  },
+
   options: [
     {
       text: String,
@@ -40,7 +48,7 @@ const QuestionSchema = new mongoose.Schema({
   correctAnswers: { 
     type: [mongoose.Schema.Types.Mixed], 
     required: function() {
-      return !['no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'].includes(this.answerType);
+      return !['no_answer', 'take_photo', 'record_video', 'augmented_photo'].includes(this.answerType);
     },
     default: []
   },
@@ -86,10 +94,6 @@ QuestionSchema.pre('save', function(next) {
   if (['no_answer', 'take_photo', 'record_video', 'augmented_photo'].includes(this.answerType)) {
     this.correctAnswers = [];
     this.puzzle = undefined;
-  }
-  
-  if (this.answerType === 'puzzle') {
-    this.correctAnswers = [];
   }
   
   if (this.answerType !== 'puzzle') {

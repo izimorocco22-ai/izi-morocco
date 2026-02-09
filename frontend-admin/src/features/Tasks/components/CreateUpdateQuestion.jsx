@@ -48,6 +48,9 @@ const defaultValueForQuestion = {
   codeBoxConfig: {
     length: 4,
     mode: "alphanumeric"
+  },
+  puzzleConfig: {
+    matchType: "exact"
   }
 };
 
@@ -100,6 +103,12 @@ const codeBoxModes = [
   { value: 'alphanumeric', label: 'Alphanumeric' },
 ];
 
+const puzzleMatchTypes = [
+  { value: 'exact', label: 'Exact Match' },
+  { value: 'domain', label: 'Domain Only' },
+  { value: 'path', label: 'Path Only' },
+];
+
 const SingleQuestionForm = ({
   index,
   control,
@@ -147,7 +156,7 @@ const SingleQuestionForm = ({
   };
 
   useEffect(() => {
-    if (["no_answer", "puzzle", "take_photo", "record_video", "augmented_photo"].includes(answerType)) {
+    if (["no_answer", "take_photo", "record_video", "augmented_photo"].includes(answerType)) {
       setValue(`questions.${index}.correctAnswers`, []);
     } else if (answerType === "mcq" || answerType === "multiple") {
       setValue(
@@ -312,28 +321,50 @@ const SingleQuestionForm = ({
           />
         )}
         {answerType === "puzzle" && (
-          <div className="flex items-end gap-3">
-            <AntSearchableSelector
-              id={`questions.${index}.puzzle`}
-              name={`questions.${index}.puzzle`}
-              labelName="Select Puzzle"
-              options={puzzlesOptions}
-              control={control}
-              errors={errors}
-              required
-              message={
-                getPuzzlesApi?.status === "success"
-                  ? "No puzzles available"
-                  : "Loading puzzles..."
-              }
-            />
-            <Button
-              type="button"
-              onClick={() => setOpenPuzzleModal(true)}
-              className="h-10 min-w-max"
-            >
-              Add New Puzzles
-            </Button>
+          <div className="flex flex-col gap-4">
+             <div className="flex items-end gap-3">
+                <AntSearchableSelector
+                  id={`questions.${index}.puzzle`}
+                  name={`questions.${index}.puzzle`}
+                  labelName="Select Puzzle"
+                  options={puzzlesOptions}
+                  control={control}
+                  errors={errors}
+                  required
+                  message={
+                    getPuzzlesApi?.status === "success"
+                      ? "No puzzles available"
+                      : "Loading puzzles..."
+                  }
+                />
+                <Button
+                  type="button"
+                  onClick={() => setOpenPuzzleModal(true)}
+                  className="h-10 min-w-max"
+                >
+                  Add New Puzzles
+                </Button>
+             </div>
+             <div className="w-full">
+                <AntSearchableSelector
+                  id={`questions.${index}.puzzleConfig.matchType`}
+                  name={`questions.${index}.puzzleConfig.matchType`}
+                  labelName="URL Match Type"
+                  options={puzzleMatchTypes}
+                  control={control}
+                  errors={errors}
+                  required
+                />
+             </div>
+             <CommonInput
+                labelName="Correct URL (Answer)"
+                id={`questions.${index}.correctAnswers`}
+                name={`questions.${index}.correctAnswers`}
+                register={register}
+                errors={errors}
+                required
+                placeholder="Enter the correct URL"
+             />
           </div>
         )}
 
@@ -455,6 +486,7 @@ const CreateUpdateQuestion = ({
             options,
             puzzle,
             codeBoxConfig,
+            puzzleConfig,
         } = qData;
         
         const pureData = { answerType, tags, points };
@@ -463,6 +495,9 @@ const CreateUpdateQuestion = ({
         }
         if (answerType === "puzzle") {
             pureData.puzzle = puzzle;
+            pureData.puzzleConfig = {
+              matchType: puzzleConfig?.matchType || 'exact'
+            };
         }
         if (answerType === "code_box") {
             pureData.codeBoxConfig = {
@@ -622,6 +657,7 @@ const CreateUpdateQuestion = ({
             // response.puzzle may be populated object or ObjectId — prefer _id if present
             puzzle: response?.puzzle?._id || response?.puzzle || "",
             codeBoxConfig: response?.codeBoxConfig || { length: 4, mode: 'alphanumeric' },
+            puzzleConfig: response?.puzzleConfig || { matchType: 'exact' },
         }]
       });
     } else if (getQuestionByIdApi.status === apiResponseType.failed) {
