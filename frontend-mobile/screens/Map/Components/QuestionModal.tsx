@@ -36,7 +36,10 @@ const QuestionModal = ({
     questionData?.answerType === 'mcq' ||
     questionData?.answerType === 'multiple' ||
     questionData?.answerType === 'number' ||
-    questionData?.answerType === 'text';
+    questionData?.answerType === 'text' ||
+    questionData?.answerType === 'take_photo' ||
+    questionData?.answerType === 'augmented_photo' ||
+    questionData?.answerType === 'record_video';
 
   const buttonTitle = isSubmitType ? 'Submit' : 'Next';
 
@@ -142,88 +145,85 @@ const QuestionModal = ({
         <View style={styles.modalContainer}>
           {/* Scrollable Question Area */}
           <View style={styles.whiteBox}>
-            {questionData && questionData?.answerType === 'puzzle' ? (
-              <View style={styles.webviewContainer}>
-                 {/* Puzzles rely on external WebView and may not work offline */}
-                <WebView
-                  source={{
-                    uri: 'https://izimorocco-jeux.online/Puzzle-mots-croises.html',
-                  }}
-                  style={{ flex: 1 }}
-                  javaScriptEnabled
-                  domStorageEnabled
-                  startInLoadingState
-                  onError={syntheticEvent => {
-                    const { nativeEvent } = syntheticEvent;
-                    console.warn('WebView error: ', nativeEvent);
-                  }}
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={[
+                commonStyles.scrollContainer,
+                styles.scrollInner,
+              ]}
+              onContentSizeChange={(contentWidth, contentHeight) => {
+                // Detect if content is larger than visible area (approx)
+                if (contentHeight > 300) {
+                  setShowScrollArrow(true);
+                }
+              }}
+              onScroll={e => {
+                const { contentOffset, layoutMeasurement, contentSize } =
+                  e.nativeEvent;
+
+                const isBottom =
+                  layoutMeasurement.height + contentOffset.y >=
+                  contentSize.height - 20;
+
+                setIsAtBottom(isBottom);
+              }}
+              scrollEventThrottle={16}
+            >
+              {/* Question */}
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#deca88',
+                  borderRadius: RFValue(8),
+                  borderStyle: 'dashed',
+                  marginBottom: RFValue(10),
+                }}
+              >
+                <MediaRenderer media={questionData?.media} />
+
+                <QuillRenderer questionName={questionData?.question} />
+              </View>
+
+              {questionData && questionData?.answerType === 'puzzle' && (
+                <View style={[styles.webviewContainer, { height: RFValue(300), marginBottom: RFValue(10) }]}>
+                  <WebView
+                    source={{
+                      uri: 'https://izimorocco-jeux.online/Puzzle-mots-croises.html',
+                    }}
+                    style={{ flex: 1 }}
+                    javaScriptEnabled
+                    domStorageEnabled
+                    startInLoadingState
+                    onError={syntheticEvent => {
+                      const { nativeEvent } = syntheticEvent;
+                      console.warn('WebView error: ', nativeEvent);
+                    }}
+                  />
+                </View>
+              )}
+
+              <QuestionRenderer
+                question={questionData}
+                selectedOption={selectedOption}
+                setSelectedOption={setSelectedOption}
+                inputAnswer={inputAnswer}
+                setInputAnswer={setInputAnswer}
+              />
+            </ScrollView>
+            {showScrollArrow && !isAtBottom && (
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: RFValue(30),
+                  alignSelf: 'center',
+                  zIndex: 100,
+                }}
+              >
+                <Image
+                  source={require('../../../assets/images/icon/down-arrow.png')}
+                  style={{ width: 30, height: 30, opacity: 0.6 }}
                 />
               </View>
-            ) : (
-              <>
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={[
-                    commonStyles.scrollContainer,
-                    styles.scrollInner,
-                  ]}
-                  onContentSizeChange={(contentWidth, contentHeight) => {
-                    // Detect if content is larger than visible area (approx)
-                    if (contentHeight > 300) {
-                      setShowScrollArrow(true);
-                    }
-                  }}
-                  onScroll={e => {
-                    const { contentOffset, layoutMeasurement, contentSize } =
-                      e.nativeEvent;
-
-                    const isBottom =
-                      layoutMeasurement.height + contentOffset.y >=
-                      contentSize.height - 20;
-
-                    setIsAtBottom(isBottom);
-                  }}
-                  scrollEventThrottle={16}
-                >
-                  {/* Question */}
-                  <View
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#deca88',
-                      borderRadius: RFValue(8),
-                      borderStyle: 'dashed',
-                      marginBottom: RFValue(10),
-                    }}
-                  >
-                    <MediaRenderer media={questionData?.media} />
-
-                    <QuillRenderer questionName={questionData?.question} />
-                  </View>
-
-                  <QuestionRenderer
-                    question={questionData}
-                    selectedOption={selectedOption}
-                    setSelectedOption={setSelectedOption}
-                    inputAnswer={inputAnswer}
-                    setInputAnswer={setInputAnswer}
-                  />
-                </ScrollView>
-                {showScrollArrow && !isAtBottom && (
-                  <View
-                    style={{
-                      position: 'absolute',
-                      bottom: RFValue(30),
-                      alignSelf: 'center',
-                      zIndex: 100,
-                    }}
-                  >
-                    <Image
-                      source={require('../../../assets/images/icon/down-arrow.png')}
-                      style={{ width: 30, height: 30, opacity: 0.6 }}
-                    />
-                  </View>
-                )}
-              </>
             )}
           </View>
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import CustomInput from '../../../components/CustomInput';
 import CodeBoxInput from '../../../components/CodeBoxInput';
+import CaptureMedia from '../../../components/CaptureMedia';
 import colors from '../../../styles/colors';
 import commonStyles from '../../../styles/commonStyles';
 
@@ -69,11 +70,48 @@ const QuestionRenderer = ({
         />
       )}
 
+      {/* For PUZZLE INPUT */}
+      {question.answerType === 'puzzle' && (
+        <CustomInput
+          error={null}
+          placeholder="Enter the puzzle answer"
+          value={inputAnswer}
+          onChangeText={setInputAnswer}
+        />
+      )}
+
       {/* For CODE BOX */}
       {question.answerType === 'code_box' && (
         <CodeBoxInput
           length={question.codeBoxConfig?.length || 4}
           mode={question.codeBoxConfig?.mode || 'alphanumeric'}
+          value={inputAnswer}
+          onChange={setInputAnswer}
+        />
+      )}
+
+      {/* For PHOTO CAPTURE */}
+      {question.answerType === 'take_photo' && (
+        <CaptureMedia
+          type="photo"
+          value={inputAnswer}
+          onChange={setInputAnswer}
+        />
+      )}
+
+      {/* For AUGMENTED PHOTO */}
+      {question.answerType === 'augmented_photo' && (
+        <CaptureMedia
+          type="augmented_photo"
+          value={inputAnswer}
+          onChange={setInputAnswer}
+        />
+      )}
+
+      {/* For VIDEO RECORDING */}
+      {question.answerType === 'record_video' && (
+        <CaptureMedia
+          type="video"
           value={inputAnswer}
           onChange={setInputAnswer}
         />

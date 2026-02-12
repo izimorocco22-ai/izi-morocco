@@ -183,6 +183,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             points: t?.question?.points,
             comments: t?.comments,
             media: t?.media || null,
+            puzzleAnswerText: t?.question?.puzzleAnswerText,
           }));
 
           dispatch({ type: 'SET_QUESTION_QUEUE', payload: queuedQuestions });
@@ -238,6 +239,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           ...t,
           isFinished: true,
           isCorrect: isCorrect,
+          userAnswer: stateRef.current.inputAnswer,
         };
       }
       return t;
@@ -252,6 +254,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       order: q?.order,
       isFinished: q?.isFinished,
       isCorrect: q?.isCorrect,
+      userAnswer: q?.userAnswer,
       isDisplayed: q?.isFinished ? true : false,
       isShownOnPlayground: q?.isShownOnPlayground,
       points: q?.question?.points || 0,

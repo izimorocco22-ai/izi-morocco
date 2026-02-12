@@ -6,6 +6,7 @@
 <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
 
   <uses-permission android:name="android.permission.CAMERA" />
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
   <uses-permission android:name="android.permission.VIBRATE" />
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -24,8 +25,8 @@
       android:theme="@style/AppTheme"
       android:supportsRtl="true">
       <meta-data
-  android:name="sk.eyJ1IjoieWFzaDExMDIiLCJhIjoiY21meHVhaXcyMDhvYjJtczRiNXZlY2l6MSJ9.dBhQ4P9pjc_RRUk0nCs17Q"
-  android:value="pk.eyJ1IjoieWFzaDExMDIiLCJhIjoiY21meG14Y21tMGRmdzJpc2Y2dTJqZ3hpNiJ9.Q2iF5usYCFwILvwDNIZkjA" />
+  android:name="MAPBOX_ACCESS_TOKEN"
+  android:value="${MAPBOX_ACCESS_TOKEN}" />
       
       <activity
         android:name=".MainActivity"

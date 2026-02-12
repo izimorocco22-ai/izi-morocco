@@ -15,4 +15,5 @@ export const apiPaths = {
   getGame:"games",
   infoGame: "game-info",
   gameLogin: "game-login",
+  upload: "upload",
 };
