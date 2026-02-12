@@ -30,8 +30,10 @@ import {
   getSessionData,
   setDataInSessionStorage,
 } from "../../../utils/sessionStorage";
+import { useSearchParams } from "react-router-dom";
 
 const Tasks = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const goTo = useNavigateTo();
   const dispatch = useDispatch();
   const { getAllQuestionsApi, cloneQuestionApi } = useSelector(
@@ -102,24 +104,47 @@ const Tasks = () => {
   ]);
 
   useEffect(() => {
-    try {
-      const saved = getSessionData("tasks_filters");
-      if (saved) {
-        const parsed = JSON.parse(saved);
+    const initSearch = searchParams.get("search") || "";
+    const initTagsCSV = searchParams.get("tags") || "";
+    const initPage = Number(searchParams.get("page") || "1");
+    if (initSearch || initTagsCSV || initPage !== 1) {
+      setSearchTerm(initSearch);
+      setCurrentPage(initPage);
+      const ids = initTagsCSV ? initTagsCSV.split(",").filter(Boolean) : [];
+      const restoredTags = ids.map((id) => ({ _id: id, name: id }));
+      setSelectedTags(restoredTags);
+      return;
+    }
+    const saved = getSessionData("tasks_filters");
+    if (saved) {
+      const parsed = (() => {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return null;
+        }
+      })();
+      if (parsed) {
         setSearchTerm(parsed?.searchTerm || "");
         setCurrentPage(parsed?.currentPage || 1);
         const restoredTags =
           Array.isArray(parsed?.selectedTags) ? parsed.selectedTags : [];
         setSelectedTags(restoredTags);
       }
-    } catch (_e) {}
-  }, []);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const simplifiedTags = selectedTags.map((t) => ({
       _id: t?._id,
       name: t?.name,
     }));
+    const tagIds = simplifiedTags.map((t) => t._id).filter(Boolean).join(",");
+    const nextParams = {};
+    nextParams.page = String(currentPage || 1);
+    if (searchTerm) nextParams.search = searchTerm;
+    if (tagIds) nextParams.tags = tagIds;
+    setSearchParams(nextParams, { replace: true });
     setDataInSessionStorage(
       "tasks_filters",
       JSON.stringify({
@@ -128,7 +153,7 @@ const Tasks = () => {
         currentPage,
       })
     );
-  }, [searchTerm, selectedTags, currentPage]);
+  }, [searchTerm, selectedTags, currentPage, setSearchParams]);
 
   const columns = [
     { value: "questionName", name: "Task", _class: "col-span-2" },
