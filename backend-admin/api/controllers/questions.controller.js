@@ -201,20 +201,24 @@ export const editQuestion = async (req, res) => {
 export const getQuestions = async (req, res) => {
   try {
     const validatedData = matchedData(req);
+    // Use req.query directly for search and tags to avoid potential issues with matchedData
+    // in complex validator chains, while still using validated defaults.
+    const search = req.query.search || validatedData.search || '';
+    const tagAsString = req.query.tags || validatedData.tags || '';
     let {
       page = 1,
       limit = 10,
-      search = '',
-      answerType,
-      tags: tagAsString
+      answerType
     } = validatedData;
-    console.log('---', validatedData);
 
-    const tags = tagAsString
-      ? tagAsString.split(',').map((tag) => tag.trim())
+    console.log('--- Request Query:', req.query);
+    console.log('--- Validated Data:', validatedData);
+
+    const tags = tagAsString && typeof tagAsString === 'string'
+      ? tagAsString.split(',').map((tag) => tag.trim()).filter(Boolean)
       : [];
 
-    console.log({ tags });
+    console.log({ search, tags });
 
     page = Number(page) || 1;
     limit = Number(limit) || 10;

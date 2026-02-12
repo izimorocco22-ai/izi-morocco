@@ -259,7 +259,10 @@ const Tasks = () => {
     data: cloneQuestionApi.data,
     error: cloneQuestionApi.error,
     sideAction: () => {
-      dispatch(getAllQuestions());
+      const tagIds = selectedTags.map((tag) => tag._id).join(",");
+      dispatch(
+        getAllQuestions({ page: currentPage, searchTerm, tags: tagIds })
+      );
     },
   });
 
