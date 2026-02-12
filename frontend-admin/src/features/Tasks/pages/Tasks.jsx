@@ -31,6 +31,7 @@ import {
   setDataInSessionStorage,
 } from "../../../utils/sessionStorage";
 import { useSearchParams } from "react-router-dom";
+import { useRef } from "react";
 
 const Tasks = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -47,6 +48,7 @@ const Tasks = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [saveCooldown, triggerSaveCooldown] = useCooldown(2000);
+  const lastParamsRef = useRef("");
 
   const questions = (data?.response?.docs || []).map((q) => {
     return {
@@ -117,13 +119,12 @@ const Tasks = () => {
     }
     const saved = getSessionData("tasks_filters");
     if (saved) {
-      const parsed = (() => {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          return null;
-        }
-      })();
+      let parsed = null;
+      try {
+        parsed = JSON.parse(saved);
+      } catch {
+        parsed = null;
+      }
       if (parsed) {
         setSearchTerm(parsed?.searchTerm || "");
         setCurrentPage(parsed?.currentPage || 1);
@@ -132,7 +133,7 @@ const Tasks = () => {
         setSelectedTags(restoredTags);
       }
     }
-  }, [searchParams]);
+  }, []);
 
   useEffect(() => {
     const simplifiedTags = selectedTags.map((t) => ({
@@ -144,7 +145,11 @@ const Tasks = () => {
     nextParams.page = String(currentPage || 1);
     if (searchTerm) nextParams.search = searchTerm;
     if (tagIds) nextParams.tags = tagIds;
-    setSearchParams(nextParams, { replace: true });
+    const nextParamsStr = JSON.stringify(nextParams);
+    if (lastParamsRef.current !== nextParamsStr) {
+      setSearchParams(nextParams, { replace: true });
+      lastParamsRef.current = nextParamsStr;
+    }
     setDataInSessionStorage(
       "tasks_filters",
       JSON.stringify({
