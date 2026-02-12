@@ -26,6 +26,10 @@ import useApiResponseHandler from "../../../hooks/useApiResponseHandler";
 import useCooldown from "../../../hooks/useCooldown";
 import DisabledWrapper from "../../../components/DisabledWrapper";
 import { useResetMultipleApiStates } from "../../../hooks/useResetMultipleApiStates";
+import {
+  getSessionData,
+  setDataInSessionStorage,
+} from "../../../utils/sessionStorage";
 
 const Tasks = () => {
   const goTo = useNavigateTo();
@@ -96,6 +100,35 @@ const Tasks = () => {
   useResetMultipleApiStates([
     { action: resetApiStateFromQuestion, stateName: "cloneQuestionApi" },
   ]);
+
+  useEffect(() => {
+    try {
+      const saved = getSessionData("tasks_filters");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setSearchTerm(parsed?.searchTerm || "");
+        setCurrentPage(parsed?.currentPage || 1);
+        const restoredTags =
+          Array.isArray(parsed?.selectedTags) ? parsed.selectedTags : [];
+        setSelectedTags(restoredTags);
+      }
+    } catch (_e) {}
+  }, []);
+
+  useEffect(() => {
+    const simplifiedTags = selectedTags.map((t) => ({
+      _id: t?._id,
+      name: t?.name,
+    }));
+    setDataInSessionStorage(
+      "tasks_filters",
+      JSON.stringify({
+        searchTerm,
+        selectedTags: simplifiedTags,
+        currentPage,
+      })
+    );
+  }, [searchTerm, selectedTags, currentPage]);
 
   const columns = [
     { value: "questionName", name: "Task", _class: "col-span-2" },
