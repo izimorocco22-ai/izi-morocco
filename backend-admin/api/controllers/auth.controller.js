@@ -35,7 +35,7 @@ import UserGroupAssignment from '../models/user-group-assignment.schema.js'
  * 2. Check if the user already exists based on email.
  * 3. Assign the default role (user) to the new user.
  * 4. Create the user and save it in the database.
- * 5. Respond with success or error message.
+ * 5. Respond with success or error message. hh
  */
 export const signupController = async (req, res) => {
   try {
