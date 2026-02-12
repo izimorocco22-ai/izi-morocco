@@ -41,11 +41,58 @@ const Tasks = () => {
     (state) => state.question
   );
   const { data, isLoading } = getAllQuestionsApi;
-  const [currentPage, setCurrentPage] = useState(1);
+
+  // Initialize state synchronously from URL or SessionStorage
+  const [currentPage, setCurrentPage] = useState(() => {
+    const fromUrl = searchParams.get("page");
+    if (fromUrl) return Number(fromUrl) || 1;
+    const saved = getSessionData("tasks_filters");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed?.currentPage || 1;
+      } catch {
+        return 1;
+      }
+    }
+    return 1;
+  });
+
+  const [searchTerm, setSearchTerm] = useState(() => {
+    const fromUrl = searchParams.get("search");
+    if (fromUrl) return fromUrl;
+    const saved = getSessionData("tasks_filters");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed?.searchTerm || "";
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  });
+
+  const [selectedTags, setSelectedTags] = useState(() => {
+    const fromUrl = searchParams.get("tags");
+    if (fromUrl) {
+      const ids = fromUrl.split(",").filter(Boolean);
+      return ids.map((id) => ({ _id: id, name: id }));
+    }
+    const saved = getSessionData("tasks_filters");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed?.selectedTags) ? parsed.selectedTags : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+
   const [deleteQuestionId, setDeleteQuestionId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTags, setSelectedTags] = useState([]);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [saveCooldown, triggerSaveCooldown] = useCooldown(2000);
   const lastParamsRef = useRef("");
@@ -104,36 +151,6 @@ const Tasks = () => {
   useResetMultipleApiStates([
     { action: resetApiStateFromQuestion, stateName: "cloneQuestionApi" },
   ]);
-
-  useEffect(() => {
-    const initSearch = searchParams.get("search") || "";
-    const initTagsCSV = searchParams.get("tags") || "";
-    const initPage = Number(searchParams.get("page") || "1");
-    if (initSearch || initTagsCSV || initPage !== 1) {
-      setSearchTerm(initSearch);
-      setCurrentPage(initPage);
-      const ids = initTagsCSV ? initTagsCSV.split(",").filter(Boolean) : [];
-      const restoredTags = ids.map((id) => ({ _id: id, name: id }));
-      setSelectedTags(restoredTags);
-      return;
-    }
-    const saved = getSessionData("tasks_filters");
-    if (saved) {
-      let parsed = null;
-      try {
-        parsed = JSON.parse(saved);
-      } catch {
-        parsed = null;
-      }
-      if (parsed) {
-        setSearchTerm(parsed?.searchTerm || "");
-        setCurrentPage(parsed?.currentPage || 1);
-        const restoredTags =
-          Array.isArray(parsed?.selectedTags) ? parsed.selectedTags : [];
-        setSelectedTags(restoredTags);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const simplifiedTags = selectedTags.map((t) => ({
