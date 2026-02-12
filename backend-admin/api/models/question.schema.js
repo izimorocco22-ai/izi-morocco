@@ -53,6 +53,11 @@ const QuestionSchema = new mongoose.Schema({
     }
   },
 
+  puzzleAnswerText: {
+    type: String,
+    trim: true
+  },
+
   points: { type: Number, required: true },
 
   tags: {

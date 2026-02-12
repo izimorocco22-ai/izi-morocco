@@ -197,6 +197,21 @@ export const createQuestionValidator = [
     .exists()
     .withMessage('Puzzle should not be provided for non-puzzle answer types'),
 
+  check('puzzleAnswerText')
+    .if((value, { req }) => req.body.answerType === 'puzzle')
+    .exists()
+    .withMessage('Answer text is required for puzzle type questions')
+    .isString()
+    .withMessage('Answer text must be a string')
+    .notEmpty()
+    .withMessage('Answer text cannot be empty'),
+
+  check('puzzleAnswerText')
+    .if((value, { req }) => req.body.answerType !== 'puzzle')
+    .not()
+    .exists()
+    .withMessage('Answer text should not be provided for non-puzzle answer types'),
+
   check('tags')
     .optional()
     .isArray()
@@ -260,6 +275,8 @@ export const editQuestionValidator = [
     .withMessage('correctAnswers must be an array'),
 
   check('puzzle').optional().isMongoId().withMessage('Invalid Puzzle ID'),
+
+  check('puzzleAnswerText').optional().isString().withMessage('Answer text must be a string'),
 
   check('tags')
     .optional()

@@ -43,10 +43,17 @@ export const createQuestion = async (req, res) => {
 
     if (validatedData.answerType === 'no_answer') {
       validatedData.correctAnswers = [];
+      validatedData.puzzle = undefined;
+      validatedData.puzzleAnswerText = undefined;
     }
 
     if (validatedData.answerType === 'puzzle') {
       validatedData.correctAnswers = [];
+    }
+
+    if (validatedData.answerType && validatedData.answerType !== 'puzzle') {
+      validatedData.puzzle = undefined;
+      validatedData.puzzleAnswerText = undefined;
     }
 
     if (!validatedData.createdBy) {
@@ -122,6 +129,7 @@ export const editQuestion = async (req, res) => {
     if (validatedData.answerType === 'no_answer') {
       validatedData.correctAnswers = [];
       validatedData.puzzle = undefined;
+      validatedData.puzzleAnswerText = undefined;
     }
 
     if (validatedData.answerType === 'puzzle') {
@@ -130,6 +138,7 @@ export const editQuestion = async (req, res) => {
 
     if (validatedData.answerType && validatedData.answerType !== 'puzzle') {
       validatedData.puzzle = undefined;
+      validatedData.puzzleAnswerText = undefined;
     }
 
     Object.assign(question, validatedData);

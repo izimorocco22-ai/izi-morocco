@@ -45,6 +45,7 @@ const defaultValueForQuestion = {
   tags: [],
   points: 0,
   puzzle: "",
+  puzzleAnswerText: "",
   codeBoxConfig: {
     length: 4,
     mode: "alphanumeric"
@@ -312,28 +313,39 @@ const SingleQuestionForm = ({
           />
         )}
         {answerType === "puzzle" && (
-          <div className="flex items-end gap-3">
-            <AntSearchableSelector
-              id={`questions.${index}.puzzle`}
-              name={`questions.${index}.puzzle`}
-              labelName="Select Puzzle"
-              options={puzzlesOptions}
-              control={control}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-end gap-3">
+              <AntSearchableSelector
+                id={`questions.${index}.puzzle`}
+                name={`questions.${index}.puzzle`}
+                labelName="Select Puzzle"
+                options={puzzlesOptions}
+                control={control}
+                errors={errors}
+                required
+                message={
+                  getPuzzlesApi?.status === "success"
+                    ? "No puzzles available"
+                    : "Loading puzzles..."
+                }
+              />
+              <Button
+                type="button"
+                onClick={() => setOpenPuzzleModal(true)}
+                className="h-10 min-w-max"
+              >
+                Add New Puzzles
+              </Button>
+            </div>
+            <CommonInput
+              labelName="Answer Text"
+              id={`questions.${index}.puzzleAnswerText`}
+              name={`questions.${index}.puzzleAnswerText`}
+              register={register}
+              type="text"
               errors={errors}
               required
-              message={
-                getPuzzlesApi?.status === "success"
-                  ? "No puzzles available"
-                  : "Loading puzzles..."
-              }
             />
-            <Button
-              type="button"
-              onClick={() => setOpenPuzzleModal(true)}
-              className="h-10 min-w-max"
-            >
-              Add New Puzzles
-            </Button>
           </div>
         )}
 
@@ -463,6 +475,7 @@ const CreateUpdateQuestion = ({
         }
         if (answerType === "puzzle") {
             pureData.puzzle = puzzle;
+            pureData.puzzleAnswerText = qData.puzzleAnswerText;
         }
         if (answerType === "code_box") {
             pureData.codeBoxConfig = {
@@ -621,6 +634,7 @@ const CreateUpdateQuestion = ({
             })),
             // response.puzzle may be populated object or ObjectId — prefer _id if present
             puzzle: response?.puzzle?._id || response?.puzzle || "",
+            puzzleAnswerText: response?.puzzleAnswerText || "",
             codeBoxConfig: response?.codeBoxConfig || { length: 4, mode: 'alphanumeric' },
         }]
       });
