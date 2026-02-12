@@ -77,10 +77,11 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({ type, value, onChange }) =>
 
     const options: any = {
       mediaType: type === 'video' ? 'video' : 'photo',
-      saveToPhotos: true,
+      saveToPhotos: false, // Changed to false to avoid permission issues and extra copies
       quality: 0.7,
       videoQuality: 'medium',
       durationLimit: 30, // 30 seconds limit for video
+      includeBase64: false,
     };
 
     setLoading(true);
@@ -92,7 +93,13 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({ type, value, onChange }) =>
         console.log('ImagePicker Error: ', response.errorMessage);
         Alert.alert('Error', response.errorMessage || 'Failed to capture media');
       } else if (response.assets && response.assets.length > 0) {
-        const uri = response.assets[0].uri;
+        const asset = response.assets[0];
+        const uri = asset.uri;
+        console.log('[CaptureMedia] Captured asset:', {
+          uri: asset.uri,
+          type: asset.type,
+          fileName: asset.fileName
+        });
         if (uri) {
           onChange(uri);
         }

@@ -1,7 +1,5 @@
 // utils/apiPaths.ts
 
-import { gameLogin } from "../store/gameSlice";
-
 export const apiPaths = {
   login: "auth/login",
   signup: "auth/signup",

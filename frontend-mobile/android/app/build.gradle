@@ -85,8 +85,8 @@ android {
         versionCode 1
         versionName "1.0"
         missingDimensionStrategy 'react-native-camera', 'general'
-        resValue "string", "MAPBOX_ACCESS_TOKEN", project.env.get("MAPBOX_ACCESS_TOKEN")
-        manifestPlaceholders = [MAPBOX_ACCESS_TOKEN: project.env.get("MAPBOX_ACCESS_TOKEN")]
+        resValue "string", "MAPBOX_ACCESS_TOKEN", "pk.eyJ1IjoieWFzaDExMDIiLCJhIjoiY21meG14Y21tMGRmdzJpc2Y2dTJqZ3hpNiJ9.Q2iF5usYCFwILvwDNIZkjA"
+        manifestPlaceholders = [MAPBOX_ACCESS_TOKEN: "pk.eyJ1IjoieWFzaDExMDIiLCJhIjoiY21meG14Y21tMGRmdzJpc2Y2dTJqZ3hpNiJ9.Q2iF5usYCFwILvwDNIZkjA"]
     }
     signingConfigs {
         debug {

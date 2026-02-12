@@ -44,8 +44,12 @@ export const handleSubmitAnswer = async (
       const uploadResult = await uploadFile(localUri);
       dispatch({ type: 'SET_INPUT_ANSWER', payload: uploadResult.url });
       isCorrect = true;
-    } catch (error) {
-      Alert.alert('Upload Failed', 'Failed to upload media. Please try again.');
+    } catch (error: any) {
+      console.error('Submit answer upload error:', error);
+      Alert.alert(
+        'Upload Failed', 
+        error.message || 'Failed to upload media. Please try again.'
+      );
       dispatch({ type: 'SET_LOADING', payload: false });
       return;
     } finally {
