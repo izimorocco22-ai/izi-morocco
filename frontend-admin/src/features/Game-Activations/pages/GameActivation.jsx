@@ -1,4 +1,4 @@
-import { act, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "../../../components/Button";
 import { cn } from "../../../lib/utils";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,19 +7,19 @@ import { HeaderType } from "../../../utils/types";
 import { formatDateToReadable } from "../../../utils/common";
 import TableGrid from "../../../components/table/TableGrid";
 import CreateGameActivationModal from "../modals/CreateGameActivationModal";
-import GenerateQrModal from "../modals/GenerateQrModal";
+// import GenerateQrModal from "../modals/GenerateQrModal";
 import TooltipWrapper from "../../../components/TooltipWrapper";
 import ArrowIcon from "../../../components/svgs/ArrowIcon";
-import GroupCodesModal from "../modals/GroupCodesModal";
+import useNavigateTo from "../../../hooks/useNavigateTo";
+import { ROUTES } from "../../../routes/helper";
 
 const GameActivation = () => {
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
-  const [activationData, setActivationData] = useState(null);
-  const [qeCodeModalOpen, setQeCodeModalOpen] = useState(false);
-  const [groupModalOpen, setGroupModalOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState(null);
+  // const [activationData, setActivationData] = useState(null);
+  // const [qeCodeModalOpen, setQeCodeModalOpen] = useState(false);
+  const goTo = useNavigateTo();
   const { getGameActivationsApi } = useSelector(
     (state) => state.gameActivation
   );
@@ -77,13 +77,8 @@ const GameActivation = () => {
             </TooltipWrapper>
           ),
           onClick: (row) => {
-            setSelectedGroup({
-              batchId: row.batchId || row._id,
-              playerId: row.playerId,
-              gameId: row?.gameDetails?._id,
-              gameName: row.gameTitle,
-            });
-            setGroupModalOpen(true);
+            const batchId = row.batchId || row._id;
+            goTo(ROUTES.GAME_ACTIVATION + `/batch/${batchId}`);
           },
         },
         // {
@@ -156,30 +151,8 @@ const GameActivation = () => {
           }}
         />
       )}
-      {qeCodeModalOpen && (
-        <GenerateQrModal
-          open={qeCodeModalOpen}
-          onOpenChange={(v) => setQeCodeModalOpen(v)}
-          data={activationData}
-        />
-      )}
-      {groupModalOpen && (
-        <GroupCodesModal
-          open={groupModalOpen}
-          onOpenChange={(v) => setGroupModalOpen(v)}
-          data={selectedGroup}
-          onGenerateQr={(row) => {
-            setActivationData({
-              id: row._id,
-              playerId: row.playerId,
-              gameId: row?.gameDetails?._id,
-              activationCode: row.activationCode,
-              gameName: row.gameDetails?.title || selectedGroup?.gameName,
-            });
-            setQeCodeModalOpen(true);
-          }}
-        />
-      )}
+      
+      
     </>
   );
 };

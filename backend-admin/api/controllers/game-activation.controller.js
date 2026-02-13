@@ -102,18 +102,16 @@ export const createGameActivationCode = async (req, res) => {
 
 export const getActivationCodesByBatchId = async (req, res) => {
   try {
-    const { batchId } = matchedData(req);
+    const { batchId } = matchedData(req, { locations: ['params'] });
 
-    const filter = {
-      isDeleted: { $ne: true },
-      $or: [
-        { activationBatchId: batchId },
-        { _id: new mongoose.Types.ObjectId(batchId) }
-      ]
-    };
+    const filter = { isDeleted: { $ne: true } };
+    const orFilters = [{ activationBatchId: batchId }];
+    if (mongoose.Types.ObjectId.isValid(batchId)) {
+      orFilters.push({ _id: new mongoose.Types.ObjectId(batchId) });
+    }
 
     const result = await GameActivation.aggregate([
-      { $match: filter },
+      { $match: { ...filter, $or: orFilters } },
       {
         $lookup: {
           from: 'GameInfo',
