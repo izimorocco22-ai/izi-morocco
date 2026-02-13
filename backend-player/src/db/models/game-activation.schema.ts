@@ -25,6 +25,9 @@ const GameActivationCodes = new mongoose.Schema({
         required:true
     } ,
 
+    claimedBy:{
+        type:String
+    }
     
     
 
