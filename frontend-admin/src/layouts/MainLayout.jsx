@@ -64,7 +64,7 @@ const sidebars = () => [
   },
   {
     id: "game-activation",
-    label: "Game Activation",
+    label: "Game Tickets",
     icon: ActivationIcon,
     to: ROUTES.GAME_ACTIVATION,
     children: ["game-activation"],
