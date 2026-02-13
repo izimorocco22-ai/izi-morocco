@@ -17,7 +17,7 @@ import { RFValue } from '../../utils/responsive';
 import SplashButton from '../../components/SplashButton';
 import OTPTextView from 'react-native-otp-textinput'; // ✅ OTP library
 import ScreenWrapper from '../../components/ScreenWrapper';
-import { verifyAccount } from '../../store/authSlice';
+import { verifyAccount, init } from '../../store/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 
@@ -74,6 +74,8 @@ export default function OtpScreen({ navigation, route }: any) {
           verifyAccount({ data: { email: email?.toLowerCase(), otp: otp } }),
         ).unwrap();
 
+        await dispatch(init()).unwrap();
+
         // Navigate only if OTP verification is successful
         navigation.navigate('Avatar');
       } catch (error: any) {
@@ -100,6 +102,8 @@ export default function OtpScreen({ navigation, route }: any) {
           verifyAccount({ data: { email: email?.toLowerCase(), otp: otp } }),
         ).unwrap();
         console.log(res);
+
+        await dispatch(init()).unwrap();
 
         // Navigate only if OTP verification is successful
         navigation.navigate('Avatar');

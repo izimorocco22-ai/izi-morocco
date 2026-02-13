@@ -18,7 +18,7 @@ import CustomInput from '../../components/CustomInput';
 import { RFValue } from '../../utils/responsive';
 import SplashButton from '../../components/SplashButton';
 import { useDispatch, useSelector } from 'react-redux';
-import { init, signUp } from '../../store/authSlice';
+import { signUp } from '../../store/authSlice';
 import { RootState } from '../../store/store';
 import ScreenWrapper from '../../components/ScreenWrapper';
 
@@ -39,7 +39,6 @@ export default function SignUpScreen({ navigation }) {
 
     try {
       await dispatch(signUp(payload)).unwrap();
-      await dispatch(init());
       navigation.navigate('Otp', {
         from: 'SignUp',
         email: email.toLowerCase(),
