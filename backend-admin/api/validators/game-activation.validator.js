@@ -24,6 +24,11 @@ export const getActivationCode = [
     check('expiresAt')
         .optional(),
 
+    check('quantity')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('Quantity must be a positive integer'),
+
 
     (req, res, next) => validateRequest(req, res, next)
 ]

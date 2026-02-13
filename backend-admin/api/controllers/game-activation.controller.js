@@ -15,11 +15,12 @@ import generateRandomCode from '../helpers/generateRandomCode.js'
 
 export const createGameActivationCode = async (req, res) => {
   try {
-    let { playerId, gameId, expiresAt } = matchedData(req);
+    let { playerId, gameId, expiresAt, quantity } = matchedData(req);
 
     if (!expiresAt) {
       expiresAt = new Date(Date.now() + 360000000);
     }
+    quantity = Number(quantity) || 1;
 
     const [player, game] = await Promise.all([
       Player.findOne({ playerId: playerId, isDeleted: { $ne: true }, isVerified: { $ne: false } }),
@@ -35,44 +36,61 @@ export const createGameActivationCode = async (req, res) => {
     }
     console.log({ player })
     let activationCodeFor = player?.role === 'A' ? 'Admin' : 'Player';
-    let success = false;
-    let activationCode;
-    let playerGame;
-    let qrCodeDataURL
+    const createdItems = [];
+    let lastCreated;
 
-    while (!success) {
-      try {
-        activationCode = generateRandomCode(8);
-
-        playerGame = await GameActivation.create({
-          playerId,
-          gameId,
-          activationCode,
-          expiresAt,
-          activationCodeFor
-        });
-
-        const qrPayload = JSON.stringify({ playerId, gameId, activationCode, expiresAt });
-        qrCodeDataURL = await QRCode.toDataURL(qrPayload);
-
-        success = true;
-      } catch (err) {
-        if (err.code === 11000) {
-          console.warn('Duplicate code detected, regenerating...');
-        } else {
-          throw err;
+    for (let i = 0; i < quantity; i++) {
+      let success = false;
+      while (!success) {
+        try {
+          const activationCode = generateRandomCode(8);
+          const playerGame = await GameActivation.create({
+            playerId,
+            gameId,
+            activationCode,
+            expiresAt,
+            activationCodeFor
+          });
+          const qrPayload = JSON.stringify({ playerId, gameId, activationCode, expiresAt });
+          const qrCodeDataURL = await QRCode.toDataURL(qrPayload);
+          createdItems.push({
+            _id: playerGame._id,
+            playerId: playerGame.playerId,
+            gameId: playerGame.gameId,
+            activationCode: playerGame.activationCode,
+            expiresAt: playerGame.expiresAt,
+            qrCodeDataURL
+          });
+          lastCreated = playerGame;
+          success = true;
+        } catch (err) {
+          if (err.code === 11000) {
+            console.warn('Duplicate code detected, regenerating...');
+          } else {
+            throw err;
+          }
         }
       }
     }
 
-    res.status(httpStatus.CREATED).json(buildResponse(httpStatus.CREATED, {
-      _id: playerGame._id,
-      playerId: playerGame.playerId,
-      gameId: playerGame.gameId,
-      activationCode: playerGame.activationCode,
-      expiresAt: playerGame.expiresAt,
-      qrCodeDataURL
-    }, 'Game activation code created successfully'));
+    if (quantity === 1) {
+      const single = createdItems[0];
+      return res.status(httpStatus.CREATED).json(
+        buildResponse(
+          httpStatus.CREATED,
+          single,
+          'Game activation code created successfully'
+        )
+      );
+    }
+
+    return res.status(httpStatus.CREATED).json(
+      buildResponse(
+        httpStatus.CREATED,
+        { createdCount: createdItems.length, codes: createdItems },
+        'Game activation codes created successfully'
+      )
+    );
   } catch (err) {
     handleError(res, err)
   }

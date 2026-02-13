@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import SpinnerIcon from "../../../components/svgs/SpinnerIcon";
 import { getPlayersDropdown } from "../../../slices/playerSlice";
 import { useEffect } from "react";
+import CommonInput from "../../../components/form/CommonInput";
 import {
   createGameActivation,
   getGameActivationDropdown,
@@ -19,9 +20,10 @@ const CreateGameActivationModal = ({ open = true, onClose }) => {
     defaultValues: {
       gameId: "",
       playerId: "",
+      quantity: 1,
     },
   });
-  const { control, handleSubmit, formState, setError, reset } = form;
+  const { control, register, handleSubmit, formState, setError, reset } = form;
   const { errors } = formState;
   const dispatch = useDispatch();
   const { createGameActivationApi, getGameActivationDropdownApi } = useSelector(
@@ -52,7 +54,7 @@ const CreateGameActivationModal = ({ open = true, onClose }) => {
     status: createGameActivationApi.status,
     data: createGameActivationApi.data,
     error: createGameActivationApi.error,
-    resetForm: () => reset({ playerId: "", gameId: "" }),
+    resetForm: () => reset({ playerId: "", gameId: "", quantity: 1 }),
     resetReduxStatus: () =>
       dispatch(resetApiStateFromGameActivation("createGameActivationApi")),
     setFormError: setError,
@@ -91,6 +93,16 @@ const CreateGameActivationModal = ({ open = true, onClose }) => {
           labelName="Select Games"
           options={games}
           control={control}
+          errors={errors}
+        />
+
+        <CommonInput
+          labelName="Quantity"
+          id="quantity"
+          name="quantity"
+          type="number"
+          register={register}
+          required
           errors={errors}
         />
 
