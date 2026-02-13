@@ -6,6 +6,7 @@ const initialState = {
   getGameActivationsApi: getDefaultApiState(),
   createGameActivationApi: getDefaultApiState(),
   getGameActivationDropdownApi: getDefaultApiState(),
+  getCodesByBatchApi: getDefaultApiState(),
 };
 
 // thunk to fetch game info
@@ -40,6 +41,16 @@ export const getGameActivationDropdown = createAsyncThunk(
   }
 );
 
+export const getCodesByBatch = createAsyncThunk(
+  `gameActivations/getCodesByBatch`,
+  async (batchId) => {
+    const res = await callAPI(`/game-activation/batch/${batchId}`, {
+      method: "GET",
+    });
+    return res.data;
+  }
+);
+
 const gameSlice = createSlice({
   name: "gameActivation",
   initialState,
@@ -59,6 +70,7 @@ const gameSlice = createSlice({
       getGameActivationDropdown,
       "getGameActivationDropdownApi"
     );
+    handleApiState(builder, getCodesByBatch, "getCodesByBatchApi");
   },
 });
 

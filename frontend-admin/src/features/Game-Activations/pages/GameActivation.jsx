@@ -9,7 +9,8 @@ import TableGrid from "../../../components/table/TableGrid";
 import CreateGameActivationModal from "../modals/CreateGameActivationModal";
 import GenerateQrModal from "../modals/GenerateQrModal";
 import TooltipWrapper from "../../../components/TooltipWrapper";
-import QrIcon from "../../../components/svgs/QRIcon";
+import ArrowIcon from "../../../components/svgs/ArrowIcon";
+import GroupCodesModal from "../modals/GroupCodesModal";
 
 const GameActivation = () => {
   const dispatch = useDispatch();
@@ -17,6 +18,8 @@ const GameActivation = () => {
   const [openModal, setOpenModal] = useState(false);
   const [activationData, setActivationData] = useState(null);
   const [qeCodeModalOpen, setQeCodeModalOpen] = useState(false);
+  const [groupModalOpen, setGroupModalOpen] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const { getGameActivationsApi } = useSelector(
     (state) => state.gameActivation
   );
@@ -43,7 +46,7 @@ const GameActivation = () => {
   const columns = [
     { value: "playerName", name: "Player Name" },
     { value: "playerEmail", name: "Player Email", _class: "col-span-2" },
-    { value: "activationCode", name: "Activation Code", _class: "col-span-1" },
+    { value: "codeCount", name: "Code Count", _class: "col-span-1" },
     { value: "gameTitle", name: "Game Title", _class: "col-span-3" },
     {
       value: "createdAt",
@@ -63,26 +66,24 @@ const GameActivation = () => {
       type: HeaderType.dynamicAction,
       actions: [
         {
-          label: "Generate QR Code",
+          label: "View Codes",
           icon: (
             <TooltipWrapper
-              content={"Generate QR Code"}
+              content={"View Codes"}
               place="right"
               className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-accent/10 cursor-pointer"
             >
-              <QrIcon />
+              <ArrowIcon />
             </TooltipWrapper>
           ),
           onClick: (row) => {
-            console.log({row})
-            setActivationData({
-              id: row._id,
+            setSelectedGroup({
+              batchId: row.batchId || row._id,
               playerId: row.playerId,
               gameId: row?.gameDetails?._id,
-              activationCode: row.activationCode,
               gameName: row.gameTitle,
             });
-            setQeCodeModalOpen(true);
+            setGroupModalOpen(true);
           },
         },
         // {
@@ -160,6 +161,23 @@ const GameActivation = () => {
           open={qeCodeModalOpen}
           onOpenChange={(v) => setQeCodeModalOpen(v)}
           data={activationData}
+        />
+      )}
+      {groupModalOpen && (
+        <GroupCodesModal
+          open={groupModalOpen}
+          onOpenChange={(v) => setGroupModalOpen(v)}
+          data={selectedGroup}
+          onGenerateQr={(row) => {
+            setActivationData({
+              id: row._id,
+              playerId: row.playerId,
+              gameId: row?.gameDetails?._id,
+              activationCode: row.activationCode,
+              gameName: row.gameDetails?.title || selectedGroup?.gameName,
+            });
+            setQeCodeModalOpen(true);
+          }}
         />
       )}
     </>
