@@ -29,6 +29,11 @@ const GameActivationCodes = new mongoose.Schema({
         type: String
     },
 
+    groupId: {
+        type: String,
+        index: true
+    },
+
     activationCodeFor: {
         type: String,
         enum: ['Admin', 'Player'],

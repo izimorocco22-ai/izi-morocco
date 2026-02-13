@@ -4,6 +4,8 @@ import { callAPI } from "../services/callApi";
 
 const initialState = {
   getGameActivationsApi: getDefaultApiState(),
+  getGroupedActivationsApi: getDefaultApiState(),
+  getCodesByGroupApi: getDefaultApiState(),
   createGameActivationApi: getDefaultApiState(),
   getGameActivationDropdownApi: getDefaultApiState(),
 };
@@ -15,6 +17,28 @@ export const getGameActivations = createAsyncThunk(
     const q = searchTerm ? `&search=${searchTerm}` : "";
     const pureUrl = `/game-activation?page=${page}${q}`;
     const res = await callAPI(pureUrl, {
+      method: "GET",
+    });
+    return res.data;
+  }
+);
+
+export const getGroupedActivations = createAsyncThunk(
+  `gameActivations/getGrouped`,
+  async ({ page, searchTerm = "" }) => {
+    const q = searchTerm ? `&search=${searchTerm}` : "";
+    const pureUrl = `/game-activation/groups?page=${page}${q}`;
+    const res = await callAPI(pureUrl, {
+      method: "GET",
+    });
+    return res.data;
+  }
+);
+
+export const getCodesByGroup = createAsyncThunk(
+  `gameActivations/getCodesByGroup`,
+  async ({ groupId, page = 1 }) => {
+    const res = await callAPI(`/game-activation/group/${groupId}?page=${page}`, {
       method: "GET",
     });
     return res.data;
@@ -53,6 +77,8 @@ const gameSlice = createSlice({
   },
   extraReducers: (builder) => {
     handleApiState(builder, getGameActivations, "getGameActivationsApi");
+    handleApiState(builder, getGroupedActivations, "getGroupedActivationsApi");
+    handleApiState(builder, getCodesByGroup, "getCodesByGroupApi");
     handleApiState(builder, createGameActivation, "createGameActivationApi");
     handleApiState(
       builder,

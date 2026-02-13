@@ -37,3 +37,13 @@ export const getAllActivationCodesForAdminValidator = [
     ...paginationValidator,
     (req, res, next) => validateRequest(req, res, next)
 ]
+
+export const getCodesByGroupValidator = [
+    check('groupId')
+        .exists()
+        .withMessage('Group ID is required')
+        .notEmpty()
+        .withMessage('Group ID cannot be empty'),
+    ...paginationValidator,
+    (req, res, next) => validateRequest(req, res, next)
+]

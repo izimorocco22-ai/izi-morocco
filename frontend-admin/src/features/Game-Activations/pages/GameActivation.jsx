@@ -1,26 +1,26 @@
-import { act, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "../../../components/Button";
 import { cn } from "../../../lib/utils";
 import { useDispatch, useSelector } from "react-redux";
-import { getGameActivations } from "../../../slices/gameActivationSlice";
+import { getGroupedActivations } from "../../../slices/gameActivationSlice";
 import { HeaderType } from "../../../utils/types";
 import { formatDateToReadable } from "../../../utils/common";
 import TableGrid from "../../../components/table/TableGrid";
 import CreateGameActivationModal from "../modals/CreateGameActivationModal";
-import GenerateQrModal from "../modals/GenerateQrModal";
+import BatchCodesModal from "../modals/BatchCodesModal";
 import TooltipWrapper from "../../../components/TooltipWrapper";
-import QrIcon from "../../../components/svgs/QRIcon";
+import ArrowIcon from "../../../components/svgs/ArrowIcon";
 
 const GameActivation = () => {
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
   const [activationData, setActivationData] = useState(null);
-  const [qeCodeModalOpen, setQeCodeModalOpen] = useState(false);
-  const { getGameActivationsApi } = useSelector(
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
+  const { getGroupedActivationsApi } = useSelector(
     (state) => state.gameActivation
   );
-  const { data, isLoading } = getGameActivationsApi;
+  const { data, isLoading } = getGroupedActivationsApi;
 
   const gameActivationsList =
     data?.response?.data?.map((a) => {
@@ -43,7 +43,7 @@ const GameActivation = () => {
   const columns = [
     { value: "playerName", name: "Player Name" },
     { value: "playerEmail", name: "Player Email", _class: "col-span-2" },
-    { value: "activationCode", name: "Activation Code", _class: "col-span-1" },
+    { value: "codeCount", name: "Code Count", _class: "col-span-1" },
     { value: "gameTitle", name: "Game Title", _class: "col-span-3" },
     {
       value: "createdAt",
@@ -63,26 +63,23 @@ const GameActivation = () => {
       type: HeaderType.dynamicAction,
       actions: [
         {
-          label: "Generate QR Code",
+          label: "View Codes",
           icon: (
             <TooltipWrapper
-              content={"Generate QR Code"}
+              content={"View Codes"}
               place="right"
               className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-accent/10 cursor-pointer"
             >
-              <QrIcon />
+              <ArrowIcon />
             </TooltipWrapper>
           ),
           onClick: (row) => {
-            console.log({row})
             setActivationData({
-              id: row._id,
-              playerId: row.playerId,
-              gameId: row?.gameDetails?._id,
-              activationCode: row.activationCode,
+              groupId: row.groupId,
+              codeCount: row.codeCount,
               gameName: row.gameTitle,
             });
-            setQeCodeModalOpen(true);
+            setBatchModalOpen(true);
           },
         },
         // {
@@ -118,7 +115,7 @@ const GameActivation = () => {
   ];
 
   useEffect(() => {
-    dispatch(getGameActivations({ page: currentPage }));
+    dispatch(getGroupedActivations({ page: currentPage }));
   }, [dispatch, currentPage]);
 
   return (
@@ -155,11 +152,11 @@ const GameActivation = () => {
           }}
         />
       )}
-      {qeCodeModalOpen && (
-        <GenerateQrModal
-          open={qeCodeModalOpen}
-          onOpenChange={(v) => setQeCodeModalOpen(v)}
-          data={activationData}
+      {batchModalOpen && (
+        <BatchCodesModal
+          open={batchModalOpen}
+          onOpenChange={(v) => setBatchModalOpen(v)}
+          group={activationData}
         />
       )}
     </>

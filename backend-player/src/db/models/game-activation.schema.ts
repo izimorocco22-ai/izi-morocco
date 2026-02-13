@@ -27,6 +27,11 @@ const GameActivationCodes = new mongoose.Schema({
 
     claimedBy:{
         type:String
+    } ,
+
+    groupId:{
+        type:String ,
+        index:true
     }
     
     

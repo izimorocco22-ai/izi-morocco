@@ -9,6 +9,7 @@ import GameInfo from '../models/game-info.schema.js'
 import GameActivation from '../models/game-activation.schema.js'
 import QRCode from 'qrcode'
 import generateRandomCode from '../helpers/generateRandomCode.js'
+import { v4 as uuidv4 } from 'uuid'
 
 
 
@@ -38,6 +39,7 @@ export const createGameActivationCode = async (req, res) => {
     let activationCodeFor = player?.role === 'A' ? 'Admin' : 'Player';
     const createdItems = [];
     let lastCreated;
+    const groupId = uuidv4();
 
     for (let i = 0; i < quantity; i++) {
       let success = false;
@@ -49,7 +51,8 @@ export const createGameActivationCode = async (req, res) => {
             gameId,
             activationCode,
             expiresAt,
-            activationCodeFor
+            activationCodeFor,
+            groupId
           });
           const qrPayload = JSON.stringify({ playerId, gameId, activationCode, expiresAt });
           const qrCodeDataURL = await QRCode.toDataURL(qrPayload);
@@ -59,6 +62,7 @@ export const createGameActivationCode = async (req, res) => {
             gameId: playerGame.gameId,
             activationCode: playerGame.activationCode,
             expiresAt: playerGame.expiresAt,
+            groupId,
             qrCodeDataURL
           });
           lastCreated = playerGame;
@@ -87,7 +91,7 @@ export const createGameActivationCode = async (req, res) => {
     return res.status(httpStatus.CREATED).json(
       buildResponse(
         httpStatus.CREATED,
-        { createdCount: createdItems.length, codes: createdItems },
+        { createdCount: createdItems.length, groupId, codes: createdItems },
         'Game activation codes created successfully'
       )
     );
@@ -101,6 +105,16 @@ export const createGameActivationCode = async (req, res) => {
 const pipeLineForAdminCodes = (filter, sort, limit, page) => {
   return [
     { $match: filter },
+    {
+      $group: {
+        _id: '$groupId',
+        playerId: { $first: '$playerId' },
+        gameId: { $first: '$gameId' },
+        expiresAt: { $first: '$expiresAt' },
+        createdAt: { $min: '$createdAt' },
+        codeCount: { $sum: 1 }
+      }
+    },
     {
       $lookup: {
         from: 'GameInfo',
@@ -132,8 +146,9 @@ const pipeLineForAdminCodes = (filter, sort, limit, page) => {
     },
     {
       $project: {
+        groupId: '$_id',
         playerId: 1,
-        activationCode: 1,
+        codeCount: 1,
         gameDetails: {
           _id: "$gameDetails._id",
           title: "$gameDetails.title",
@@ -173,8 +188,7 @@ export const getAllActivationCodesForAdmin = async (req, res) => {
 
     if (search) {
       filter.$or = [
-        { playerId: { $regex: search, $options: 'i' } },
-        { activationCode: { $regex: search, $options: 'i' } }
+        { playerId: { $regex: search, $options: 'i' } }
       ]
     }
 
@@ -193,9 +207,65 @@ export const getAllActivationCodesForAdmin = async (req, res) => {
       totalPages,
       data
     };
-    res.status(httpStatus.OK).json({ response, message: 'Activation codes fetched successfully' });
+    res.status(httpStatus.OK).json({ response, message: 'Activation code groups fetched successfully' });
   }
   catch (err) {
+    handleError(res, err)
+  }
+}
+
+export const getCodesByGroupForAdmin = async (req, res) => {
+  try {
+    const { groupId, page = 1, limit = 100 } = matchedData(req)
+    const filter = { isDeleted: { $ne: true }, activationCodeFor: 'Admin', groupId }
+    const pipeline = [
+      { $match: filter },
+      {
+        $lookup: {
+          from: 'GameInfo',
+          localField: 'gameId',
+          foreignField: '_id',
+          as: 'gameDetails'
+        }
+      },
+      {
+        $lookup: {
+          from: 'Players',
+          localField: 'playerId',
+          foreignField: 'playerId',
+          as: 'playerDetails'
+        }
+      },
+      { $unwind: { path: '$gameDetails', preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$playerDetails', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          playerId: 1,
+          activationCode: 1,
+          groupId: 1,
+          gameDetails: {
+            _id: "$gameDetails._id",
+            title: "$gameDetails.title",
+            description: "$gameDetails.description"
+          },
+          playerDetails: {
+            name: "$playerDetails.name",
+            email: "$playerDetails.email"
+          },
+          expiresAt: 1,
+          createdAt: 1
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $skip: (Number(page) - 1) * Number(limit) },
+      { $limit: Number(limit) }
+    ]
+    const data = await GameActivation.aggregate(pipeline)
+    res
+      .status(httpStatus.OK)
+      .json(buildResponse(httpStatus.OK, { docs: data }, 'Group codes fetched successfully'))
+  } catch (err) {
     handleError(res, err)
   }
 }

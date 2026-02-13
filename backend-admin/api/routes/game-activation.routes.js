@@ -27,9 +27,19 @@ router.get(
     gameActivationController.getAllActivationCodesForAdmin   
 )
 
+router.get(
+    '/groups' ,
+    gameActivationValidator.getAllActivationCodesForAdminValidator ,
+    gameActivationController.getAllActivationCodesForAdmin
+)
+
+router.get(
+    '/group/:groupId' ,
+    gameActivationValidator.getCodesByGroupValidator ,
+    gameActivationController.getCodesByGroupForAdmin
+)
 
 export default router
-
 
 
 
