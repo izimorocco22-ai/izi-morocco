@@ -9,7 +9,7 @@ import CommonInput from "../../../components/form/CommonInput";
 import {
   createGameActivation,
   getGameActivationDropdown,
-  getGameActivations,
+  getGroupedActivations,
   resetApiStateFromGameActivation,
 } from "../../../slices/gameActivationSlice";
 import useApiResponseHandler from "../../../hooks/useApiResponseHandler";
@@ -59,7 +59,7 @@ const CreateGameActivationModal = ({ open = true, onClose }) => {
       dispatch(resetApiStateFromGameActivation("createGameActivationApi")),
     setFormError: setError,
     sideAction: () => {
-      dispatch(getGameActivations({ page: 1 }));
+      dispatch(getGroupedActivations({ page: 1 }));
       onClose && onClose();
     },
   });
