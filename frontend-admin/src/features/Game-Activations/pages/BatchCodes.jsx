@@ -37,6 +37,35 @@ const BatchCodes = () => {
       playerEmail: a.playerDetails?.email || "N/A",
     })) || [];
 
+  const handleExport = () => {
+    const headers = ["Activation Code", "Game Title", "Created At", "Expires At"];
+    const rows = list.map((r) => [
+      r.activationCode || "",
+      r.gameTitle || "",
+      r.createdAt || "",
+      r.expiresAt || "",
+    ]);
+    const csv = [headers, ...rows].map((row) =>
+      row
+        .map((val) => {
+          const s = String(val ?? "");
+          const needsQuotes = /[",\n]/.test(s);
+          const escaped = s.replace(/"/g, '""');
+          return needsQuotes ? `"${escaped}"` : escaped;
+        })
+        .join(",")
+    ).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `batch_codes_${groupId}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const columns = [
     { value: "playerName", name: "Player Name" },
     { value: "playerEmail", name: "Player Email", _class: "col-span-2" },
@@ -95,7 +124,10 @@ const BatchCodes = () => {
           )}
         >
           <h1 className="text-2xl font-bold">Batch Codes</h1>
-          <Button onClick={() => window.history.back()}>Back</Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={handleExport}>Export</Button>
+            <Button onClick={() => window.history.back()}>Back</Button>
+          </div>
         </div>
 
         <TableGrid
