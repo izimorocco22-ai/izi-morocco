@@ -33,24 +33,30 @@ export const handleSubmitAnswer = async (
       stateRef.current.inputAnswer.trim().toLowerCase() ===
       correctAnswer?.trim().toLowerCase();
   } else if (['take_photo', 'augmented_photo', 'record_video'].includes(answerType)) {
-    // For media capture, it's correct if something was captured
     const localUri = stateRef.current.inputAnswer;
     if (!localUri) {
       return Alert.alert('Error', `Please capture a ${answerType.replace('_', ' ')} before submitting.`);
     }
 
     try {
+      console.log('[handleSubmitAnswer] Starting upload for:', localUri);
       dispatch({ type: 'SET_LOADING', payload: true });
+      
       const uploadResult = await uploadFile(localUri);
+      console.log('[handleSubmitAnswer] Upload successful:', uploadResult);
+      
+      if (!uploadResult || !uploadResult.url) {
+        throw new Error('Upload succeeded but no URL returned');
+      }
+      
       dispatch({ type: 'SET_INPUT_ANSWER', payload: uploadResult.url });
       isCorrect = true;
     } catch (error: any) {
-      console.error('Submit answer upload error:', error);
-      Alert.alert(
-        'Upload Failed', 
-        error.message || 'Failed to upload media. Please try again.'
-      );
+      console.error('[handleSubmitAnswer] Upload error:', error);
       dispatch({ type: 'SET_LOADING', payload: false });
+      
+      const errorMsg = error.message || 'Failed to upload media';
+      Alert.alert('Upload Failed', errorMsg);
       return;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });

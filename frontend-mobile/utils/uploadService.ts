@@ -11,52 +11,51 @@ export const uploadFile = async (uri: string) => {
   try {
     const token = await AsyncStorage.getItem('accessToken');
     
-    // Clean the URI and get filename/extension
+    if (!uri) {
+      throw new Error('No file URI provided');
+    }
+
     const cleanPath = uri.split('?')[0];
-    const fileName = cleanPath.split('/').pop() || 'upload.jpg';
+    const fileName = cleanPath.split('/').pop() || `upload_${Date.now()}.jpg`;
     const extension = fileName.split('.').pop()?.toLowerCase() || 'jpg';
     
-    let type = '';
+    let type = 'image/jpeg';
     if (['mp4', 'mov', 'm4v', '3gp'].includes(extension)) {
       type = 'video/mp4';
-    } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
-      type = `image/${extension === 'jpg' ? 'jpeg' : extension}`;
-    } else {
+    } else if (['jpg', 'jpeg'].includes(extension)) {
       type = 'image/jpeg';
+    } else if (['png'].includes(extension)) {
+      type = 'image/png';
     }
 
     const formData = new FormData();
-    // For React Native, the object must have uri, name, and type
-    const fileToUpload = {
+    formData.append('file', {
       uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
       name: fileName,
       type: type,
-    };
-
-    formData.append('file', fileToUpload as any);
+    } as any);
 
     const fullUrl = `${API_BASE_URL.replace(/\/$/, '')}/${apiPaths.upload}`;
-    console.log('[uploadFile] Uploading to:', fullUrl);
+    console.log('[uploadFile] Uploading:', fileName);
 
     const response = await axios.post(fullUrl, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: token ? `Bearer ${token}` : '',
       },
-      // This is crucial for Axios to correctly handle FormData in React Native
-      transformRequest: (data, headers) => {
-        return data;
-      },
+      transformRequest: (data) => data,
+      timeout: 60000,
     });
 
-    if (response.data && response.data.success) {
+    console.log('[uploadFile] Response:', response.data);
+
+    if (response.data?.success && response.data?.data) {
       return response.data.data;
-    } else {
-      throw new Error(response.data?.message || 'Upload failed');
     }
+    
+    throw new Error(response.data?.message || 'Upload failed');
   } catch (error: any) {
-    console.error('Upload service error:', error);
-    const errorMessage = error.response?.data?.message || error.message || 'Unknown upload error';
-    throw new Error(errorMessage);
+    console.error('[uploadFile] Error:', error.message);
+    throw new Error(error.response?.data?.message || error.message || 'Upload failed');
   }
 };
