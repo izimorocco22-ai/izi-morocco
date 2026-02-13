@@ -24,6 +24,9 @@ const QuestionPlacerMap = () => {
   const { selectedQuestion, selectedQuestions } = useSelector(
     (state) => state.games
   );
+  const [searchValue, setSearchValue] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const placedQuestions = selectedQuestions.filter((q) => q.isPlaced);
 
@@ -565,11 +568,69 @@ const QuestionPlacerMap = () => {
     };
   }, [resizeMap]);
 
+  useEffect(() => {
+    const q = searchValue.trim();
+    if (q.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    const token = import.meta.env.VITE_MAPBOX_API_KEY_PK;
+    const controller = new AbortController();
+    setIsSearching(true);
+    fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+        q
+      )}.json?access_token=${token}&limit=5`,
+      { signal: controller.signal }
+    )
+      .then((r) => r.json())
+      .then((json) => {
+        const feats = Array.isArray(json?.features) ? json.features : [];
+        setSearchResults(
+          feats.map((f) => ({ label: f.place_name, center: f.center }))
+        );
+      })
+      .catch(() => {})
+      .finally(() => setIsSearching(false));
+    return () => controller.abort();
+  }, [searchValue]);
+
+  const handleSelectPlace = (place) => {
+    if (!map.current || !place) return;
+    map.current.flyTo({ center: place.center, zoom: 14 });
+    setSearchResults([]);
+  };
+
   return (
     <div className="flex flex-col h-full bg-gray-100 border border-red-500 min-h-72">
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 relative">
           <div ref={mapContainer} className="absolute inset-0 h-full w-full" />
+
+          <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border p-2 z-20 w-64">
+            <input
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Search location"
+              className="w-full border rounded px-2 py-1 text-sm"
+            />
+            {isSearching && (
+              <div className="text-xs text-gray-500 p-2">Searching...</div>
+            )}
+            {searchResults.length > 0 && (
+              <ul className="mt-2 max-h-40 overflow-auto">
+                {searchResults.map((r, idx) => (
+                  <li
+                    key={idx}
+                    className="p-2 text-sm hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleSelectPlace(r)}
+                  >
+                    {r.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           {/* Placement Instructions */}
           {selectedQuestion && (
@@ -611,7 +672,7 @@ const QuestionPlacerMap = () => {
 
           {/* Placed Questions Panel */}
           {placedQuestions.length > 0 && (
-            <div className="w-full absolute top-4 right-4 bg-white rounded-lg shadow-lg border max-w-sm max-h-64 overflow-hidden z-10">
+            <div className="w-full absolute top-20 right-4 bg-white rounded-lg shadow-lg border max-w-sm max-h-64 overflow-hidden z-10">
               <div className="w-full p-3 border-b bg-gray-50 flex justify-between items-center">
                 <h3 className="font-semibold text-gray-800">
                   Placed Questions ({placedQuestions.length})
