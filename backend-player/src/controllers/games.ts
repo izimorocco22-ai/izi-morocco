@@ -450,26 +450,15 @@ export const joinGameController = async (req: Request, res: Response) => {
       message: 'Game has already finished.'
     })
   }
-  const activations = await GameActivation.find({ playerId: user.playerId })
-
-  if (!activations || activations.length === 0) {
-    return res.status(httpStatus.NOT_FOUND).json({
-      success: false,
-      message: 'No game purchases found'
-    })
-  }
-  console.log({ activations, playerId: user.playerId })
-
-  const activation = activations.find(
-    (a) =>
-      a.gameId.toString() === validatedData.gameId &&
-      a.activationCode === validatedData.activationCode
-  )
+  const activation = await GameActivation.findOne({
+    activationCode: validatedData.activationCode,
+    gameId: new mongoose.Types.ObjectId(validatedData.gameId)
+  }).lean()
 
   if (!activation) {
     return res.status(httpStatus.BAD_REQUEST).json({
       success: false,
-      message: 'Invalid activation or game not purchased'
+      message: 'Invalid activation code'
     })
   }
 
@@ -478,6 +467,44 @@ export const joinGameController = async (req: Request, res: Response) => {
       success: false,
       message: 'Game has expired'
     })
+  }
+
+  // Allow admin-generated codes to be claimed by any player, once
+  if (activation.playerId !== user.playerId) {
+    const activationFor = (activation as any)?.activationCodeFor
+    if (activationFor === 'Admin') {
+      const alreadyUsedByAnother = await GameLogs.findOne({
+        activationCode: validatedData.activationCode,
+        gameId: new mongoose.Types.ObjectId(validatedData.gameId),
+        playerId: { $ne: user.playerId }
+      })
+      if (alreadyUsedByAnother) {
+        return res.status(httpStatus.BAD_REQUEST).json({
+          success: false,
+          message: 'Activation code already used'
+        })
+      }
+      const updated = await GameActivation.findOneAndUpdate(
+        {
+          activationCode: validatedData.activationCode,
+          gameId: new mongoose.Types.ObjectId(validatedData.gameId),
+          playerId: activation.playerId
+        },
+        { $set: { playerId: user.playerId } },
+        { new: true }
+      )
+      if (!updated) {
+        return res.status(httpStatus.BAD_REQUEST).json({
+          success: false,
+          message: 'Activation code already claimed'
+        })
+      }
+    } else {
+      return res.status(httpStatus.BAD_REQUEST).json({
+        success: false,
+        message: 'Invalid activation or game not purchased'
+      })
+    }
   }
 
   const aggregationPipeline = [
