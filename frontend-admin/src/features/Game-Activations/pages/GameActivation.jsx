@@ -69,7 +69,7 @@ const GameActivation = () => {
               place="right"
               className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-accent/10 cursor-pointer"
             >
-              <ArrowIcon />
+              <ArrowIcon variant="dark" />
             </TooltipWrapper>
           ),
           onClick: (row) => {
