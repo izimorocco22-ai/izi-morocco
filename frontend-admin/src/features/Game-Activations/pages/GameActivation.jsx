@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { act, useEffect, useState } from "react";
 import Button from "../../../components/Button";
 import { cn } from "../../../lib/utils";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,19 +7,16 @@ import { HeaderType } from "../../../utils/types";
 import { formatDateToReadable } from "../../../utils/common";
 import TableGrid from "../../../components/table/TableGrid";
 import CreateGameActivationModal from "../modals/CreateGameActivationModal";
-// import GenerateQrModal from "../modals/GenerateQrModal";
+import GenerateQrModal from "../modals/GenerateQrModal";
 import TooltipWrapper from "../../../components/TooltipWrapper";
-import ArrowIcon from "../../../components/svgs/ArrowIcon";
-import useNavigateTo from "../../../hooks/useNavigateTo";
-import { ROUTES } from "../../../routes/helper";
+import QrIcon from "../../../components/svgs/QRIcon";
 
 const GameActivation = () => {
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
-  // const [activationData, setActivationData] = useState(null);
-  // const [qeCodeModalOpen, setQeCodeModalOpen] = useState(false);
-  const goTo = useNavigateTo();
+  const [activationData, setActivationData] = useState(null);
+  const [qeCodeModalOpen, setQeCodeModalOpen] = useState(false);
   const { getGameActivationsApi } = useSelector(
     (state) => state.gameActivation
   );
@@ -46,7 +43,7 @@ const GameActivation = () => {
   const columns = [
     { value: "playerName", name: "Player Name" },
     { value: "playerEmail", name: "Player Email", _class: "col-span-2" },
-    { value: "codeCount", name: "Code Count", _class: "col-span-1" },
+    { value: "activationCode", name: "Activation Code", _class: "col-span-1" },
     { value: "gameTitle", name: "Game Title", _class: "col-span-3" },
     {
       value: "createdAt",
@@ -66,19 +63,26 @@ const GameActivation = () => {
       type: HeaderType.dynamicAction,
       actions: [
         {
-          label: "View Codes",
+          label: "Generate QR Code",
           icon: (
             <TooltipWrapper
-              content={"View Codes"}
+              content={"Generate QR Code"}
               place="right"
               className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-accent/10 cursor-pointer"
             >
-              <ArrowIcon />
+              <QrIcon />
             </TooltipWrapper>
           ),
           onClick: (row) => {
-            const batchId = row.batchId || row._id;
-            goTo(ROUTES.GAME_ACTIVATION + `/batch/${batchId}`);
+            console.log({row})
+            setActivationData({
+              id: row._id,
+              playerId: row.playerId,
+              gameId: row?.gameDetails?._id,
+              activationCode: row.activationCode,
+              gameName: row.gameTitle,
+            });
+            setQeCodeModalOpen(true);
           },
         },
         // {
@@ -151,8 +155,13 @@ const GameActivation = () => {
           }}
         />
       )}
-      
-      
+      {qeCodeModalOpen && (
+        <GenerateQrModal
+          open={qeCodeModalOpen}
+          onOpenChange={(v) => setQeCodeModalOpen(v)}
+          data={activationData}
+        />
+      )}
     </>
   );
 };

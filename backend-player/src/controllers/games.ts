@@ -450,26 +450,26 @@ export const joinGameController = async (req: Request, res: Response) => {
       message: 'Game has already finished.'
     })
   }
-  const activation = await GameActivation.findOne({
-    gameId: new mongoose.Types.ObjectId(validatedData.gameId),
-    activationCode: validatedData.activationCode
-  })
+  const activations = await GameActivation.find({ playerId: user.playerId })
+
+  if (!activations || activations.length === 0) {
+    return res.status(httpStatus.NOT_FOUND).json({
+      success: false,
+      message: 'No game purchases found'
+    })
+  }
+  console.log({ activations, playerId: user.playerId })
+
+  const activation = activations.find(
+    (a) =>
+      a.gameId.toString() === validatedData.gameId &&
+      a.activationCode === validatedData.activationCode
+  )
 
   if (!activation) {
     return res.status(httpStatus.BAD_REQUEST).json({
       success: false,
       message: 'Invalid activation or game not purchased'
-    })
-  }
-
-  const alreadyUsed = await GameLogs.findOne({
-    gameId: new mongoose.Types.ObjectId(validatedData.gameId),
-    activationCode: validatedData.activationCode
-  })
-  if (alreadyUsed && alreadyUsed.playerId !== user.playerId) {
-    return res.status(httpStatus.BAD_REQUEST).json({
-      success: false,
-      message: 'Activation code already used'
     })
   }
 

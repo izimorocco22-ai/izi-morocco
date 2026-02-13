@@ -9,7 +9,6 @@ import GameInfo from '../models/game-info.schema.js'
 import GameActivation from '../models/game-activation.schema.js'
 import QRCode from 'qrcode'
 import generateRandomCode from '../helpers/generateRandomCode.js'
-import { v4 as uuidv4 } from 'uuid'
 
 
 
@@ -22,7 +21,6 @@ export const createGameActivationCode = async (req, res) => {
       expiresAt = new Date(Date.now() + 360000000);
     }
     quantity = Number(quantity) || 1;
-    const batchId = uuidv4();
 
     const [player, game] = await Promise.all([
       Player.findOne({ playerId: playerId, isDeleted: { $ne: true }, isVerified: { $ne: false } }),
@@ -51,8 +49,7 @@ export const createGameActivationCode = async (req, res) => {
             gameId,
             activationCode,
             expiresAt,
-            activationCodeFor,
-            activationBatchId: batchId
+            activationCodeFor
           });
           const qrPayload = JSON.stringify({ playerId, gameId, activationCode, expiresAt });
           const qrCodeDataURL = await QRCode.toDataURL(qrPayload);
@@ -62,8 +59,7 @@ export const createGameActivationCode = async (req, res) => {
             gameId: playerGame.gameId,
             activationCode: playerGame.activationCode,
             expiresAt: playerGame.expiresAt,
-            qrCodeDataURL,
-            activationBatchId: batchId
+            qrCodeDataURL
           });
           lastCreated = playerGame;
           success = true;
@@ -82,7 +78,7 @@ export const createGameActivationCode = async (req, res) => {
       return res.status(httpStatus.CREATED).json(
         buildResponse(
           httpStatus.CREATED,
-          { ...single, activationBatchId: batchId },
+          single,
           'Game activation code created successfully'
         )
       );
@@ -91,7 +87,7 @@ export const createGameActivationCode = async (req, res) => {
     return res.status(httpStatus.CREATED).json(
       buildResponse(
         httpStatus.CREATED,
-        { createdCount: createdItems.length, batchId, codes: createdItems },
+        { createdCount: createdItems.length, codes: createdItems },
         'Game activation codes created successfully'
       )
     );
@@ -100,63 +96,7 @@ export const createGameActivationCode = async (req, res) => {
   }
 }
 
-export const getActivationCodesByBatchId = async (req, res) => {
-  try {
-    const { batchId } = matchedData(req, { locations: ['params'] });
-
-    const filter = { isDeleted: { $ne: true } };
-    const orFilters = [{ activationBatchId: batchId }];
-    if (mongoose.Types.ObjectId.isValid(batchId)) {
-      orFilters.push({ _id: new mongoose.Types.ObjectId(batchId) });
-    }
-
-    const result = await GameActivation.aggregate([
-      { $match: { ...filter, $or: orFilters } },
-      {
-        $lookup: {
-          from: 'GameInfo',
-          localField: 'gameId',
-          foreignField: '_id',
-          as: 'gameDetails'
-        }
-      },
-      {
-        $lookup: {
-          from: 'Players',
-          localField: 'playerId',
-          foreignField: 'playerId',
-          as: 'playerDetails'
-        }
-      },
-      { $unwind: { path: '$gameDetails', preserveNullAndEmptyArrays: true } },
-      { $unwind: { path: '$playerDetails', preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          _id: 1,
-          playerId: 1,
-          activationCode: 1,
-          gameDetails: {
-            _id: "$gameDetails._id",
-            title: "$gameDetails.title",
-            description: "$gameDetails.description"
-          },
-          playerDetails: {
-            name: "$playerDetails.name",
-            email: "$playerDetails.email"
-          },
-          expiresAt: 1,
-          createdAt: 1,
-          activationBatchId: 1
-        }
-      },
-      { $sort: { createdAt: -1 } }
-    ]);
-
-    res.status(httpStatus.OK).json({ response: { data: result }, message: 'Batch codes fetched successfully' });
-  } catch (err) {
-    handleError(res, err);
-  }
-}
+// export const generateActivation
 
 const pipeLineForAdminCodes = (filter, sort, limit, page) => {
   return [
@@ -194,7 +134,6 @@ const pipeLineForAdminCodes = (filter, sort, limit, page) => {
       $project: {
         playerId: 1,
         activationCode: 1,
-        activationBatchId: 1,
         gameDetails: {
           _id: "$gameDetails._id",
           title: "$gameDetails.title",
@@ -209,21 +148,9 @@ const pipeLineForAdminCodes = (filter, sort, limit, page) => {
       }
     },
     {
-      $group: {
-        _id: { $ifNull: ['$activationBatchId', '$_id'] },
-        batchId: { $first: { $ifNull: ['$activationBatchId', '$_id'] } },
-        playerId: { $first: '$playerId' },
-        gameDetails: { $first: '$gameDetails' },
-        playerDetails: { $first: '$playerDetails' },
-        expiresAt: { $max: '$expiresAt' },
-        createdAt: { $min: '$createdAt' },
-        codeCount: { $sum: 1 }
-      }
-    },
-    { $sort: sort },
-    {
       $facet: {
         data: [
+          { $sort: sort },
           { $skip: (page - 1) * limit },
           { $limit: limit }
         ],

@@ -25,12 +25,6 @@ const GameActivationCodes = new mongoose.Schema({
         required: true
     },
 
-    activationBatchId: {
-        type: String,
-        index: true,
-        default: null
-    },
-
     activationCodeFor: {
         type: String,
         enum: ['Admin', 'Player'],

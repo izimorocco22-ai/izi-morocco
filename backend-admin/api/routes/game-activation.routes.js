@@ -27,11 +27,6 @@ router.get(
     gameActivationController.getAllActivationCodesForAdmin   
 )
 
-router.get(
-    '/batch/:batchId',
-    gameActivationValidator.getCodesByBatchIdValidator,
-    gameActivationController.getActivationCodesByBatchId
-)
 
 export default router
 

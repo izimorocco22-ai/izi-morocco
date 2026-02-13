@@ -37,12 +37,3 @@ export const getAllActivationCodesForAdminValidator = [
     ...paginationValidator,
     (req, res, next) => validateRequest(req, res, next)
 ]
-
-export const getCodesByBatchIdValidator = [
-    check('batchId')
-        .exists()
-        .withMessage('Batch ID is required')
-        .notEmpty()
-        .withMessage('Batch ID cannot be empty'),
-    (req, res, next) => validateRequest(req, res, next)
-]
