@@ -1,6 +1,6 @@
 import { Alert } from 'react-native';
 import { markerGets } from './markerLogic';
-import { uploadFile } from '../../../../utils/uploadService';
+import { uploadFile } from '../../../utils/uploadService';
 
 export const handleSubmitAnswer = async (
   stateRef: any,

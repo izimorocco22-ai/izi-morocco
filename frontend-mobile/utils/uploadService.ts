@@ -2,10 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiPaths } from './apiPaths';
 import { Platform } from 'react-native';
 import axios from 'axios';
+import { API_URL } from '@env';
 
-// Get API_URL from a safer place or use fallback
-// We use a fallback to avoid "Cannot find module '@env'" if the .env is not set up
-const API_BASE_URL = 'https://izi-morocco-1.onrender.com';
+const API_BASE_URL: string = (API_URL || '').trim();
 
 export const uploadFile = async (uri: string) => {
   try {
@@ -13,6 +12,9 @@ export const uploadFile = async (uri: string) => {
     
     if (!uri) {
       throw new Error('No file URI provided');
+    }
+    if (!API_BASE_URL) {
+      throw new Error('API_URL is not configured');
     }
 
     const cleanPath = uri.split('?')[0];
