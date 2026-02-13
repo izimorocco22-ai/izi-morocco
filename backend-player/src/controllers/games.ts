@@ -473,31 +473,32 @@ export const joinGameController = async (req: Request, res: Response) => {
   if (activation.playerId !== user.playerId) {
     const activationFor = (activation as any)?.activationCodeFor
     if (activationFor === 'Admin') {
-      const alreadyUsedByAnother = await GameLogs.findOne({
-        activationCode: validatedData.activationCode,
-        gameId: new mongoose.Types.ObjectId(validatedData.gameId),
-        playerId: { $ne: user.playerId }
-      })
-      if (alreadyUsedByAnother) {
+      // Use claimedBy to atomically mark first claim
+      const previouslyClaimedBy = (activation as any)?.claimedBy
+
+      if (previouslyClaimedBy && previouslyClaimedBy !== user.playerId) {
         return res.status(httpStatus.BAD_REQUEST).json({
           success: false,
           message: 'Activation code already used'
         })
       }
-      const updated = await GameActivation.findOneAndUpdate(
-        {
-          activationCode: validatedData.activationCode,
-          gameId: new mongoose.Types.ObjectId(validatedData.gameId),
-          playerId: activation.playerId
-        },
-        { $set: { playerId: user.playerId } },
-        { new: true }
-      )
-      if (!updated) {
-        return res.status(httpStatus.BAD_REQUEST).json({
-          success: false,
-          message: 'Activation code already claimed'
-        })
+
+      if (!previouslyClaimedBy) {
+        const claimed = await GameActivation.findOneAndUpdate(
+          {
+            activationCode: validatedData.activationCode,
+            gameId: new mongoose.Types.ObjectId(validatedData.gameId),
+            claimedBy: { $exists: false }
+          },
+          { $set: { claimedBy: user.playerId } },
+          { new: true }
+        )
+        if (!claimed) {
+          return res.status(httpStatus.BAD_REQUEST).json({
+            success: false,
+            message: 'Activation code already used'
+          })
+        }
       }
     } else {
       return res.status(httpStatus.BAD_REQUEST).json({
