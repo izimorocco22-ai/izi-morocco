@@ -14,6 +14,7 @@ import Tags from "../features/Tag/pages/Tags";
 import Puzzles from "../features/Puzzles/pages/Puzzles";
 import RuleEngine from "../features/Map/RuleEngine";
 import GameActivation from "../features/Game-Activations/pages/GameActivation";
+import BatchCodes from "../features/Game-Activations/pages/BatchCodes";
 import PlayerAdmin from "../features/PlayerAdmin/pages/PlayerAdmin";
 import BlocklyEditor from "../features/Games/components/Blockly2";
 
@@ -44,6 +45,7 @@ export default function AppRoutes() {
         <Route path={ROUTES.TAGS} element={<Tags />} />
         <Route path={ROUTES.PUZZLES} element={<Puzzles />} />
         <Route path={ROUTES.GAME_ACTIVATION} element={<GameActivation />} />
+        <Route path={ROUTES.GAME_ACTIVATION_GROUP} element={<BatchCodes />} />
         <Route path={ROUTES.PLAYER_ADMIN} element={<PlayerAdmin />} />
       </Route>
 

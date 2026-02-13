@@ -16,6 +16,7 @@ export const ROUTES = {
   TAGS: "/tags",
   PUZZLES: "/puzzles",
   GAME_ACTIVATION: "/game-activation",
+  GAME_ACTIVATION_GROUP: "/game-activation/group/:groupId",
   PLAYER_ADMIN: "/player-admin",
   NOT_FOUND: "*",
 };

@@ -7,7 +7,7 @@ import { HeaderType } from "../../../utils/types";
 import { formatDateToReadable } from "../../../utils/common";
 import TableGrid from "../../../components/table/TableGrid";
 import CreateGameActivationModal from "../modals/CreateGameActivationModal";
-import BatchCodesModal from "../modals/BatchCodesModal";
+import useNavigateTo from "../../../hooks/useNavigateTo";
 import TooltipWrapper from "../../../components/TooltipWrapper";
 import ArrowIcon from "../../../components/svgs/ArrowIcon";
 
@@ -15,8 +15,7 @@ const GameActivation = () => {
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
-  const [activationData, setActivationData] = useState(null);
-  const [batchModalOpen, setBatchModalOpen] = useState(false);
+  const goTo = useNavigateTo();
   const { getGroupedActivationsApi } = useSelector(
     (state) => state.gameActivation
   );
@@ -74,12 +73,7 @@ const GameActivation = () => {
             </TooltipWrapper>
           ),
           onClick: (row) => {
-            setActivationData({
-              groupId: row.groupId,
-              codeCount: row.codeCount,
-              gameName: row.gameTitle,
-            });
-            setBatchModalOpen(true);
+            goTo(`/game-activation/group/${row.groupId}`);
           },
         },
         // {
@@ -152,13 +146,7 @@ const GameActivation = () => {
           }}
         />
       )}
-      {batchModalOpen && (
-        <BatchCodesModal
-          open={batchModalOpen}
-          onOpenChange={(v) => setBatchModalOpen(v)}
-          group={activationData}
-        />
-      )}
+      
     </>
   );
 };
