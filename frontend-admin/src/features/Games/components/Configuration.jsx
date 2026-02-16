@@ -574,6 +574,7 @@ function Configuration({
                     labelName="Duration Value"
                     name="duration.value"
                     register={register}
+                    type="number"
                     errors={errors}
                     placeholder="50"
                     required

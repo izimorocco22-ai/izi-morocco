@@ -29,7 +29,7 @@ export const createGameInfoValidator = [
     .optional()
     .isString()
     .withMessage('Language must be a string')
-    .isIn(['english', 'german', 'deutsch', 'russian', 'estonian'])
+    .isIn(['english', 'french', 'spanish', 'arabic'])
     .withMessage('Invalid language'),
 
   check('status')
@@ -203,7 +203,7 @@ export const updateGameInfoValidator = [
     .isString()
     .withMessage('Language must be a string')
     .bail()
-    .isIn(['english', 'german', 'deutsch', 'russian', 'estonian', 'french'])
+    .isIn(['english', 'french', 'spanish', 'arabic'])
     .withMessage('Invalid language'),
 
   check('status')
@@ -402,7 +402,7 @@ export const getAllGamesValidator = [
     .optional()
     .isString()
     .withMessage('Language must be a string')
-    .isIn(['english', 'german', 'deutsch', 'russian', 'estonian', 'french'])
+    .isIn(['english', 'french', 'spanish', 'arabic'])
     .withMessage('Invalid language'),
 
   (req, res, next) => validateRequest(req, res, next)
