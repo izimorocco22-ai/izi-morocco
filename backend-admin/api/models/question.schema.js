@@ -104,8 +104,7 @@ QuestionSchema.pre('save', function(next) {
       // keep options/correctAnswers for single-answer MCQ inside puzzle
       this.codeBoxConfig = undefined;
     } else if (this.puzzleAnswerType === 'code_box') {
-      // use codeBoxConfig; clear options/correctAnswers
-      this.correctAnswers = [];
+      // use codeBoxConfig; keep correctAnswers (single code string), clear options
       this.options = [];
     } else {
       // text or number: store as text in puzzleAnswerText; clear options/correctAnswers/codeBox

@@ -251,7 +251,7 @@ const SingleQuestionForm = ({
              </div>
           </div>
         )}
-        {(answerType === "mcq" || answerType === "multiple" || (answerType === "puzzle" && puzzleAnswerType === "mcq")) && (
+        {(answerType === "mcq" || answerType === "multiple") && (
           <div className="border border-accent/25 rounded-lg p-4 flex flex-col gap-1">
             {errors?.questions?.[index]?.options?.message && (
               <p className="text-red-600 text-sm mb-2">
@@ -400,6 +400,79 @@ const SingleQuestionForm = ({
                     required
                   />
                 </div>
+              </div>
+            )}
+            {puzzleAnswerType === "code_box" && (
+              <CommonInput
+                labelName="Correct Answer"
+                id={`questions.${index}.correctAnswers`}
+                name={`questions.${index}.correctAnswers`}
+                register={register}
+                errors={errors}
+                required
+              />
+            )}
+            {puzzleAnswerType === "mcq" && (
+              <div className="border border-accent/25 rounded-lg p-4 flex flex-col gap-1">
+                {errors?.questions?.[index]?.options?.message && (
+                  <p className="text-red-600 text-sm mb-2">
+                    {errors.questions[index].options.message}
+                  </p>
+                )}
+                {fields.map((field, optionIndex) => (
+                  <div
+                    key={field.id}
+                    className={cn("relative flex w-full items-center gap-4")}
+                  >
+                    <CommonInput
+                      labelName="Question Option"
+                      id={`questions.${index}.options.${optionIndex}.text`}
+                      name={`questions.${index}.options.${optionIndex}.text`}
+                      register={register}
+                      errors={errors}
+                      required
+                    />
+                    <CheckBox
+                      labelName="Is Correct"
+                      handleChecked={() => handleCheckboxChange(optionIndex)}
+                      name={`questions.${index}.options.${optionIndex}.isCorrect`}
+                      checked={!!getValues(`questions.${index}.options`)?.[optionIndex]?.isCorrect}
+                    />
+                    <div className="flex w-full gap-4">
+                      <TooltipWrapper
+                        content={"Add Option"}
+                        place="right"
+                        className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-accent/10 cursor-pointer"
+                      >
+                        <span
+                          onClick={() => {
+                            append({
+                              isCorrect: false,
+                              text: "",
+                            });
+                          }}
+                          className="rounded-full h-10 w-10"
+                        >
+                          <PlusIcon variant="dark" />
+                        </span>
+                      </TooltipWrapper>
+                      {fields.length > 1 && (
+                        <TooltipWrapper
+                          place="right"
+                          content="Remove Option"
+                          className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-accent/10 cursor-pointer"
+                        >
+                          <span
+                            onClick={() => removeOption(optionIndex)}
+                            className="rounded-full h-10 w-10"
+                          >
+                            <DeleteIcon variant="dark" />
+                          </span>
+                        </TooltipWrapper>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
