@@ -145,6 +145,27 @@ const RichTextEditor = ({
     const quill = quillRef.current?.getEditor?.();
     if (!quill) return;
 
+    try {
+      quill.clipboard.addMatcher('IMG', (node, delta) => {
+        // Ensure a centered line after the image embed
+        if (delta && Array.isArray(delta.ops)) {
+          // Only add centered newline if not already present
+          const hasNewlineAfter =
+            delta.ops.length > 1 &&
+            typeof delta.ops[delta.ops.length - 1]?.insert === 'string' &&
+            delta.ops[delta.ops.length - 1]?.insert.includes('\n');
+          if (!hasNewlineAfter) {
+            delta.ops.push({ insert: '\n', attributes: { align: 'center' } });
+          } else {
+            // force center on the newline after image
+            const last = delta.ops[delta.ops.length - 1];
+            last.attributes = { ...(last.attributes || {}), align: 'center' };
+          }
+        }
+        return delta;
+      });
+    } catch {}
+
     const handleTextChange = (delta, oldDelta, source) => {
       if (source !== 'user') return;
       const hasImage = delta.ops?.some((op) => op.insert && op.insert.image);
