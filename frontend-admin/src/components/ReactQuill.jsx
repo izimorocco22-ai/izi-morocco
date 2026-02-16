@@ -64,7 +64,17 @@ const RichTextEditor = ({
 
   const modules = {
     toolbar: {
-      container: toolbarConfigs[toolbar] || toolbarConfigs.full
+      container: toolbarConfigs[toolbar] || toolbarConfigs.full,
+      handlers: {
+        align: (value) => {
+          const quill = quillRef.current?.getEditor?.();
+          if (!quill) return;
+          const sel = quill.getSelection(true);
+          if (!sel) return;
+          const alignValue = value || '';
+          quill.formatLine(sel.index, sel.length, { align: alignValue });
+        }
+      }
     },
     clipboard: {
       matchVisual: false,
