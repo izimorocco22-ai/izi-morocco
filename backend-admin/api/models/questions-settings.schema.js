@@ -18,7 +18,7 @@ const QuestionSettingsSchema = new mongoose.Schema({
     icon: { type: String, default: null },
     language: {
         type: String,
-        enum: ['english', 'german', 'deutsch', 'russian', 'estonian', 'french'],
+        enum: ['english', 'french', 'spanish', 'arabic'],
         default: 'english'
     },
 

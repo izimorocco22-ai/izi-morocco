@@ -16,7 +16,7 @@ const GameInfoSchema = new mongoose.Schema({
 
     language: {
         type: String,
-        enum: ['english', 'german', 'deutsch', 'russian', 'estonian'],
+        enum: ['english', 'french', 'spanish', 'arabic'],
         default: 'english'
     },
 
