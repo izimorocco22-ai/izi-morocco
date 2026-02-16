@@ -106,13 +106,12 @@ const BlocklyEditor = () => {
 
   useEffect(() => {
     if (iframeRef.current) {
-      const iframe = iframeRef.current;
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-      doc.open();
-      doc.write(
-        html(taskData, xmlString, isHighestIndexGreater, playgroundNamedArray)
+      iframeRef.current.srcdoc = html(
+        taskData,
+        xmlString,
+        isHighestIndexGreater,
+        playgroundNamedArray
       );
-      doc.close();
     }
   }, [taskData, xmlString, isHighestIndexGreater, playgroundNamedArray]);
 
