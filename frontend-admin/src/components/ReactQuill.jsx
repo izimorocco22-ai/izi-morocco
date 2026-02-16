@@ -210,6 +210,29 @@ const RichTextEditor = ({
     };
   }, []);
 
+  // Fallback: on initial load, center any images that have no alignment
+  useEffect(() => {
+    const quill = quillRef.current?.getEditor?.();
+    if (!quill) return;
+    try {
+      const contents = quill.getContents();
+      let idx = 0;
+      contents.ops?.forEach((op) => {
+        const len =
+          op.insert && typeof op.insert === 'string'
+            ? op.insert.length
+            : op.insert && op.insert.image
+            ? 1
+            : 0;
+        if (op.insert && op.insert.image) {
+          // Attempt to center the image line
+          quill.formatLine(idx, 1, { align: 'center' });
+        }
+        idx += len;
+      });
+    } catch {}
+  }, []);
+
   return (
     <div className={containerClasses}>
       <label
