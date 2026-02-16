@@ -719,7 +719,7 @@ export const html = (
     // Clear workspace and load XML
     workspace.clear();
     Blockly.Xml.domToWorkspace(xmlDoc.documentElement, workspace);
-    console.log("BLOCKY Diagram loaded Successfully.");
+    alert("✅ BLOCKY Diagram loaded Successfully.!");
   } catch (error) {
     console.error("Load error:", error);
     alert("❌ Error loading XML: " + error.message);
@@ -747,7 +747,7 @@ export const html = (
           
           workspace.clear();
           Blockly.Xml.domToWorkspace(xml.documentElement, workspace);
-          console.log('BLOCKY Diagram loaded Successfully.');
+          alert('✅ BLOCKY Diagram loaded Successfully.!');
         } catch (error) {
           console.error('Load error:', error);
           alert('❌ Error loading XML: ' + error.message);
@@ -757,25 +757,13 @@ export const html = (
       event.target.value = '';
     }
 
-// Ensure XML loads only once per iframe document lifecycle
-window.__BLOCKLY_XML_LOADED__ = false;
 window.addEventListener("message", (event) => {
-  try {
-    if (
-      event.data &&
-      event.data.type === "LOAD_XML" &&
-      ${!highestIndexOfXML} &&
-      !window.__BLOCKLY_XML_LOADED__
-    ) {
-      window.__BLOCKLY_XML_LOADED__ = true;
-      setTimeout(() => {
-        loadXMLToWorkspace(event.data.xml);
-      }, 300);
+    if (event.data.type === "LOAD_XML" && ${!highestIndexOfXML}) {
+    setTimeout(()=>{
+      loadXMLToWorkspace(event.data.xml);
+      },1000)
     }
-  } catch (e) {
-    console.warn("BLOCKLY message handler error:", e);
-  }
-});
+  });
 
   </script>
 </body>

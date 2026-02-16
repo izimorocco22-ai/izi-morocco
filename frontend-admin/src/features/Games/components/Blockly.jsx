@@ -32,14 +32,7 @@ const BlocklyEditor = () => {
   );
 
   const playgroundName = getGameInfobyIdApi?.data?.response?.playgroundName || 'Untitled Playground';
-  const playgroundsArr = getGameInfobyIdApi?.data?.response?.playgrounds || [];
-  const playgroundNamedArray =
-    Array.isArray(playgroundsArr) && playgroundsArr.length > 0
-      ? playgroundsArr.map((p) => {
-          const n = p?.name || playgroundName;
-          return [n, n];
-        })
-      : [[playgroundName, playgroundName]];
+  const playgroundNamedArray = [[playgroundName, playgroundName]]
   const taskData = selectedQuestions.map((ele) => ({
     id: ele.id,
     name: ele.name,
@@ -106,14 +99,13 @@ const BlocklyEditor = () => {
 
   useEffect(() => {
     if (iframeRef.current) {
-      iframeRef.current.srcdoc = html(
-        taskData,
-        xmlString,
-        isHighestIndexGreater,
-        playgroundNamedArray
-      );
+      const iframe = iframeRef.current;
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(html(taskData, xmlString, isHighestIndexGreater, playgroundNamedArray));
+      doc.close();
     }
-  }, [taskData, xmlString, isHighestIndexGreater, playgroundNamedArray]);
+  }, []);
 
   return (
     <iframe
