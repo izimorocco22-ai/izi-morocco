@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -64,6 +64,8 @@ const TaskCard = ({ task, index, onToggle }) => {
 };
 
 const TaskList = ({ tasks = [], onChange = () => {} }) => {
+  const containerRef = useRef(null);
+
   const handleToggle = (index, field, value, extra = {}) => {
     const next = tasks.map((t, i) =>
       i === index ? { ...t, [field]: value, ...extra } : t
@@ -73,12 +75,52 @@ const TaskList = ({ tasks = [], onChange = () => {} }) => {
 
   if (!tasks || tasks.length === 0) return <div className="p-4">No tasks</div>;
 
+  const showScrollButtons = useMemo(() => (tasks?.length || 0) > 6, [tasks]);
+
   return (
-    <div className="grid grid-cols-1 gap-3">
-      {console.log("tasks in TaskList", tasks)}
-      {tasks.map((task, idx) => (
-        <TaskCard key={idx} task={task} index={idx} onToggle={handleToggle} />
-      ))}
+    <div className="relative">
+      {showScrollButtons && (
+        <div className="absolute right-1 top-1 z-10 flex flex-col gap-1">
+          <button
+            type="button"
+            className="h-7 w-7 lg:h-8 lg:w-8 rounded-full bg-accent text-white flex items-center justify-center shadow hover:scale-110 duration-200"
+            onClick={() => {
+              containerRef.current?.scrollBy({ top: -240, behavior: "smooth" });
+            }}
+            aria-label="Scroll up"
+            title="Scroll up"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            className="h-7 w-7 lg:h-8 lg:w-8 rounded-full bg-accent text-white flex items-center justify-center shadow hover:scale-110 duration-200"
+            onClick={() => {
+              containerRef.current?.scrollBy({ top: 240, behavior: "smooth" });
+            }}
+            aria-label="Scroll down"
+            title="Scroll down"
+          >
+            ↓
+          </button>
+        </div>
+      )}
+
+      <div
+        ref={containerRef}
+        className="max-h-[60vh] overflow-y-auto pr-2"
+      >
+        <div className="grid grid-cols-1 gap-3">
+          {tasks.map((task, idx) => (
+            <TaskCard
+              key={idx}
+              task={task}
+              index={idx}
+              onToggle={handleToggle}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
