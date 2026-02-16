@@ -719,7 +719,7 @@ export const html = (
     // Clear workspace and load XML
     workspace.clear();
     Blockly.Xml.domToWorkspace(xmlDoc.documentElement, workspace);
-    alert("✅ BLOCKY Diagram loaded Successfully.!");
+    console.log("BLOCKY Diagram loaded Successfully.");
   } catch (error) {
     console.error("Load error:", error);
     alert("❌ Error loading XML: " + error.message);
@@ -747,7 +747,7 @@ export const html = (
           
           workspace.clear();
           Blockly.Xml.domToWorkspace(xml.documentElement, workspace);
-          alert('✅ BLOCKY Diagram loaded Successfully.!');
+          console.log('BLOCKY Diagram loaded Successfully.');
         } catch (error) {
           console.error('Load error:', error);
           alert('❌ Error loading XML: ' + error.message);
