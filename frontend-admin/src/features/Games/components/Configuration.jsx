@@ -545,10 +545,9 @@ function Configuration({
                 control={control}
                 options={[
                   { value: "english", label: "English" },
-                  { value: "german", label: "German" },
-                  { value: "deutsch", label: "Deutsch" },
-                  { value: "russian", label: "Russian" },
-                  { value: "estonian", label: "Estonian" },
+                  { value: "french", label: "French" },
+                  { value: "spanish", label: "Spanish" },
+                  { value: "arabic", label: "Arabic" },
                 ]}
                 placeholder="Select Language"
                 required={true}
