@@ -72,7 +72,28 @@ const RichTextEditor = ({
           const sel = quill.getSelection(true);
           if (!sel) return;
           const alignValue = value || '';
-          quill.formatLine(sel.index, sel.length, { align: alignValue });
+          // Apply to all lines in selection (Ctrl+A friendly)
+          const end = sel.index + sel.length;
+          let i = sel.index;
+          try {
+            while (i <= end) {
+              quill.formatLine(i, 1, { align: alignValue });
+              const res = quill.getLine(i);
+              const line = res && res[0];
+              const len = line && line.length ? line.length() : 0;
+              if (len === 0) {
+                // empty line, move forward by 1
+                i += 1;
+              } else {
+                // move to next line (+1 for newline)
+                i += len + 1;
+              }
+              if (i <= sel.index) break;
+            }
+          } catch {
+            // fallback: single line
+            quill.formatLine(sel.index, sel.length, { align: alignValue });
+          }
         }
       }
     },
