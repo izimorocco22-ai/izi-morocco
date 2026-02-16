@@ -199,6 +199,27 @@ body,
   height: 600px;
   width: 100%;
   border: 1px solid #ccc;
+
+/* Ensure Quill image alignment persists and is rendered correctly */
+.ql-align-center {
+  text-align: center;
+}
+.ql-align-center img {
+  display: inline-block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+.ql-align-right img {
+  display: inline-block;
+  margin-left: auto;
+  max-width: 100%;
+}
+.ql-align-left img {
+  display: inline-block;
+  margin-right: auto;
+  max-width: 100%;
+}
+  border: 1px solid #ccc;
 }
 
 /* react-split-grid styles */

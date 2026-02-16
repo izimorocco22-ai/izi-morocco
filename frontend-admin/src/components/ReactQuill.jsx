@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
 import { Controller } from 'react-hook-form';
 import 'react-quill-new/dist/quill.snow.css';
@@ -129,6 +129,33 @@ const RichTextEditor = ({
     [&_.ql-toolbar.ql-snow]:border-b-0
     [&_.ql-toolbar]:bg-gray-50
   `;
+
+  // Auto-center newly inserted images and allow alignment via toolbar
+  useEffect(() => {
+    const quill = quillRef.current?.getEditor?.();
+    if (!quill) return;
+
+    const handleTextChange = (delta, oldDelta, source) => {
+      if (source !== 'user') return;
+      let indexCursor = 0;
+      delta.ops?.forEach((op) => {
+        const len = op.insert ? (typeof op.insert === 'string' ? op.insert.length : 1) : (op.retain || 0);
+        // If an image embed was inserted, center-align the line
+        if (op.insert && op.insert.image) {
+          const idx = indexCursor;
+          try {
+            quill.formatLine(idx, 1, { align: 'center' });
+          } catch {}
+        }
+        indexCursor += len;
+      });
+    };
+
+    quill.on('text-change', handleTextChange);
+    return () => {
+      quill.off('text-change', handleTextChange);
+    };
+  }, []);
 
   return (
     <div className={containerClasses}>
