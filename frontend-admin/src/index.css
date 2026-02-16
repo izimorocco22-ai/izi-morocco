@@ -219,6 +219,13 @@ body,
   margin-right: auto;
   max-width: 100%;
 }
+
+/* Default: center images in editor */
+.ql-editor img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
   border: 1px solid #ccc;
 }
 

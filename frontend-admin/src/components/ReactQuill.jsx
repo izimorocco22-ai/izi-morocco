@@ -187,21 +187,25 @@ const RichTextEditor = ({
       });
     } catch {}
 
-    const handleTextChange = (delta, oldDelta, source) => {
-      if (source !== 'user') return;
-      const hasImage = delta.ops?.some((op) => op.insert && op.insert.image);
-      if (hasImage) {
-        // After Quill updates selection, align the image's line to center
-        setTimeout(() => {
-          try {
-            const sel = quill.getSelection(true);
-            if (sel && sel.index > 0) {
-              const idx = sel.index - 1; // image embed sits at index - 1
-              quill.formatLine(idx, 1, { align: 'center' });
-            }
-          } catch {}
-        }, 0);
-      }
+    const handleTextChange = () => {
+      // On any change, ensure all image lines are centered if not explicitly aligned
+      try {
+        const contents = quill.getContents();
+        let idx = 0;
+        contents.ops?.forEach((op) => {
+          const isImage = op.insert && op.insert.image;
+          const len =
+            op.insert && typeof op.insert === 'string'
+              ? op.insert.length
+              : isImage
+              ? 1
+              : 0;
+          if (isImage) {
+            quill.formatLine(idx, 1, { align: 'center' });
+          }
+          idx += len;
+        });
+      } catch {}
     };
 
     quill.on('text-change', handleTextChange);
