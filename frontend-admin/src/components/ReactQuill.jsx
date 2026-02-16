@@ -137,18 +137,19 @@ const RichTextEditor = ({
 
     const handleTextChange = (delta, oldDelta, source) => {
       if (source !== 'user') return;
-      let indexCursor = 0;
-      delta.ops?.forEach((op) => {
-        const len = op.insert ? (typeof op.insert === 'string' ? op.insert.length : 1) : (op.retain || 0);
-        // If an image embed was inserted, center-align the line
-        if (op.insert && op.insert.image) {
-          const idx = indexCursor;
+      const hasImage = delta.ops?.some((op) => op.insert && op.insert.image);
+      if (hasImage) {
+        // After Quill updates selection, align the image's line to center
+        setTimeout(() => {
           try {
-            quill.formatLine(idx, 1, { align: 'center' });
+            const sel = quill.getSelection(true);
+            if (sel && sel.index > 0) {
+              const idx = sel.index - 1; // image embed sits at index - 1
+              quill.formatLine(idx, 1, { align: 'center' });
+            }
           } catch {}
-        }
-        indexCursor += len;
-      });
+        }, 0);
+      }
     };
 
     quill.on('text-change', handleTextChange);
