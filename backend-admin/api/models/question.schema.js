@@ -29,6 +29,12 @@ const QuestionSchema = new mongoose.Schema({
       default: 'alphanumeric' 
     }
   },
+  
+  puzzleAnswerType: {
+    type: String,
+    enum: ['code_box', 'number', 'text', 'mcq'],
+    default: null
+  },
 
   options: [
     {
@@ -94,12 +100,25 @@ QuestionSchema.pre('save', function(next) {
   }
   
   if (this.answerType === 'puzzle') {
-    this.correctAnswers = [];
+    if (this.puzzleAnswerType === 'mcq') {
+      // keep options/correctAnswers for single-answer MCQ inside puzzle
+      this.codeBoxConfig = undefined;
+    } else if (this.puzzleAnswerType === 'code_box') {
+      // use codeBoxConfig; clear options/correctAnswers
+      this.correctAnswers = [];
+      this.options = [];
+    } else {
+      // text or number: store as text in puzzleAnswerText; clear options/correctAnswers/codeBox
+      this.correctAnswers = [];
+      this.options = [];
+      this.codeBoxConfig = undefined;
+    }
   }
   
   if (this.answerType !== 'puzzle') {
     this.puzzle = undefined;
   }
+  
   
   next();
 });

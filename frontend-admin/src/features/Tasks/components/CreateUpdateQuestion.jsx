@@ -121,6 +121,11 @@ const SingleQuestionForm = ({
     name: `questions.${index}.answerType`,
   });
 
+  const puzzleAnswerType = useWatch({
+    control,
+    name: `questions.${index}.puzzleAnswerType`,
+  });
+
   const options = useWatch({
     control,
     name: `questions.${index}.options`,
@@ -133,7 +138,7 @@ const SingleQuestionForm = ({
 
   const handleCheckboxChange = (optionIndex = -1) => {
     const currentFieldValue = getValues(`questions.${index}.options`)[optionIndex];
-    if (answerType === "mcq") {
+    if (answerType === "mcq" || (answerType === "puzzle" && puzzleAnswerType === "mcq")) {
       //create all fields to false and then set current to true
       fields.forEach((field, idx) => {
         if (idx !== optionIndex && field.isCorrect) {
@@ -148,15 +153,24 @@ const SingleQuestionForm = ({
   };
 
   useEffect(() => {
-    if (["no_answer", "puzzle", "take_photo", "record_video", "augmented_photo"].includes(answerType)) {
+    if (["no_answer", "take_photo", "record_video", "augmented_photo"].includes(answerType)) {
       setValue(`questions.${index}.correctAnswers`, []);
     } else if (answerType === "mcq" || answerType === "multiple") {
       setValue(
         `questions.${index}.correctAnswers`,
         options?.filter((op) => op.isCorrect)?.map((op) => op.text) || []
       );
+    } else if (answerType === "puzzle") {
+      if (puzzleAnswerType === "mcq") {
+        setValue(
+          `questions.${index}.correctAnswers`,
+          options?.filter((op) => op.isCorrect)?.map((op) => op.text) || []
+        );
+      } else {
+        setValue(`questions.${index}.correctAnswers`, []);
+      }
     }
-  }, [answerType, options, setValue, index]);
+  }, [answerType, puzzleAnswerType, options, setValue, index]);
 
   useEffect(() => {
     if (
@@ -237,7 +251,7 @@ const SingleQuestionForm = ({
              </div>
           </div>
         )}
-        {(answerType === "mcq" || answerType === "multiple") && (
+        {(answerType === "mcq" || answerType === "multiple" || (answerType === "puzzle" && puzzleAnswerType === "mcq")) && (
           <div className="border border-accent/25 rounded-lg p-4 flex flex-col gap-1">
             {errors?.questions?.[index]?.options?.message && (
               <p className="text-red-600 text-sm mb-2">
@@ -337,15 +351,57 @@ const SingleQuestionForm = ({
                 Add New Puzzles
               </Button>
             </div>
-            <CommonInput
-              labelName="Answer Text"
-              id={`questions.${index}.puzzleAnswerText`}
-              name={`questions.${index}.puzzleAnswerText`}
-              register={register}
-              type="text"
+            <AntSearchableSelector
+              id={`questions.${index}.puzzleAnswerType`}
+              name={`questions.${index}.puzzleAnswerType`}
+              labelName="Puzzle Answer Type"
+              options={[
+                { value: "text", label: "Text" },
+                { value: "number", label: "Number" },
+                { value: "code_box", label: "Code Box" },
+                { value: "mcq", label: "Multiple With Single Answer" },
+              ]}
+              control={control}
               errors={errors}
               required
             />
+            {["text", "number"].includes(puzzleAnswerType || "") && (
+              <CommonInput
+                labelName="Answer Text"
+                id={`questions.${index}.puzzleAnswerText`}
+                name={`questions.${index}.puzzleAnswerText`}
+                register={register}
+                type={puzzleAnswerType === "number" ? "number" : "text"}
+                errors={errors}
+                required
+              />
+            )}
+            {puzzleAnswerType === "code_box" && (
+              <div className="flex gap-4">
+                <div className="w-1/2">
+                  <CommonInput
+                    labelName="Code Box Length"
+                    id={`questions.${index}.codeBoxConfig.length`}
+                    name={`questions.${index}.codeBoxConfig.length`}
+                    register={register}
+                    type="number"
+                    errors={errors}
+                    required
+                  />
+                </div>
+                <div className="w-1/2">
+                  <AntSearchableSelector
+                    id={`questions.${index}.codeBoxConfig.mode`}
+                    name={`questions.${index}.codeBoxConfig.mode`}
+                    labelName="Input Mode"
+                    options={codeBoxModes}
+                    control={control}
+                    errors={errors}
+                    required
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
