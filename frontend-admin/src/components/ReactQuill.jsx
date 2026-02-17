@@ -171,45 +171,44 @@ const RichTextEditor = ({
     const quill = quillRef.current?.getEditor?.();
     if (!quill) return;
 
-    try {
-      quill.clipboard.addMatcher('IMG', (node, delta) => {
-        // Ensure a centered line after the image embed
-        if (delta && Array.isArray(delta.ops)) {
-          // Only add centered newline if not already present
-          const hasNewlineAfter =
-            delta.ops.length > 1 &&
-            typeof delta.ops[delta.ops.length - 1]?.insert === 'string' &&
-            delta.ops[delta.ops.length - 1]?.insert.includes('\n');
-          if (!hasNewlineAfter) {
-            delta.ops.push({ insert: '\n', attributes: { align: 'center' } });
-          } else {
-            // force center on the newline after image
-            const last = delta.ops[delta.ops.length - 1];
-            last.attributes = { ...(last.attributes || {}), align: 'center' };
-          }
-        }
-        return delta;
-      });
-    } catch {}
-
-    const handleTextChange = () => {
-      // On any change, ensure all image lines are centered if not explicitly aligned
+    const handleTextChange = (delta, oldDelta, source) => {
+      if (source !== 'user') return;
+      
       try {
         const contents = quill.getContents();
+        let needsUpdate = false;
         let idx = 0;
-        contents.ops?.forEach((op) => {
+        
+        contents.ops?.forEach((op, opIndex) => {
           const isImage = op.insert && op.insert.image;
-          const len =
-            op.insert && typeof op.insert === 'string'
-              ? op.insert.length
-              : isImage
-              ? 1
-              : 0;
+          const len = op.insert && typeof op.insert === 'string'
+            ? op.insert.length
+            : isImage ? 1 : 0;
+          
           if (isImage) {
-            quill.formatLine(idx, 1, { align: 'center' });
+            // Check if the line has center alignment
+            const format = quill.getFormat(idx, 1);
+            if (format.align !== 'center') {
+              quill.formatLine(idx, 1, { align: 'center' }, 'silent');
+              needsUpdate = true;
+            }
           }
           idx += len;
         });
+        
+        // If we made changes, trigger a silent update to persist the centering
+        if (needsUpdate && control) {
+          const updatedContents = quill.getContents();
+          // This will update the form value with centered images
+          setTimeout(() => {
+            if (control) {
+              const field = control._fields?.[name];
+              if (field?._f?.onChange) {
+                field._f.onChange({ target: { value: updatedContents } });
+              }
+            }
+          }, 0);
+        }
       } catch {}
     };
 
@@ -217,7 +216,7 @@ const RichTextEditor = ({
     return () => {
       quill.off('text-change', handleTextChange);
     };
-  }, []);
+  }, [control, name]);
 
   // Fallback: on initial load, center any images that have no alignment
   useEffect(() => {
@@ -270,8 +269,29 @@ const RichTextEditor = ({
               onChange={(content, delta, source, editor) => {
                 if (source === 'user') {
                   const contents = editor.getContents();
-                  field.onChange(contents);
-                  propOnChange(contents);
+                  
+                  // Ensure all images have center alignment in the delta
+                  let idx = 0;
+                  let modified = false;
+                  const ops = contents.ops?.map((op) => {
+                    const isImage = op.insert && op.insert.image;
+                    if (isImage) {
+                      const format = editor.getFormat(idx, 1);
+                      if (format.align !== 'center') {
+                        modified = true;
+                        editor.formatLine(idx, 1, { align: 'center' }, 'silent');
+                      }
+                    }
+                    const len = op.insert && typeof op.insert === 'string'
+                      ? op.insert.length
+                      : isImage ? 1 : 0;
+                    idx += len;
+                    return op;
+                  });
+                  
+                  const finalContents = modified ? editor.getContents() : contents;
+                  field.onChange(finalContents);
+                  propOnChange(finalContents);
                 }
               }}
               modules={modules}
