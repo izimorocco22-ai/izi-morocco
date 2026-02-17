@@ -272,6 +272,11 @@ export const editQuestionValidator = [
       'Answer Type must be text, mcq, multiple, number, no_answer, puzzle, take_photo, record_video, augmented_photo, or code_box'
     ),
 
+  check('puzzleAnswerType')
+    .optional()
+    .isIn(['code_box', 'number', 'text', 'mcq'])
+    .withMessage('Invalid Puzzle Answer Type'),
+
   check('points')
     .optional()
     .isInt({ min: 0 })

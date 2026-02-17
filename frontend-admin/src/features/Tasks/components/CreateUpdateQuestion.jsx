@@ -789,7 +789,7 @@ const CreateUpdateQuestion = ({
     if (getQuestionByIdApi.status === apiResponseType.success) {
       const response = getQuestionByIdApi.data?.response;
       setDataInSessionStorage("questionId", response?._id);
-      // Infer puzzleAnswerType if not stored
+      // Infer puzzleAnswerType if not stored (backward compatibility)
       const inferredPuzzleType =
         response?.puzzleAnswerType ||
         (response?.answerType === "puzzle"
@@ -797,9 +797,13 @@ const CreateUpdateQuestion = ({
             ? "mcq"
             : response?.codeBoxConfig
             ? "code_box"
-            : typeof response?.puzzleAnswerText === "number"
-            ? "number"
-            : "text"
+            : (() => {
+                const text = String(response?.puzzleAnswerText ?? "").trim();
+                if (text && /^[0-9]+$/.test(text)) {
+                  return "number";
+                }
+                return "text";
+              })()
           : undefined);
       reset({
         questions: [{
