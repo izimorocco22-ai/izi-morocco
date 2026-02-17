@@ -172,6 +172,32 @@ const SingleQuestionForm = ({
     }
   }, [answerType, puzzleAnswerType, options, setValue, index]);
 
+  // Normalize fields when puzzle answer type changes
+  useEffect(() => {
+    if (answerType !== "puzzle") return;
+    if (puzzleAnswerType === "mcq") {
+      const current = getValues(`questions.${index}.options`);
+      if (!current || current.length < 2) {
+        setValue(`questions.${index}.options`, [{ text: "", isCorrect: false }, { text: "", isCorrect: false }]);
+      }
+      setValue(`questions.${index}.codeBoxConfig`, undefined);
+      setValue(`questions.${index}.puzzleAnswerText`, undefined);
+    } else if (puzzleAnswerType === "code_box") {
+      const cfg = getValues(`questions.${index}.codeBoxConfig`);
+      if (!cfg || !cfg.length) {
+        setValue(`questions.${index}.codeBoxConfig`, { length: 4, mode: "alphanumeric" });
+      }
+      setValue(`questions.${index}.options`, []);
+      setValue(`questions.${index}.puzzleAnswerText`, undefined);
+    } else {
+      // text or number
+      setValue(`questions.${index}.options`, []);
+      setValue(`questions.${index}.codeBoxConfig`, undefined);
+      const txt = getValues(`questions.${index}.puzzleAnswerText`);
+      if (!txt) setValue(`questions.${index}.puzzleAnswerText`, "");
+    }
+  }, [answerType, puzzleAnswerType]);
+
   useEffect(() => {
     if (
       options?.length === 0 &&

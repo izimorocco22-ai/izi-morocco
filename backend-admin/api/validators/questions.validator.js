@@ -98,6 +98,13 @@ export const createQuestionValidator = [
     .withMessage(
       'Answer Type must be text, mcq, multiple, number, no_answer, puzzle, take_photo, record_video, augmented_photo, or code_box'
     ),
+  // Require puzzleAnswerType when puzzle selected
+  check('puzzleAnswerType')
+    .if((value, { req }) => req.body.answerType === 'puzzle')
+    .exists()
+    .withMessage('Puzzle Answer Type is required for puzzle')
+    .isIn(['code_box', 'number', 'text', 'mcq'])
+    .withMessage('Invalid Puzzle Answer Type'),
 
   check('points')
     .exists()
@@ -106,7 +113,7 @@ export const createQuestionValidator = [
     .withMessage('Points must be a positive integer'),
 
   check('options')
-    .if((value, { req }) => ['mcq', 'multiple'].includes(req.body.answerType))
+    .if((value, { req }) => ['mcq', 'multiple'].includes(req.body.answerType) || (req.body.answerType === 'puzzle' && req.body.puzzleAnswerType === 'mcq'))
     .exists()
     .withMessage('Options are required for MCQ/Multiple')
     .isArray({ min: 2 })
@@ -114,14 +121,14 @@ export const createQuestionValidator = [
     .custom(validateOptionsUniqueness),
 
   check('options.*.text')
-    .if((value, { req }) => ['mcq', 'multiple'].includes(req.body.answerType))
+    .if((value, { req }) => ['mcq', 'multiple'].includes(req.body.answerType) || (req.body.answerType === 'puzzle' && req.body.puzzleAnswerType === 'mcq'))
     .exists()
     .withMessage('Option text is required')
     .notEmpty()
     .withMessage('Option text cannot be empty'),
 
   check('options.*.isCorrect')
-    .if((value, { req }) => ['mcq', 'multiple'].includes(req.body.answerType))
+    .if((value, { req }) => ['mcq', 'multiple'].includes(req.body.answerType) || (req.body.answerType === 'puzzle' && req.body.puzzleAnswerType === 'mcq'))
     .exists()
     .withMessage('isCorrect is required for each option')
     .isBoolean()
@@ -151,7 +158,10 @@ export const createQuestionValidator = [
 
   check('correctAnswers')
     .if(
-      (value, { req }) => !['no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'].includes(req.body.answerType)
+      (value, { req }) =>
+        !['no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'].includes(req.body.answerType) ||
+        (req.body.answerType === 'puzzle' && req.body.puzzleAnswerType === 'code_box') ||
+        (req.body.answerType === 'puzzle' && req.body.puzzleAnswerType === 'mcq')
     )
     .exists()
     .withMessage('correctAnswers are required')
@@ -161,14 +171,14 @@ export const createQuestionValidator = [
     .custom(validateCorrectAnswersMatchOptions),
 
   check('correctAnswers')
-    .if((value, { req }) => ['text', 'number', 'code_box'].includes(req.body.answerType))
+    .if((value, { req }) => ['text', 'number', 'code_box'].includes(req.body.answerType) || (req.body.answerType === 'puzzle' && req.body.puzzleAnswerType === 'code_box'))
     .isArray({ min: 1, max: 1 })
     .withMessage(
       'text/number/code_box answer types must have exactly one correct answer'
     ),
 
   check('codeBoxConfig')
-    .if((value, { req }) => req.body.answerType === 'code_box')
+    .if((value, { req }) => req.body.answerType === 'code_box' || (req.body.answerType === 'puzzle' && req.body.puzzleAnswerType === 'code_box'))
     .exists()
     .withMessage('Code Box configuration is required')
     .custom((value) => {
@@ -198,7 +208,7 @@ export const createQuestionValidator = [
     .withMessage('Puzzle should not be provided for non-puzzle answer types'),
 
   check('puzzleAnswerText')
-    .if((value, { req }) => req.body.answerType === 'puzzle')
+    .if((value, { req }) => req.body.answerType === 'puzzle' && ['text', 'number'].includes(req.body.puzzleAnswerType))
     .exists()
     .withMessage('Answer text is required for puzzle type questions')
     .isString()
@@ -207,7 +217,7 @@ export const createQuestionValidator = [
     .withMessage('Answer text cannot be empty'),
 
   check('puzzleAnswerText')
-    .if((value, { req }) => req.body.answerType !== 'puzzle')
+    .if((value, { req }) => req.body.answerType !== 'puzzle' || (req.body.answerType === 'puzzle' && !['text', 'number'].includes(req.body.puzzleAnswerType)))
     .not()
     .exists()
     .withMessage('Answer text should not be provided for non-puzzle answer types'),
