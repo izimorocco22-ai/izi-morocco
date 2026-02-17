@@ -15,6 +15,7 @@ const GameActivation = () => {
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
+  const [openTicketModal, setOpenTicketModal] = useState(false);
   const goTo = useNavigateTo();
   const { getGroupedActivationsApi } = useSelector(
     (state) => state.gameActivation
@@ -122,9 +123,14 @@ const GameActivation = () => {
           )}
         >
           <h1 className="text-2xl font-bold">Game Activation</h1>
-          <Button onClick={() => setOpenModal(true)}>
-            Create Game Activation
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setOpenModal(true)}>
+              Create Game Activation
+            </Button>
+            <Button variant="light" onClick={() => setOpenTicketModal(true)}>
+              Create Ticket
+            </Button>
+          </div>
         </div>
         <TableGrid
           data={gameActivationsList}
@@ -146,7 +152,15 @@ const GameActivation = () => {
           }}
         />
       )}
-      
+      {openTicketModal && (
+        <CreateGameActivationModal
+          onClose={() => {
+            setOpenTicketModal(false);
+          }}
+          title="Create Ticket"
+          hideQuantity
+        />
+      )}
     </>
   );
 };

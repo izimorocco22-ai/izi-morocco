@@ -15,7 +15,12 @@ import {
 import useApiResponseHandler from "../../../hooks/useApiResponseHandler";
 import AntSearchableSelector from "../../../components/form/AntDesign/AntSearchableSelector";
 
-const CreateGameActivationModal = ({ open = true, onClose }) => {
+const CreateGameActivationModal = ({
+  open = true,
+  onClose,
+  title = "Create Game Activation",
+  hideQuantity = false,
+}) => {
   const form = useForm({
     defaultValues: {
       gameId: "",
@@ -41,8 +46,11 @@ const CreateGameActivationModal = ({ open = true, onClose }) => {
     })) || [];
 
   const onSubmit = async (data) => {
-    console.log("form submitted", data);
-    dispatch(createGameActivation(data));
+    const payload = {
+      ...data,
+      quantity: hideQuantity ? 1 : Number(data.quantity || 1),
+    };
+    dispatch(createGameActivation(payload));
   };
 
   useEffect(() => {
@@ -68,7 +76,7 @@ const CreateGameActivationModal = ({ open = true, onClose }) => {
     <Modal
       open={open}
       onOpenChange={onClose}
-      title={<span className="text-2xl">Create Game Activation</span>}
+      title={<span className="text-2xl">{title}</span>}
       contentClassName="min-w-[90%] lg:min-w-[840px] min-h-[70vh] overflow-y-auto overflow-x-clip"
       className="overflow-y-scroll scrollbar-hide text-blue min-h-[200px]"
       showClose
@@ -96,15 +104,17 @@ const CreateGameActivationModal = ({ open = true, onClose }) => {
           errors={errors}
         />
 
-        <CommonInput
-          labelName="Quantity"
-          id="quantity"
-          name="quantity"
-          type="number"
-          register={register}
-          required
-          errors={errors}
-        />
+        {!hideQuantity && (
+          <CommonInput
+            labelName="Quantity"
+            id="quantity"
+            name="quantity"
+            type="number"
+            register={register}
+            required
+            errors={errors}
+          />
+        )}
 
         <Button type="submit" className="w-fit">
           {"Create"}
