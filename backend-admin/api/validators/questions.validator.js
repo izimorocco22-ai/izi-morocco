@@ -191,12 +191,40 @@ export const createQuestionValidator = [
       if (typeof value !== 'object' || value === null) {
         throw new Error('Code Box configuration must be an object');
       }
-      if (!value.length || typeof value.length !== 'number' || value.length < 1) {
-        throw new Error('Code Box length must be a positive number');
+      if (!value.length || typeof value.length !== 'number' || value.length < 1 || value.length > 20) {
+        throw new Error('Code Box length must be between 1 and 20');
       }
       if (!value.mode || !['numeric', 'alpha', 'alphanumeric'].includes(value.mode)) {
         throw new Error('Code Box mode must be numeric, alpha, or alphanumeric');
       }
+      return true;
+    }),
+
+  check('correctAnswers')
+    .if((value, { req }) => req.body.answerType === 'code_box' || (req.body.answerType === 'puzzle' && req.body.puzzleAnswerType === 'code_box'))
+    .custom((answers, { req }) => {
+      if (!answers || answers.length !== 1) {
+        throw new Error('Code box must have exactly one correct answer');
+      }
+      const answer = String(answers[0]);
+      const config = req.body.codeBoxConfig;
+      
+      if (answer.length !== config.length) {
+        throw new Error(`Correct answer must be exactly ${config.length} characters`);
+      }
+      
+      if (config.mode === 'numeric' && !/^[0-9]+$/.test(answer)) {
+        throw new Error('Correct answer must contain only numbers for numeric mode');
+      }
+      
+      if (config.mode === 'alpha' && !/^[a-zA-Z]+$/.test(answer)) {
+        throw new Error('Correct answer must contain only letters for alpha mode');
+      }
+      
+      if (config.mode === 'alphanumeric' && !/^[a-zA-Z0-9]+$/.test(answer)) {
+        throw new Error('Correct answer must contain only letters and numbers for alphanumeric mode');
+      }
+      
       return true;
     }),
 
@@ -289,6 +317,23 @@ export const editQuestionValidator = [
     .withMessage('Points must be a positive integer'),
 
   check('options').optional().isArray().withMessage('Options must be an array'),
+
+  check('codeBoxConfig')
+    .optional()
+    .custom((value) => {
+      if (value !== undefined && value !== null) {
+        if (typeof value !== 'object' || Array.isArray(value)) {
+          throw new Error('Code Box configuration must be an object');
+        }
+        if (value.length !== undefined && (typeof value.length !== 'number' || value.length < 1 || value.length > 20)) {
+          throw new Error('Code Box length must be between 1 and 20');
+        }
+        if (value.mode !== undefined && !['numeric', 'alpha', 'alphanumeric'].includes(value.mode)) {
+          throw new Error('Code Box mode must be numeric, alpha, or alphanumeric');
+        }
+      }
+      return true;
+    }),
 
   check('correctAnswers')
     .optional()
