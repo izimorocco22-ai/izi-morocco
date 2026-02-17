@@ -61,6 +61,11 @@ const Dashboard = () => {
 
   const totalQuestions = questions.total;
 
+  const safeActivationCodes = activationCodes || {
+    total: 0,
+    perGame: [],
+  };
+
   const activationCodesChartConfig = useMemo(
     () => ({
       count: {
@@ -256,16 +261,17 @@ const Dashboard = () => {
           <span className="text-sm text-gray-600">
             Total Codes:{" "}
             <span className="font-semibold">
-              {activationCodes.total.toLocaleString()}
+              {safeActivationCodes.total.toLocaleString()}
             </span>
           </span>
         </div>
-        {activationCodes.perGame && activationCodes.perGame.length > 0 ? (
+        {safeActivationCodes.perGame &&
+        safeActivationCodes.perGame.length > 0 ? (
           <ChartContainer
             config={activationCodesChartConfig}
             className="w-full max-h-[320px] min-h-[220px]"
           >
-            <BarChart data={activationCodes.perGame}>
+            <BarChart data={safeActivationCodes.perGame}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="gameTitle"
