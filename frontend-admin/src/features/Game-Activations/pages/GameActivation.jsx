@@ -31,6 +31,7 @@ const GameActivation = () => {
         gameTitle: a.gameDetails?.title || "N/A",
         playerName: a.playerDetails?.name || "N/A",
         playerEmail: a.playerDetails?.email || "N/A",
+        vendor: a.vendor || "",
       };
     }) || [];
 
@@ -43,6 +44,7 @@ const GameActivation = () => {
   const columns = [
     { value: "playerName", name: "Player Name" },
     { value: "playerEmail", name: "Player Email", _class: "col-span-2" },
+    { value: "vendor", name: "Vendor", _class: "col-span-1" },
     { value: "codeCount", name: "Code Count", _class: "col-span-1" },
     { value: "gameTitle", name: "Game Title", _class: "col-span-3" },
     {
