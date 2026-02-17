@@ -46,7 +46,8 @@ const GameActivation = () => {
     { value: "playerEmail", name: "Player Email", _class: "col-span-2" },
     { value: "vendor", name: "Vendor", _class: "col-span-1" },
     { value: "codeCount", name: "Code Count", _class: "col-span-1" },
-    { value: "gameTitle", name: "Game Title", _class: "col-span-3" },
+    // reduce Game Title span so header fits in single grid row (total 12)
+    { value: "gameTitle", name: "Game Title", _class: "col-span-2" },
     {
       value: "createdAt",
       name: "Created At",
