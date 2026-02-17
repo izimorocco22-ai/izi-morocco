@@ -622,6 +622,8 @@ const CreateUpdateQuestion = ({
             options,
             puzzle,
             codeBoxConfig,
+            puzzleAnswerType,
+            puzzleAnswerText,
         } = qData;
         
         const pureData = { answerType, tags, points };
@@ -630,7 +632,19 @@ const CreateUpdateQuestion = ({
         }
         if (answerType === "puzzle") {
             pureData.puzzle = puzzle;
-            pureData.puzzleAnswerText = qData.puzzleAnswerText;
+            pureData.puzzleAnswerType = puzzleAnswerType;
+            if (puzzleAnswerType === "mcq") {
+              pureData.options = options;
+            }
+            if (puzzleAnswerType === "code_box") {
+              pureData.codeBoxConfig = {
+                length: Number(codeBoxConfig?.length) || 4,
+                mode: codeBoxConfig?.mode || 'alphanumeric'
+              };
+            }
+            if (["text", "number"].includes(puzzleAnswerType || "")) {
+              pureData.puzzleAnswerText = String(puzzleAnswerText ?? "");
+            }
         }
         if (answerType === "code_box") {
             pureData.codeBoxConfig = {
@@ -775,6 +789,18 @@ const CreateUpdateQuestion = ({
     if (getQuestionByIdApi.status === apiResponseType.success) {
       const response = getQuestionByIdApi.data?.response;
       setDataInSessionStorage("questionId", response?._id);
+      // Infer puzzleAnswerType if not stored
+      const inferredPuzzleType =
+        response?.puzzleAnswerType ||
+        (response?.answerType === "puzzle"
+          ? response?.options?.length > 0
+            ? "mcq"
+            : response?.codeBoxConfig
+            ? "code_box"
+            : typeof response?.puzzleAnswerText === "number"
+            ? "number"
+            : "text"
+          : undefined);
       reset({
         questions: [{
             questionName: response?.questionName,
@@ -790,6 +816,7 @@ const CreateUpdateQuestion = ({
             // response.puzzle may be populated object or ObjectId — prefer _id if present
             puzzle: response?.puzzle?._id || response?.puzzle || "",
             puzzleAnswerText: response?.puzzleAnswerText || "",
+            puzzleAnswerType: inferredPuzzleType,
             codeBoxConfig: response?.codeBoxConfig || { length: 4, mode: 'alphanumeric' },
         }]
       });
