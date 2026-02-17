@@ -1,4 +1,13 @@
-import { Label, Pie, PieChart } from "recharts";
+import {
+  Label,
+  Pie,
+  PieChart,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
@@ -23,9 +32,17 @@ const Dashboard = () => {
     activeUsers: { total: 0, trending: "+0%", retentionRate: "N/A" },
     tagsChartData: [],
     recentActivity: [],
+    activationCodes: { total: 0, perGame: [] },
   };
 
-  const { games, questions, tagsChartData, activeUsers, recentActivity } = dashboardData;
+  const {
+    games,
+    questions,
+    tagsChartData,
+    activeUsers,
+    recentActivity,
+    activationCodes,
+  } = dashboardData;
 
   const tagsChartConfig = useMemo(() => {
     const config = {
@@ -43,6 +60,16 @@ const Dashboard = () => {
   }, [tagsChartData]);
 
   const totalQuestions = questions.total;
+
+  const activationCodesChartConfig = useMemo(
+    () => ({
+      count: {
+        label: "Codes",
+        color: "#f97316",
+      },
+    }),
+    []
+  );
 
   if (isLoading) {
     return (
@@ -222,6 +249,46 @@ const Dashboard = () => {
             )}
           </div>
         </div>
+      </div>
+      <div className="mt-6 border border-warning/50 rounded-lg h-full p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold text-xl">Activation Codes by Game</h3>
+          <span className="text-sm text-gray-600">
+            Total Codes:{" "}
+            <span className="font-semibold">
+              {activationCodes.total.toLocaleString()}
+            </span>
+          </span>
+        </div>
+        {activationCodes.perGame && activationCodes.perGame.length > 0 ? (
+          <ChartContainer
+            config={activationCodesChartConfig}
+            className="w-full max-h-[320px] min-h-[220px]"
+          >
+            <BarChart data={activationCodes.perGame}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="gameTitle"
+                tick={{ fontSize: 10 }}
+                interval={0}
+                angle={-20}
+                textAnchor="end"
+              />
+              <YAxis />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar
+                dataKey="count"
+                name="Codes"
+                fill="var(--color-count)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ChartContainer>
+        ) : (
+          <div className="w-full text-center text-gray-500 py-10">
+            No activation codes generated yet
+          </div>
+        )}
       </div>
     </div>
   );

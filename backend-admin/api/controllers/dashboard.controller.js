@@ -87,6 +87,42 @@ export const getDashboardStats = async (req, res) => {
         }
     ]);
 
+    // Activation Codes Stats
+    const totalActivationCodes = await GameActivationCodes.countDocuments();
+
+    const activationCodesByGame = await GameActivationCodes.aggregate([
+      {
+        $group: {
+          _id: '$gameId',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $lookup: {
+          from: 'GameInfo',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'game',
+        },
+      },
+      {
+        $unwind: {
+          path: '$game',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          gameId: '$_id',
+          gameTitle: { $ifNull: ['$game.title', 'Unknown Game'] },
+          count: 1,
+        },
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ]);
+
     const dashboardData = {
       games: {
         total: totalGames,
@@ -108,7 +144,11 @@ export const getDashboardStats = async (req, res) => {
         retentionRate: "N/A"
       },
       tagsChartData: tagsDistribution,
-      recentActivity
+      recentActivity,
+      activationCodes: {
+        total: totalActivationCodes,
+        perGame: activationCodesByGame
+      }
     };
 
     res.status(httpStatus.OK).json(buildResponse(httpStatus.OK, dashboardData, 'Dashboard stats fetched successfully'));
