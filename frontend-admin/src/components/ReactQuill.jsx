@@ -62,38 +62,46 @@ const RichTextEditor = ({
     ]
   };
 
+  // Custom image handler to auto-center images
+  const imageHandler = useCallback(() => {
+    const quill = quillRef.current?.getEditor?.();
+    if (!quill) return;
+
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const range = quill.getSelection(true);
+        // Insert image
+        quill.insertEmbed(range.index, 'image', e.target?.result, 'user');
+        // Move cursor after image
+        quill.setSelection(range.index + 1, 0, 'silent');
+        // Format the line with center alignment
+        quill.formatLine(range.index, 1, { align: 'center' }, 'user');
+      };
+      reader.readAsDataURL(file);
+    };
+  }, []);
+
   const modules = {
     toolbar: {
       container: toolbarConfigs[toolbar] || toolbarConfigs.full,
       handlers: {
+        image: imageHandler,
         align: (value) => {
           const quill = quillRef.current?.getEditor?.();
           if (!quill) return;
           const sel = quill.getSelection(true);
           if (!sel) return;
           const alignValue = value || '';
-          // Apply to all lines in selection (Ctrl+A friendly)
-          const end = sel.index + sel.length;
-          let i = sel.index;
-          try {
-            while (i <= end) {
-              quill.formatLine(i, 1, { align: alignValue });
-              const res = quill.getLine(i);
-              const line = res && res[0];
-              const len = line && line.length ? line.length() : 0;
-              if (len === 0) {
-                // empty line, move forward by 1
-                i += 1;
-              } else {
-                // move to next line (+1 for newline)
-                i += len + 1;
-              }
-              if (i <= sel.index) break;
-            }
-          } catch {
-            // fallback: single line
-            quill.formatLine(sel.index, sel.length, { align: alignValue });
-          }
+          quill.formatLine(sel.index, sel.length || 1, { align: alignValue }, 'user');
         }
       }
     },
@@ -162,98 +170,13 @@ const RichTextEditor = ({
     [&_.ql-editor_.ql-align-center]:text-center
     [&_.ql-editor_.ql-align-center_img]:mx-auto
     [&_.ql-editor_.ql-align-center_img]:block
+    [&_.ql-editor_p_img]:mx-auto
+    [&_.ql-editor_p_img]:block
     [&_.ql-editor_img]:max-w-full
     [&_.ql-editor_img]:h-auto
   `;
 
-  // Auto-center newly inserted images immediately
-  useEffect(() => {
-    const quill = quillRef.current?.getEditor?.();
-    if (!quill) return;
 
-    // Center images on paste/insert
-    const handleTextChange = (delta, oldDelta, source) => {
-      if (source !== 'user') return;
-      
-      // Check if an image was just inserted
-      const hasImageInsert = delta.ops?.some(op => op.insert && op.insert.image);
-      
-      if (hasImageInsert) {
-        // Batch the formatting to avoid multiple updates
-        quill.history.cutoff();
-        
-        requestAnimationFrame(() => {
-          try {
-            const contents = quill.getContents();
-            let idx = 0;
-            let needsFormat = false;
-            
-            contents.ops?.forEach((op) => {
-              const isImage = op.insert && op.insert.image;
-              const len = op.insert && typeof op.insert === 'string'
-                ? op.insert.length
-                : isImage ? 1 : 0;
-              
-              if (isImage) {
-                const format = quill.getFormat(idx, 1);
-                if (format.align !== 'center') {
-                  needsFormat = true;
-                }
-              }
-              idx += len;
-            });
-            
-            if (needsFormat) {
-              idx = 0;
-              contents.ops?.forEach((op) => {
-                const isImage = op.insert && op.insert.image;
-                const len = op.insert && typeof op.insert === 'string'
-                  ? op.insert.length
-                  : isImage ? 1 : 0;
-                
-                if (isImage) {
-                  quill.formatLine(idx, 1, { align: 'center' }, 'api');
-                }
-                idx += len;
-              });
-            }
-          } catch {}
-        });
-      }
-    };
-
-    quill.on('text-change', handleTextChange);
-    return () => {
-      quill.off('text-change', handleTextChange);
-    };
-  }, []);
-
-  // Center images on initial mount only
-  useEffect(() => {
-    const quill = quillRef.current?.getEditor?.();
-    if (!quill) return;
-    
-    const timer = setTimeout(() => {
-      try {
-        const contents = quill.getContents();
-        let idx = 0;
-        
-        contents.ops?.forEach((op) => {
-          const isImage = op.insert && op.insert.image;
-          const len = op.insert && typeof op.insert === 'string'
-            ? op.insert.length
-            : isImage ? 1 : 0;
-          
-          if (isImage) {
-            quill.formatLine(idx, 1, { align: 'center' }, 'api');
-          }
-          idx += len;
-        });
-      } catch {}
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className={containerClasses}>
