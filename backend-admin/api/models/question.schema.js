@@ -28,7 +28,7 @@ const QuestionSchema = new mongoose.Schema({
       enum: ['numeric', 'alpha', 'alphanumeric']
     },
     _id: false,
-    default: undefined
+    // no default; field remains absent unless provided
   },
   
   puzzleAnswerType: {
