@@ -166,80 +166,74 @@ const RichTextEditor = ({
     [&_.ql-editor_img]:h-auto
   `;
 
-  // Auto-center newly inserted images and allow alignment via toolbar
+  // Auto-center newly inserted images immediately
   useEffect(() => {
     const quill = quillRef.current?.getEditor?.();
     if (!quill) return;
 
+    // Center images on paste/insert
     const handleTextChange = (delta, oldDelta, source) => {
       if (source !== 'user') return;
       
-      try {
-        const contents = quill.getContents();
-        let needsUpdate = false;
-        let idx = 0;
-        
-        contents.ops?.forEach((op, opIndex) => {
-          const isImage = op.insert && op.insert.image;
-          const len = op.insert && typeof op.insert === 'string'
-            ? op.insert.length
-            : isImage ? 1 : 0;
-          
-          if (isImage) {
-            // Check if the line has center alignment
-            const format = quill.getFormat(idx, 1);
-            if (format.align !== 'center') {
-              quill.formatLine(idx, 1, { align: 'center' }, 'silent');
-              needsUpdate = true;
-            }
-          }
-          idx += len;
-        });
-        
-        // If we made changes, trigger a silent update to persist the centering
-        if (needsUpdate && control) {
-          const updatedContents = quill.getContents();
-          // This will update the form value with centered images
-          setTimeout(() => {
-            if (control) {
-              const field = control._fields?.[name];
-              if (field?._f?.onChange) {
-                field._f.onChange({ target: { value: updatedContents } });
+      // Check if an image was just inserted
+      const hasImageInsert = delta.ops?.some(op => op.insert && op.insert.image);
+      
+      if (hasImageInsert) {
+        // Use setTimeout to ensure the image is in the DOM
+        setTimeout(() => {
+          try {
+            const contents = quill.getContents();
+            let idx = 0;
+            
+            contents.ops?.forEach((op) => {
+              const isImage = op.insert && op.insert.image;
+              const len = op.insert && typeof op.insert === 'string'
+                ? op.insert.length
+                : isImage ? 1 : 0;
+              
+              if (isImage) {
+                // Apply center alignment immediately
+                quill.formatLine(idx, 1, { align: 'center' }, 'silent');
               }
-            }
-          }, 0);
-        }
-      } catch {}
+              idx += len;
+            });
+          } catch {}
+        }, 10);
+      }
     };
 
     quill.on('text-change', handleTextChange);
     return () => {
       quill.off('text-change', handleTextChange);
     };
-  }, [control, name]);
+  }, []);
 
-  // Fallback: on initial load, center any images that have no alignment
+  // Fallback: center images on initial load and when value changes
   useEffect(() => {
     const quill = quillRef.current?.getEditor?.();
     if (!quill) return;
-    try {
-      const contents = quill.getContents();
-      let idx = 0;
-      contents.ops?.forEach((op) => {
-        const len =
-          op.insert && typeof op.insert === 'string'
+    
+    setTimeout(() => {
+      try {
+        const contents = quill.getContents();
+        let idx = 0;
+        let hasImages = false;
+        
+        contents.ops?.forEach((op) => {
+          const isImage = op.insert && op.insert.image;
+          const len = op.insert && typeof op.insert === 'string'
             ? op.insert.length
-            : op.insert && op.insert.image
-            ? 1
-            : 0;
-        if (op.insert && op.insert.image) {
-          // Attempt to center the image line
-          quill.formatLine(idx, 1, { align: 'center' });
-        }
-        idx += len;
-      });
-    } catch {}
-  }, []);
+            : isImage ? 1 : 0;
+          
+          if (isImage) {
+            hasImages = true;
+            quill.formatLine(idx, 1, { align: 'center' }, 'silent');
+          }
+          idx += len;
+        });
+      } catch {}
+    }, 100);
+  }, [editorValue, value, defaultValue]);
 
   return (
     <div className={containerClasses}>
@@ -267,32 +261,9 @@ const RichTextEditor = ({
               theme={theme}
               value={field.value}
               onChange={(content, delta, source, editor) => {
-                if (source === 'user') {
-                  const contents = editor.getContents();
-                  
-                  // Ensure all images have center alignment in the delta
-                  let idx = 0;
-                  let modified = false;
-                  const ops = contents.ops?.map((op) => {
-                    const isImage = op.insert && op.insert.image;
-                    if (isImage) {
-                      const format = editor.getFormat(idx, 1);
-                      if (format.align !== 'center') {
-                        modified = true;
-                        editor.formatLine(idx, 1, { align: 'center' }, 'silent');
-                      }
-                    }
-                    const len = op.insert && typeof op.insert === 'string'
-                      ? op.insert.length
-                      : isImage ? 1 : 0;
-                    idx += len;
-                    return op;
-                  });
-                  
-                  const finalContents = modified ? editor.getContents() : contents;
-                  field.onChange(finalContents);
-                  propOnChange(finalContents);
-                }
+                const contents = editor.getContents();
+                field.onChange(contents);
+                propOnChange(contents);
               }}
               modules={modules}
               formats={formats}
