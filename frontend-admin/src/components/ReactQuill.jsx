@@ -179,8 +179,8 @@ const RichTextEditor = ({
       const hasImageInsert = delta.ops?.some(op => op.insert && op.insert.image);
       
       if (hasImageInsert) {
-        // Use setTimeout to ensure the image is in the DOM
-        setTimeout(() => {
+        // Use requestAnimationFrame to ensure the image is in the DOM
+        requestAnimationFrame(() => {
           try {
             const contents = quill.getContents();
             let idx = 0;
@@ -198,7 +198,7 @@ const RichTextEditor = ({
               idx += len;
             });
           } catch {}
-        }, 10);
+        });
       }
     };
 
@@ -208,16 +208,15 @@ const RichTextEditor = ({
     };
   }, []);
 
-  // Fallback: center images on initial load and when value changes
+  // Center images on initial mount only
   useEffect(() => {
     const quill = quillRef.current?.getEditor?.();
     if (!quill) return;
     
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       try {
         const contents = quill.getContents();
         let idx = 0;
-        let hasImages = false;
         
         contents.ops?.forEach((op) => {
           const isImage = op.insert && op.insert.image;
@@ -226,14 +225,15 @@ const RichTextEditor = ({
             : isImage ? 1 : 0;
           
           if (isImage) {
-            hasImages = true;
             quill.formatLine(idx, 1, { align: 'center' }, 'silent');
           }
           idx += len;
         });
       } catch {}
     }, 100);
-  }, [editorValue, value, defaultValue]);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className={containerClasses}>
