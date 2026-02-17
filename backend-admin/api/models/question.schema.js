@@ -22,12 +22,13 @@ const QuestionSchema = new mongoose.Schema({
   },
 
   codeBoxConfig: {
-    length: { type: Number, default: 4 },
+    length: { type: Number },
     mode: { 
       type: String, 
-      enum: ['numeric', 'alpha', 'alphanumeric'], 
-      default: 'alphanumeric' 
-    }
+      enum: ['numeric', 'alpha', 'alphanumeric']
+    },
+    _id: false,
+    default: undefined
   },
   
   puzzleAnswerType: {
@@ -116,6 +117,9 @@ QuestionSchema.pre('save', function(next) {
   
   if (this.answerType !== 'puzzle') {
     this.puzzle = undefined;
+    if (this.answerType !== 'code_box') {
+      this.codeBoxConfig = undefined;
+    }
   }
   
   

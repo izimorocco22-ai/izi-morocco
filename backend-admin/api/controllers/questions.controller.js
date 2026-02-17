@@ -60,14 +60,35 @@ export const createQuestion = async (req, res) => {
       validatedData.createdBy = req.user?.id;
     }
 
-    console.log(req.user);
-
-    console.log('---', validatedData);
+    console.log('CreateQuestion: user', req.user?._id);
+    console.log('CreateQuestion: validated', {
+      questionName: validatedData.questionName,
+      answerType: validatedData.answerType,
+      puzzle: validatedData.puzzle,
+      puzzleAnswerType: validatedData.puzzleAnswerType,
+      puzzleAnswerText: validatedData.puzzleAnswerText,
+      optionsCount: Array.isArray(validatedData.options) ? validatedData.options.length : 0,
+      correctAnswers: validatedData.correctAnswers,
+      codeBoxConfig: validatedData.codeBoxConfig,
+      tagsCount: Array.isArray(validatedData.tags) ? validatedData.tags.length : 0,
+      points: validatedData.points
+    });
 
     validatedData.createdBy = req.user._id;
 
     const newQuestion = new Questions(validatedData);
+    console.log('CreateQuestion: saving...');
     await newQuestion.save();
+    console.log('CreateQuestion: saved', {
+      _id: newQuestion._id,
+      answerType: newQuestion.answerType,
+      puzzle: newQuestion.puzzle,
+      puzzleAnswerType: newQuestion.puzzleAnswerType,
+      puzzleAnswerText: newQuestion.puzzleAnswerText,
+      optionsCount: Array.isArray(newQuestion.options) ? newQuestion.options.length : 0,
+      correctAnswers: newQuestion.correctAnswers,
+      codeBoxConfig: newQuestion.codeBoxConfig
+    });
 
     res
       .status(httpStatus.CREATED)
@@ -88,7 +109,18 @@ export const editQuestion = async (req, res) => {
     const validatedData = matchedData(req);
     const { id } = validatedData;
 
-    console.log('---', validatedData);
+    console.log('EditQuestion: validated', {
+      id,
+      questionName: validatedData.questionName,
+      answerType: validatedData.answerType,
+      puzzle: validatedData.puzzle,
+      puzzleAnswerType: validatedData.puzzleAnswerType,
+      puzzleAnswerText: validatedData.puzzleAnswerText,
+      optionsCount: Array.isArray(validatedData.options) ? validatedData.options.length : undefined,
+      correctAnswers: validatedData.correctAnswers,
+      codeBoxConfig: validatedData.codeBoxConfig,
+      points: validatedData.points
+    });
 
     const question = await Questions.findById(id);
 
@@ -142,7 +174,18 @@ export const editQuestion = async (req, res) => {
     }
 
     Object.assign(question, validatedData);
+    console.log('EditQuestion: saving...', { id: question._id });
     await question.save();
+    console.log('EditQuestion: saved', {
+      _id: question._id,
+      answerType: question.answerType,
+      puzzle: question.puzzle,
+      puzzleAnswerType: question.puzzleAnswerType,
+      puzzleAnswerText: question.puzzleAnswerText,
+      optionsCount: Array.isArray(question.options) ? question.options.length : 0,
+      correctAnswers: question.correctAnswers,
+      codeBoxConfig: question.codeBoxConfig
+    });
 
     res
       .status(httpStatus.OK)

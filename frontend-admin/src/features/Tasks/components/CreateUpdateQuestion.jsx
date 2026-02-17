@@ -817,7 +817,7 @@ const CreateUpdateQuestion = ({
             puzzle: response?.puzzle?._id || response?.puzzle || "",
             puzzleAnswerText: response?.puzzleAnswerText || "",
             puzzleAnswerType: inferredPuzzleType,
-            codeBoxConfig: response?.codeBoxConfig || { length: 4, mode: 'alphanumeric' },
+            codeBoxConfig: response?.codeBoxConfig,
         }]
       });
     } else if (getQuestionByIdApi.status === apiResponseType.failed) {
