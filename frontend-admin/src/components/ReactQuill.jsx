@@ -94,15 +94,7 @@ const RichTextEditor = ({
     toolbar: {
       container: toolbarConfigs[toolbar] || toolbarConfigs.full,
       handlers: {
-        image: imageHandler,
-        align: (value) => {
-          const quill = quillRef.current?.getEditor?.();
-          if (!quill) return;
-          const sel = quill.getSelection(true);
-          if (!sel) return;
-          const alignValue = value || '';
-          quill.formatLine(sel.index, sel.length || 1, { align: alignValue }, 'user');
-        }
+        image: imageHandler
       }
     },
     clipboard: {
