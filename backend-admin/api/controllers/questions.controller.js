@@ -48,7 +48,9 @@ export const createQuestion = async (req, res) => {
     }
 
     if (validatedData.answerType === 'puzzle') {
-      validatedData.correctAnswers = [];
+      if (['text', 'number'].includes(validatedData.puzzleAnswerType)) {
+        validatedData.correctAnswers = [];
+      }
     }
 
     if (validatedData.answerType && validatedData.answerType !== 'puzzle') {
@@ -165,7 +167,9 @@ export const editQuestion = async (req, res) => {
     }
 
     if (validatedData.answerType === 'puzzle') {
-      validatedData.correctAnswers = [];
+      if (['text', 'number'].includes(validatedData.puzzleAnswerType)) {
+        validatedData.correctAnswers = [];
+      }
     }
 
     if (validatedData.answerType && validatedData.answerType !== 'puzzle') {
