@@ -200,6 +200,13 @@ export const createQuestionValidator = [
       return true;
     }),
 
+  check('augmentedPhotoImage')
+    .if((value, { req }) => req.body.answerType === 'augmented_photo')
+    .exists()
+    .withMessage('Image is required for augmented photo type')
+    .isString()
+    .withMessage('augmentedPhotoImage must be a string'),
+
   check('correctAnswers')
     .if((value, { req }) => req.body.answerType === 'code_box' || (req.body.answerType === 'puzzle' && req.body.puzzleAnswerType === 'code_box'))
     .custom((answers, { req }) => {
@@ -343,6 +350,11 @@ export const editQuestionValidator = [
   check('puzzle').optional().isMongoId().withMessage('Invalid Puzzle ID'),
 
   check('puzzleAnswerText').optional().isString().withMessage('Answer text must be a string'),
+
+  check('augmentedPhotoImage')
+    .optional()
+    .isString()
+    .withMessage('Image must be a string'),
 
   check('tags')
     .optional()

@@ -10,7 +10,7 @@ import {
   updateQuestion,
 } from "../../../slices/questionSlice";
 import FormStepperButtons from "./FormStepperButtons";
-import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { cn } from "../../../lib/utils";
 import CheckBox from "../../../components/form/Checkbox";
@@ -35,6 +35,8 @@ import Button from "../../../components/Button";
 import CreateUpdatePuzzlesModal from "../../Puzzles/components/CreateUpdatePuzzles";
 import { useResetMultipleApiStates } from "../../../hooks/useResetMultipleApiStates";
 import CreateUpdateQuestionSkeleton from "./CreateUpdateQuestionSkeleton";
+import FileUpload from "../../../components/form/FileUpload";
+import { callAPI } from "../../../services/callApi";
 
 const defaultValueForQuestion = {
   questionName: "",
@@ -50,7 +52,8 @@ const defaultValueForQuestion = {
   codeBoxConfig: {
     length: 4,
     mode: "alphanumeric"
-  }
+  },
+  augmentedPhotoImage: null
 };
 
 const answerTypes = [
@@ -305,6 +308,15 @@ const SingleQuestionForm = ({
           errors={errors}
           required
         />
+        {answerType === "augmented_photo" && (
+          <FileUpload
+            name={`questions.${index}.augmentedPhotoImage`}
+            labelName="Reference Image"
+            type="image"
+            errors={errors}
+            required
+          />
+        )}
         {answerType === "code_box" && (
           <div className="flex gap-4">
              <div className="w-1/2">
@@ -686,9 +698,37 @@ const CreateUpdateQuestion = ({
             codeBoxConfig,
             puzzleAnswerType,
             puzzleAnswerText,
+            augmentedPhotoImage,
         } = qData;
         
         const pureData = { answerType, tags, points };
+
+        if (answerType === "augmented_photo") {
+          if (augmentedPhotoImage instanceof File) {
+            const formData = new FormData();
+            formData.append("images", augmentedPhotoImage);
+            const uploadResponse = await callAPI("/upload", {
+              method: "POST",
+              data: formData,
+              headers: { "Content-Type": "multipart/form-data" },
+              suppressError: true,
+            });
+
+            if (uploadResponse?.error) {
+              throw new Error(
+                uploadResponse?.data?.message || "Failed to upload image"
+              );
+            }
+
+            const uploaded =
+              uploadResponse?.data?.response?.images?.[0] || null;
+            if (uploaded) {
+              pureData.augmentedPhotoImage = uploaded;
+            }
+          } else if (typeof augmentedPhotoImage === "string") {
+            pureData.augmentedPhotoImage = augmentedPhotoImage;
+          }
+        }
         
         // Handle MCQ and Multiple choice
         if (answerType === "mcq" || answerType === "multiple") {
@@ -916,6 +956,7 @@ const CreateUpdateQuestion = ({
             puzzleAnswerText: String(response?.puzzleAnswerText || ""),
             puzzleAnswerType: inferredPuzzleType || "",
             codeBoxConfig: response?.codeBoxConfig || { length: 4, mode: "alphanumeric" },
+            augmentedPhotoImage: response?.augmentedPhotoImage || null,
         }]
       });
     } else if (getQuestionByIdApi.status === apiResponseType.failed) {
@@ -952,6 +993,7 @@ const CreateUpdateQuestion = ({
 
   return (
     <>
+      <FormProvider {...form}>
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <h3 className="font-semibold mb-2 text-xl">
           {getQuestionId ? "Update Question" : "Create Question"}
@@ -1001,6 +1043,7 @@ const CreateUpdateQuestion = ({
           // isDisabledNextButton={!!id || (!!getQuestionId)}
         />
       </form>
+      </FormProvider>
       {openTagModal && (
         <CreateUpdateTagModal onClose={() => setOpenTagModal(false)} />
       )}

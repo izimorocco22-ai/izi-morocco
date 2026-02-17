@@ -77,6 +77,11 @@ const QuestionSchema = new mongoose.Schema({
     default: []
   },
 
+  augmentedPhotoImage: {
+    type: String,
+    trim: true
+  },
+
   isDeleted: {
     type: Boolean,
     default: false
@@ -140,6 +145,10 @@ QuestionSchema.pre('save', function(next) {
       this.codeBoxConfig = undefined;
       this.options = [];
     }
+  }
+
+  if (this.answerType !== 'augmented_photo') {
+    this.augmentedPhotoImage = undefined;
   }
   
   next();
