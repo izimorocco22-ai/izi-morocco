@@ -141,12 +141,13 @@ export const createQuestionValidator = [
 
   check('options')
     .if((value, { req }) =>
-      ['text', 'number', 'no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo', 'code_box'].includes(req.body.answerType)
+      ['text', 'number', 'no_answer', 'take_photo', 'record_video', 'augmented_photo', 'code_box'].includes(req.body.answerType) ||
+      (req.body.answerType === 'puzzle' && req.body.puzzleAnswerType !== 'mcq')
     )
     .not()
     .exists()
     .withMessage(
-      'Options should not be provided for text/number/no_answer/puzzle/media/code_box answer types'
+      'Options should not be provided for text/number/no_answer/media/code_box answer types or puzzle with non-mcq answer type'
     ),
 
   check('correctAnswers')

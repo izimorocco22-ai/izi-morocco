@@ -50,6 +50,12 @@ export const createQuestion = async (req, res) => {
     if (validatedData.answerType === 'puzzle') {
       if (['text', 'number'].includes(validatedData.puzzleAnswerType)) {
         validatedData.correctAnswers = [];
+      } else if (validatedData.puzzleAnswerType === 'mcq') {
+        if (!validatedData.correctAnswers || validatedData.correctAnswers.length === 0) {
+          validatedData.correctAnswers = validatedData.options
+            ?.filter(opt => opt.isCorrect)
+            ?.map(opt => opt.text) || [];
+        }
       }
     }
 
@@ -169,6 +175,12 @@ export const editQuestion = async (req, res) => {
     if (validatedData.answerType === 'puzzle') {
       if (['text', 'number'].includes(validatedData.puzzleAnswerType)) {
         validatedData.correctAnswers = [];
+      } else if (validatedData.puzzleAnswerType === 'mcq') {
+        if (!validatedData.correctAnswers || validatedData.correctAnswers.length === 0) {
+          validatedData.correctAnswers = validatedData.options
+            ?.filter(opt => opt.isCorrect)
+            ?.map(opt => opt.text) || [];
+        }
       }
     }
 

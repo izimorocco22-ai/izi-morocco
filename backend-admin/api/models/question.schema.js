@@ -95,33 +95,52 @@ const QuestionSchema = new mongoose.Schema({
 
 
 QuestionSchema.pre('save', function(next) {
+  // Handle no_answer and media types
   if (['no_answer', 'take_photo', 'record_video', 'augmented_photo'].includes(this.answerType)) {
     this.correctAnswers = [];
     this.puzzle = undefined;
+    this.puzzleAnswerType = undefined;
+    this.puzzleAnswerText = undefined;
+    this.codeBoxConfig = undefined;
+    this.options = [];
   }
   
+  // Handle puzzle type
   if (this.answerType === 'puzzle') {
     if (this.puzzleAnswerType === 'mcq') {
-      // keep options/correctAnswers for single-answer MCQ inside puzzle
+      // Keep options and correctAnswers for MCQ inside puzzle
       this.codeBoxConfig = undefined;
+      this.puzzleAnswerText = undefined;
     } else if (this.puzzleAnswerType === 'code_box') {
-      // use codeBoxConfig; keep correctAnswers (single code string), clear options
+      // Keep codeBoxConfig and correctAnswers (single code string)
       this.options = [];
-    } else {
-      // text or number: store as text in puzzleAnswerText; clear options/correctAnswers/codeBox
+      this.puzzleAnswerText = undefined;
+    } else if (['text', 'number'].includes(this.puzzleAnswerType)) {
+      // Store answer in puzzleAnswerText; clear other fields
       this.correctAnswers = [];
       this.options = [];
       this.codeBoxConfig = undefined;
     }
   }
   
+  // Handle non-puzzle types
   if (this.answerType !== 'puzzle') {
     this.puzzle = undefined;
-    if (this.answerType !== 'code_box') {
+    this.puzzleAnswerType = undefined;
+    this.puzzleAnswerText = undefined;
+    
+    if (this.answerType === 'code_box') {
+      // Keep codeBoxConfig for code_box type
+      this.options = [];
+    } else if (['mcq', 'multiple'].includes(this.answerType)) {
+      // Keep options for MCQ types
       this.codeBoxConfig = undefined;
+    } else {
+      // For text/number, clear both
+      this.codeBoxConfig = undefined;
+      this.options = [];
     }
   }
-  
   
   next();
 });

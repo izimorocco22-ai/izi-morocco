@@ -40,11 +40,12 @@ const defaultValueForQuestion = {
   questionName: "",
   questionDescription: "",
   answerType: "text",
-  correctAnswers: [],
+  correctAnswers: "",
   options: [{ text: "", isCorrect: false }],
   tags: [],
   points: 0,
   puzzle: "",
+  puzzleAnswerType: "",
   puzzleAnswerText: "",
   codeBoxConfig: {
     length: 4,
@@ -166,11 +167,24 @@ const SingleQuestionForm = ({
           `questions.${index}.correctAnswers`,
           options?.filter((op) => op.isCorrect)?.map((op) => op.text) || []
         );
-      } else {
+      } else if (puzzleAnswerType === "code_box") {
+        // Keep correctAnswers as is for code_box in puzzle
+        const current = getValues(`questions.${index}.correctAnswers`);
+        if (!current || (Array.isArray(current) && current.length === 0)) {
+          setValue(`questions.${index}.correctAnswers`, "");
+        }
+      } else if (["text", "number"].includes(puzzleAnswerType || "")) {
+        // For text/number puzzle types, clear correctAnswers
         setValue(`questions.${index}.correctAnswers`, []);
       }
+    } else if (answerType === "code_box") {
+      // Keep correctAnswers as is for code_box
+      const current = getValues(`questions.${index}.correctAnswers`);
+      if (!current || (Array.isArray(current) && current.length === 0)) {
+        setValue(`questions.${index}.correctAnswers`, "");
+      }
     }
-  }, [answerType, puzzleAnswerType, options, setValue, index]);
+  }, [answerType, puzzleAnswerType, options, setValue, index, getValues]);
 
   // Normalize fields when puzzle answer type changes
   useEffect(() => {
@@ -187,16 +201,21 @@ const SingleQuestionForm = ({
       if (!cfg || !cfg.length) {
         setValue(`questions.${index}.codeBoxConfig`, { length: 4, mode: "alphanumeric" });
       }
+      const currentAnswer = getValues(`questions.${index}.correctAnswers`);
+      if (!currentAnswer || (Array.isArray(currentAnswer) && currentAnswer.length === 0)) {
+        setValue(`questions.${index}.correctAnswers`, "");
+      }
       setValue(`questions.${index}.options`, []);
       setValue(`questions.${index}.puzzleAnswerText`, undefined);
-    } else {
+    } else if (["text", "number"].includes(puzzleAnswerType || "")) {
       // text or number
       setValue(`questions.${index}.options`, []);
       setValue(`questions.${index}.codeBoxConfig`, undefined);
       const txt = getValues(`questions.${index}.puzzleAnswerText`);
       if (!txt) setValue(`questions.${index}.puzzleAnswerText`, "");
+      setValue(`questions.${index}.correctAnswers`, []);
     }
-  }, [answerType, puzzleAnswerType]);
+  }, [answerType, puzzleAnswerType, index, setValue, getValues]);
 
   useEffect(() => {
     if (
@@ -627,47 +646,60 @@ const CreateUpdateQuestion = ({
         } = qData;
         
         const pureData = { answerType, tags, points };
+        
+        // Handle MCQ and Multiple choice
         if (answerType === "mcq" || answerType === "multiple") {
-            pureData.options = options;
+            pureData.options = options || [];
+            pureData.correctAnswers = options?.filter((op) => op.isCorrect)?.map((op) => op.text) || [];
         }
+        
+        // Handle Puzzle type
         if (answerType === "puzzle") {
             pureData.puzzle = puzzle;
             pureData.puzzleAnswerType = puzzleAnswerType;
+            
             if (puzzleAnswerType === "mcq") {
-              pureData.options = options;
-            }
-            if (puzzleAnswerType === "code_box") {
+              pureData.options = options || [];
+              pureData.correctAnswers = options?.filter((op) => op.isCorrect)?.map((op) => op.text) || [];
+            } else if (puzzleAnswerType === "code_box") {
               pureData.codeBoxConfig = {
                 length: Number(codeBoxConfig?.length) || 4,
                 mode: codeBoxConfig?.mode || 'alphanumeric'
               };
-            }
-            if (["text", "number"].includes(puzzleAnswerType || "")) {
+              const rawAnswer = Array.isArray(correctAnswers) ? correctAnswers[0] : correctAnswers;
+              const normalized = rawAnswer != null ? String(rawAnswer).trim() : "";
+              pureData.correctAnswers = normalized ? [normalized] : [];
+            } else if (["text", "number"].includes(puzzleAnswerType || "")) {
               pureData.puzzleAnswerText = String(puzzleAnswerText ?? "");
+              pureData.correctAnswers = [];
             }
         }
+        
+        // Handle Code Box type
         if (answerType === "code_box") {
             pureData.codeBoxConfig = {
                 length: Number(codeBoxConfig?.length) || 4,
                 mode: codeBoxConfig?.mode || 'alphanumeric'
             };
-        }
-        
-        if (answerType === "puzzle" && puzzleAnswerType === "code_box") {
-            const rawAnswer = Array.isArray(correctAnswers)
-              ? correctAnswers[0]
-              : correctAnswers;
+            const rawAnswer = Array.isArray(correctAnswers) ? correctAnswers[0] : correctAnswers;
             const normalized = rawAnswer != null ? String(rawAnswer).trim() : "";
             pureData.correctAnswers = normalized ? [normalized] : [];
-        } else if (Array.isArray(correctAnswers)) {
-            pureData.correctAnswers = correctAnswers;
-        } else {
-            pureData.correctAnswers = [correctAnswers];
+        }
+        
+        // Handle Text and Number types
+        if (answerType === "text" || answerType === "number") {
+            const rawAnswer = Array.isArray(correctAnswers) ? correctAnswers[0] : correctAnswers;
+            const normalized = rawAnswer != null ? String(rawAnswer).trim() : "";
+            pureData.correctAnswers = normalized ? [normalized] : [];
+        }
+        
+        // Handle no answer types
+        if (["no_answer", "take_photo", "record_video", "augmented_photo"].includes(answerType)) {
+            pureData.correctAnswers = [];
         }
 
         // Process images in the rich text description (questionDescription)
         const processedDescription = await processDeltaImages(questionDescription);
-        // keep title as plain text
         pureData.questionName = questionName;
         pureData.questionDescription = processedDescription;
         return pureData;
@@ -811,23 +843,40 @@ const CreateUpdateQuestion = ({
                 return "text";
               })()
           : undefined);
+      
+      // Determine correct answer value based on answer type
+      let correctAnswerValue = "";
+      if (response?.answerType === "puzzle") {
+        if (inferredPuzzleType === "code_box") {
+          correctAnswerValue = response?.correctAnswers?.[0] || "";
+        } else if (inferredPuzzleType === "mcq") {
+          correctAnswerValue = response?.correctAnswers?.[0] || "";
+        } else {
+          correctAnswerValue = "";
+        }
+      } else if (["text", "number", "code_box"].includes(response?.answerType)) {
+        correctAnswerValue = response?.correctAnswers?.[0] || "";
+      } else if (["mcq", "multiple"].includes(response?.answerType)) {
+        correctAnswerValue = response?.correctAnswers?.[0] || "";
+      }
+      
       reset({
         questions: [{
             questionName: response?.questionName,
             questionDescription: response?.questionDescription || "",
             answerType: response?.answerType,
-            correctAnswers: response?.correctAnswers[0],
+            correctAnswers: correctAnswerValue,
             tags: response?.tags?.map((tag) => tag._id) || [],
             points: response?.points,
             options: response?.options?.map((op) => ({
             text: op.text,
             isCorrect: op.isCorrect,
-            })),
+            })) || [],
             // response.puzzle may be populated object or ObjectId — prefer _id if present
             puzzle: response?.puzzle?._id || response?.puzzle || "",
             puzzleAnswerText: response?.puzzleAnswerText || "",
-            puzzleAnswerType: inferredPuzzleType,
-            codeBoxConfig: response?.codeBoxConfig,
+            puzzleAnswerType: inferredPuzzleType || "",
+            codeBoxConfig: response?.codeBoxConfig || { length: 4, mode: "alphanumeric" },
         }]
       });
     } else if (getQuestionByIdApi.status === apiResponseType.failed) {
