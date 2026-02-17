@@ -159,6 +159,11 @@ const RichTextEditor = ({
     [&_.ql-container.ql-snow]:border
     [&_.ql-toolbar.ql-snow]:border-b-0
     [&_.ql-toolbar]:bg-gray-50
+    [&_.ql-editor_.ql-align-center]:text-center
+    [&_.ql-editor_.ql-align-center_img]:mx-auto
+    [&_.ql-editor_.ql-align-center_img]:block
+    [&_.ql-editor_img]:max-w-full
+    [&_.ql-editor_img]:h-auto
   `;
 
   // Auto-center newly inserted images and allow alignment via toolbar
