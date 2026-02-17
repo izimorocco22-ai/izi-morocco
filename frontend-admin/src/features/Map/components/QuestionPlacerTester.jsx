@@ -13,6 +13,53 @@ import CrossIcon from "../../../components/svgs/CrossIcon";
 
 const MEDIA_BASE_URL = MEDIA_URL();
 
+const applyCustomMapStyle = (mapInstance) => {
+  if (!mapInstance) return;
+
+  const trySetPaint = (layerId, prop, value) => {
+    if (!mapInstance.getLayer(layerId)) return;
+    try {
+      mapInstance.setPaintProperty(layerId, prop, value);
+    } catch (e) {
+    }
+  };
+
+  const landColor = "#ededed";
+  const landAccentColor = "#f7ad04";
+  const waterColor = "#53dabf";
+  const waterAltColor = "#d7d0cc";
+
+  ["background"].forEach((id) => {
+    trySetPaint(id, "background-color", landColor);
+  });
+
+  ["land", "landcover", "landuse"].forEach((id) => {
+    trySetPaint(id, "fill-color", landColor);
+  });
+
+  ["park", "landcover_vegetation"].forEach((id) => {
+    trySetPaint(id, "fill-color", landAccentColor);
+  });
+
+  ["water", "waterway"].forEach((id) => {
+    trySetPaint(id, "fill-color", waterColor);
+  });
+
+  ["water-shadow"].forEach((id) => {
+    trySetPaint(id, "fill-color", waterAltColor);
+  });
+
+  [
+    "road-primary",
+    "road-secondary",
+    "road-tertiary",
+    "road-street",
+    "road-minor",
+  ].forEach((id) => {
+    trySetPaint(id, "line-color", "#ffffff");
+  });
+};
+
 const QuestionPlacerMap = () => {
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -481,6 +528,7 @@ const QuestionPlacerMap = () => {
       map.current.on("load", () => {
         setIsMapLoaded(true);
         addCircleLayers();
+        applyCustomMapStyle(map.current);
       });
 
       map.current.on("click", handleMapClick);
