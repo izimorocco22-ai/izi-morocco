@@ -827,7 +827,7 @@ const CreateUpdateQuestion = ({
     if (getQuestionByIdApi.status === apiResponseType.success) {
       const response = getQuestionByIdApi.data?.response;
       setDataInSessionStorage("questionId", response?._id);
-      // Infer puzzleAnswerType if not stored (backward compatibility)
+      
       const inferredPuzzleType =
         response?.puzzleAnswerType ||
         (response?.answerType === "puzzle"
@@ -844,15 +844,12 @@ const CreateUpdateQuestion = ({
               })()
           : undefined);
       
-      // Determine correct answer value based on answer type
       let correctAnswerValue = "";
       if (response?.answerType === "puzzle") {
         if (inferredPuzzleType === "code_box") {
           correctAnswerValue = response?.correctAnswers?.[0] || "";
         } else if (inferredPuzzleType === "mcq") {
           correctAnswerValue = response?.correctAnswers?.[0] || "";
-        } else {
-          correctAnswerValue = "";
         }
       } else if (["text", "number", "code_box"].includes(response?.answerType)) {
         correctAnswerValue = response?.correctAnswers?.[0] || "";
@@ -867,14 +864,13 @@ const CreateUpdateQuestion = ({
             answerType: response?.answerType,
             correctAnswers: correctAnswerValue,
             tags: response?.tags?.map((tag) => tag._id) || [],
-            points: response?.points,
+            points: response?.points || 0,
             options: response?.options?.map((op) => ({
-            text: op.text,
-            isCorrect: op.isCorrect,
+              text: op.text,
+              isCorrect: op.isCorrect,
             })) || [],
-            // response.puzzle may be populated object or ObjectId — prefer _id if present
             puzzle: response?.puzzle?._id || response?.puzzle || "",
-            puzzleAnswerText: response?.puzzleAnswerText || "",
+            puzzleAnswerText: String(response?.puzzleAnswerText || ""),
             puzzleAnswerType: inferredPuzzleType || "",
             codeBoxConfig: response?.codeBoxConfig || { length: 4, mode: "alphanumeric" },
         }]
