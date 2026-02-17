@@ -7,6 +7,12 @@ const GameActivationCodes = new mongoose.Schema({
         required: true
     },
 
+    vendor: {
+        type: String,
+        trim: true,
+        default: null
+    },
+
     gameId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'GameInfo',

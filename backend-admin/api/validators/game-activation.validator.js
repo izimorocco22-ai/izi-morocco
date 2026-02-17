@@ -29,6 +29,11 @@ export const getActivationCode = [
         .isInt({ min: 1 })
         .withMessage('Quantity must be a positive integer'),
 
+    check('vendor')
+        .optional()
+        .isString()
+        .withMessage('Vendor must be a string'),
+
 
     (req, res, next) => validateRequest(req, res, next)
 ]

@@ -16,7 +16,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 export const createGameActivationCode = async (req, res) => {
   try {
-    let { playerId, gameId, expiresAt, quantity } = matchedData(req);
+    let { playerId, gameId, expiresAt, quantity, vendor } = matchedData(req);
 
     if (!expiresAt) {
       expiresAt = new Date(Date.now() + 360000000);
@@ -52,7 +52,8 @@ export const createGameActivationCode = async (req, res) => {
             activationCode,
             expiresAt,
             activationCodeFor,
-            groupId
+            groupId,
+            vendor: vendor || null
           });
           const qrPayload = JSON.stringify({ playerId, gameId, activationCode, expiresAt });
           const qrCodeDataURL = await QRCode.toDataURL(qrPayload);
@@ -109,6 +110,7 @@ const pipeLineForAdminCodes = (filter, sort, limit, page) => {
       $group: {
         _id: '$groupId',
         playerId: { $first: '$playerId' },
+        vendor: { $first: '$vendor' },
         gameId: { $first: '$gameId' },
         expiresAt: { $first: '$expiresAt' },
         createdAt: { $min: '$createdAt' },
@@ -148,6 +150,7 @@ const pipeLineForAdminCodes = (filter, sort, limit, page) => {
       $project: {
         groupId: '$_id',
         playerId: 1,
+            vendor: 1,
         codeCount: 1,
         gameDetails: {
           _id: "$gameDetails._id",
@@ -242,6 +245,7 @@ export const getCodesByGroupForAdmin = async (req, res) => {
         $project: {
           _id: 1,
           playerId: 1,
+          vendor: 1,
           activationCode: 1,
           groupId: 1,
           gameDetails: {

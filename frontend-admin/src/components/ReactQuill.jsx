@@ -181,7 +181,6 @@ const RichTextEditor = ({
       </label>
 
       {control ? (
-        // ✅ Controlled RHF mode using `Controller`
         <Controller
           name={name}
           control={control}
@@ -196,6 +195,7 @@ const RichTextEditor = ({
               theme={theme}
               value={field.value}
               onChange={(content, delta, source, editor) => {
+                if (source !== 'user') return;
                 const contents = editor.getContents();
                 field.onChange(contents);
                 propOnChange(contents);

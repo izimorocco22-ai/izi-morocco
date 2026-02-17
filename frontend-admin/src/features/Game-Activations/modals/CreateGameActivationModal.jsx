@@ -25,6 +25,7 @@ const CreateGameActivationModal = ({
     defaultValues: {
       gameId: "",
       playerId: "",
+      vendor: "",
       quantity: 1,
     },
   });
@@ -86,6 +87,16 @@ const CreateGameActivationModal = ({
         noValidate
         className="p-4 flex flex-col gap-4 items-end min-h-[400px]"
       >
+        {!hideQuantity && (
+          <CommonInput
+            labelName="Vendor"
+            id="vendor"
+            name="vendor"
+            type="text"
+            register={register}
+            errors={errors}
+          />
+        )}
         <AntSearchableSelector
           id="playerId"
           name="playerId"
