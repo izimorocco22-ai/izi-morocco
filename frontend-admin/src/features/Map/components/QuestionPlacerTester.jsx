@@ -15,48 +15,91 @@ const MEDIA_BASE_URL = MEDIA_URL();
 
 const applyCustomMapStyle = (mapInstance) => {
   if (!mapInstance) return;
+  const style = mapInstance.getStyle();
+  if (!style || !style.layers) return;
 
-  const trySetPaint = (layerId, prop, value) => {
-    if (!mapInstance.getLayer(layerId)) return;
-    try {
-      mapInstance.setPaintProperty(layerId, prop, value);
-    } catch (e) {
+  const landColor = "#e5e5e5";
+  const waterColor = "#d7d0cc";
+
+  style.layers.forEach((layer) => {
+    const id = layer.id || "";
+    const type = layer.type;
+    const sourceLayer = layer["source-layer"] || "";
+
+    const setVisibility = (visible) => {
+      try {
+        mapInstance.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
+      } catch (e) {}
+    };
+
+    const setPaint = (prop, value) => {
+      try {
+        mapInstance.setPaintProperty(id, prop, value);
+      } catch (e) {}
+    };
+
+    const hideAdmin =
+      id.includes("admin") || sourceLayer.includes("admin");
+    const hidePoi =
+      id.includes("poi") || sourceLayer.includes("poi");
+    const hideTransit =
+      id.includes("transit") ||
+      id.includes("rail") ||
+      sourceLayer.includes("transit");
+    const hideWaterLabels =
+      id.includes("water-label") || id.includes("marine-label");
+    const hidePlaceLabels =
+      id.includes("poi-label") ||
+      id.includes("settlement-label") ||
+      id.includes("state-label") ||
+      id.includes("country-label");
+
+    if (hideAdmin || hidePoi || hideTransit || hideWaterLabels || hidePlaceLabels) {
+      setVisibility(false);
+      return;
     }
-  };
 
-  const landColor = "#ededed";
-  const landAccentColor = "#f7ad04";
-  const waterColor = "#53dabf";
-  const waterAltColor = "#d7d0cc";
+    const isLandLayer =
+      id === "background" ||
+      id.includes("land") ||
+      id.includes("landuse") ||
+      id.includes("landcover") ||
+      sourceLayer.includes("land");
 
-  ["background"].forEach((id) => {
-    trySetPaint(id, "background-color", landColor);
-  });
+    if (isLandLayer) {
+      if (type === "background") {
+        setPaint("background-color", landColor);
+      }
+      if (type === "fill" || type === "hillshade") {
+        setPaint("fill-color", landColor);
+        setPaint("fill-opacity", 1);
+      }
+    }
 
-  ["land", "landcover", "landuse"].forEach((id) => {
-    trySetPaint(id, "fill-color", landColor);
-  });
+    const isRoadLayer = id.includes("road");
 
-  ["park", "landcover_vegetation"].forEach((id) => {
-    trySetPaint(id, "fill-color", landAccentColor);
-  });
+    if (isRoadLayer) {
+      if (type === "line") {
+        setPaint("line-color", "#c4c4c4");
+        setPaint("line-width", 1);
+      }
+      if (type === "fill") {
+        setPaint("fill-color", "#e0e0e0");
+      }
+      return;
+    }
 
-  ["water", "waterway"].forEach((id) => {
-    trySetPaint(id, "fill-color", waterColor);
-  });
+    const isWaterLayer =
+      id.includes("water") || sourceLayer.includes("water");
 
-  ["water-shadow"].forEach((id) => {
-    trySetPaint(id, "fill-color", waterAltColor);
-  });
-
-  [
-    "road-primary",
-    "road-secondary",
-    "road-tertiary",
-    "road-street",
-    "road-minor",
-  ].forEach((id) => {
-    trySetPaint(id, "line-color", "#ffffff");
+    if (isWaterLayer) {
+      if (type === "fill") {
+        setPaint("fill-color", waterColor);
+      }
+      if (type === "line") {
+        setPaint("line-color", waterColor);
+      }
+    }
   });
 };
 

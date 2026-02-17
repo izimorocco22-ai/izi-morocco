@@ -128,7 +128,7 @@ const GameActivation = () => {
           <h1 className="text-2xl font-bold">Game Activation</h1>
           <div className="flex gap-2">
             <Button onClick={() => setOpenModal(true)}>
-              Create Game Activation
+              Create Multipal Ticket 
             </Button>
             <Button variant="light" onClick={() => setOpenTicketModal(true)}>
               Create Ticket
