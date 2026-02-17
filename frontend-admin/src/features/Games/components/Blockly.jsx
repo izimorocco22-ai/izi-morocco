@@ -31,8 +31,15 @@ const BlocklyEditor = () => {
     (state) => state.games
   );
 
-  const playgroundName = getGameInfobyIdApi?.data?.response?.playgroundName || 'Untitled Playground';
-  const playgroundNamedArray = [[playgroundName, playgroundName]]
+  const gameInfo = getGameInfobyIdApi?.data?.response;
+  const playgrounds = gameInfo?.playgrounds || [];
+  const playgroundNamedArray =
+    playgrounds.length > 0
+      ? playgrounds.map((pg, index) => [
+          pg?.name || `Playground ${index + 1}`,
+          String(index + 1),
+        ])
+      : [[gameInfo?.playgroundName || "Untitled Playground", "1"]];
   const taskData = selectedQuestions.map((ele) => ({
     id: ele.id,
     name: ele.name,
