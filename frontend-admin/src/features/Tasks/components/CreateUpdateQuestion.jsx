@@ -132,10 +132,45 @@ const SingleQuestionForm = ({
     name: `questions.${index}.options`,
   });
 
+  const codeBoxLength = useWatch({
+    control,
+    name: `questions.${index}.codeBoxConfig.length`,
+  });
+
+  const codeBoxMode = useWatch({
+    control,
+    name: `questions.${index}.codeBoxConfig.mode`,
+  });
+
   const { fields, append, remove: removeOption, update } = useFieldArray({
     control,
     name: `questions.${index}.options`,
   });
+
+  const validateCodeBoxAnswer = (value) => {
+    if (!value) return true;
+    const length = Number(codeBoxLength) || 4;
+    const mode = codeBoxMode || 'alphanumeric';
+    const str = String(value);
+    
+    if (str.length !== length) {
+      return `Answer must be exactly ${length} characters`;
+    }
+    
+    if (mode === 'numeric' && !/^[0-9]+$/.test(str)) {
+      return 'Answer must contain only numbers';
+    }
+    
+    if (mode === 'alpha' && !/^[a-zA-Z]+$/.test(str)) {
+      return 'Answer must contain only letters';
+    }
+    
+    if (mode === 'alphanumeric' && !/^[a-zA-Z0-9]+$/.test(str)) {
+      return 'Answer must contain only letters and numbers';
+    }
+    
+    return true;
+  };
 
   const handleCheckboxChange = (optionIndex = -1) => {
     const currentFieldValue = getValues(`questions.${index}.options`)[optionIndex];
@@ -281,6 +316,8 @@ const SingleQuestionForm = ({
                   type="number"
                   errors={errors}
                   required
+                  min="1"
+                  max="20"
                 />
              </div>
              <div className="w-1/2">
@@ -369,6 +406,8 @@ const SingleQuestionForm = ({
             register={register}
             errors={errors}
             required
+            maxLength={answerType === "code_box" ? Number(codeBoxLength) || 4 : undefined}
+            validate={answerType === "code_box" ? validateCodeBoxAnswer : undefined}
           />
         )}
         {answerType === "puzzle" && (
@@ -432,6 +471,8 @@ const SingleQuestionForm = ({
                     type="number"
                     errors={errors}
                     required
+                    min="1"
+                    max="20"
                   />
                 </div>
                 <div className="w-1/2">
@@ -455,6 +496,8 @@ const SingleQuestionForm = ({
                 register={register}
                 errors={errors}
                 required
+                maxLength={Number(codeBoxLength) || 4}
+                validate={validateCodeBoxAnswer}
               />
             )}
             {puzzleAnswerType === "mcq" && (
