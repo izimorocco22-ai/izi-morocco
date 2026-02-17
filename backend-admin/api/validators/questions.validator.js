@@ -33,7 +33,12 @@ const validateCorrectAnswersUniqueness = (answers) => {
 const validateCorrectAnswersMatchOptions = (answers, { req }) => {
   const answerType = req.body.answerType;
 
-  if (answerType === 'text' || answerType === 'number' || answerType === 'code_box') {
+  if (
+    answerType === 'text' ||
+    answerType === 'number' ||
+    answerType === 'code_box' ||
+    (answerType === 'puzzle' && req.body.puzzleAnswerType === 'code_box')
+  ) {
     return true;
   }
 

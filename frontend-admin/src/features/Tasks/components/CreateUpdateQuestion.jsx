@@ -653,7 +653,13 @@ const CreateUpdateQuestion = ({
             };
         }
         
-        if (Array.isArray(correctAnswers)) {
+        if (answerType === "puzzle" && puzzleAnswerType === "code_box") {
+            const rawAnswer = Array.isArray(correctAnswers)
+              ? correctAnswers[0]
+              : correctAnswers;
+            const normalized = rawAnswer != null ? String(rawAnswer).trim() : "";
+            pureData.correctAnswers = normalized ? [normalized] : [];
+        } else if (Array.isArray(correctAnswers)) {
             pureData.correctAnswers = correctAnswers;
         } else {
             pureData.correctAnswers = [correctAnswers];
