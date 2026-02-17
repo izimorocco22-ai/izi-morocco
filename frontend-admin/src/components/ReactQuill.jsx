@@ -179,11 +179,14 @@ const RichTextEditor = ({
       const hasImageInsert = delta.ops?.some(op => op.insert && op.insert.image);
       
       if (hasImageInsert) {
-        // Use requestAnimationFrame to ensure the image is in the DOM
+        // Batch the formatting to avoid multiple updates
+        quill.history.cutoff();
+        
         requestAnimationFrame(() => {
           try {
             const contents = quill.getContents();
             let idx = 0;
+            let needsFormat = false;
             
             contents.ops?.forEach((op) => {
               const isImage = op.insert && op.insert.image;
@@ -192,11 +195,28 @@ const RichTextEditor = ({
                 : isImage ? 1 : 0;
               
               if (isImage) {
-                // Apply center alignment immediately
-                quill.formatLine(idx, 1, { align: 'center' }, 'silent');
+                const format = quill.getFormat(idx, 1);
+                if (format.align !== 'center') {
+                  needsFormat = true;
+                }
               }
               idx += len;
             });
+            
+            if (needsFormat) {
+              idx = 0;
+              contents.ops?.forEach((op) => {
+                const isImage = op.insert && op.insert.image;
+                const len = op.insert && typeof op.insert === 'string'
+                  ? op.insert.length
+                  : isImage ? 1 : 0;
+                
+                if (isImage) {
+                  quill.formatLine(idx, 1, { align: 'center' }, 'api');
+                }
+                idx += len;
+              });
+            }
           } catch {}
         });
       }
@@ -225,7 +245,7 @@ const RichTextEditor = ({
             : isImage ? 1 : 0;
           
           if (isImage) {
-            quill.formatLine(idx, 1, { align: 'center' }, 'silent');
+            quill.formatLine(idx, 1, { align: 'center' }, 'api');
           }
           idx += len;
         });
