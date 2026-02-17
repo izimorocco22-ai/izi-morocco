@@ -18,7 +18,7 @@ import AntSearchableSelector from "../../../components/form/AntDesign/AntSearcha
 const CreateGameActivationModal = ({
   open = true,
   onClose,
-  title = "Create Game Activation",
+  title = "Create Ticket",
   hideQuantity = false,
 }) => {
   const form = useForm({
