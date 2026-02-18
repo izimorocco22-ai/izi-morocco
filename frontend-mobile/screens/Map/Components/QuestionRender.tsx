@@ -5,6 +5,7 @@ import CodeBoxInput from '../../../components/CodeBoxInput';
 import CaptureMedia from '../../../components/CaptureMedia';
 import colors from '../../../styles/colors';
 import commonStyles from '../../../styles/commonStyles';
+import { getCleanImageUrl } from '../../../utils/imageUtils';
 
 const QuestionRenderer = ({
   question,
@@ -14,20 +15,38 @@ const QuestionRenderer = ({
   setInputAnswer,
 }) => {
   const handleOptionPress = (index: number) => {
-    if (question.answerType === 'mcq') {
-      setSelectedOption([index]); // Only one selection
+    if (
+      question.answerType === 'mcq' ||
+      (question.answerType === 'puzzle' &&
+        question.puzzleAnswerType === 'mcq')
+    ) {
+      setSelectedOption([index]);
+      const text = question.options?.[index]?.text || '';
+      setInputAnswer(text);
     } else if (question.answerType === 'multiple') {
       const updated = selectedOption.includes(index)
         ? selectedOption.filter(i => i !== index)
         : [...selectedOption, index];
       setSelectedOption(updated);
+      const texts = updated
+        .map(i => question.options?.[i]?.text)
+        .filter(Boolean);
+      setInputAnswer(texts.join(', '));
     }
   };
+
+  const augmentedOverlay =
+    question.answerType === 'augmented_photo'
+      ? getCleanImageUrl(question.augmentedPhotoImage)
+      : null;
 
   return (
     <View style={styles.container}>
       {/* For MCQ / MSQ */}
-      {(question.answerType === 'mcq' || question.answerType === 'multiple') &&
+      {(question.answerType === 'mcq' ||
+        question.answerType === 'multiple' ||
+        (question.answerType === 'puzzle' &&
+          question.puzzleAnswerType === 'mcq')) &&
         question.options?.map((option, index) => {
           const isSelected = selectedOption.includes(index);
           return (
@@ -71,7 +90,11 @@ const QuestionRenderer = ({
       )}
 
       {/* For PUZZLE INPUT */}
-      {question.answerType === 'puzzle' && (
+      {question.answerType === 'puzzle' &&
+        (!question.puzzleAnswerType ||
+          !['text', 'number', 'code_box', 'mcq'].includes(
+            question.puzzleAnswerType,
+          )) && (
         <CustomInput
           error={null}
           placeholder="Enter the puzzle answer"
@@ -79,6 +102,27 @@ const QuestionRenderer = ({
           onChangeText={setInputAnswer}
         />
       )}
+
+      {question.answerType === 'puzzle' &&
+        question.puzzleAnswerType === 'text' && (
+          <CustomInput
+            error={null}
+            placeholder="Type your answer"
+            value={inputAnswer}
+            onChangeText={setInputAnswer}
+          />
+        )}
+
+      {question.answerType === 'puzzle' &&
+        question.puzzleAnswerType === 'number' && (
+          <CustomInput
+            error={null}
+            placeholder="Enter a number"
+            keyboardType="numeric"
+            value={inputAnswer}
+            onChangeText={setInputAnswer}
+          />
+        )}
 
       {/* For CODE BOX */}
       {question.answerType === 'code_box' && (
@@ -89,6 +133,16 @@ const QuestionRenderer = ({
           onChange={setInputAnswer}
         />
       )}
+
+      {question.answerType === 'puzzle' &&
+        question.puzzleAnswerType === 'code_box' && (
+          <CodeBoxInput
+            length={question.codeBoxConfig?.length || 4}
+            mode={question.codeBoxConfig?.mode || 'alphanumeric'}
+            value={inputAnswer}
+            onChange={setInputAnswer}
+          />
+        )}
 
       {/* For PHOTO CAPTURE */}
       {question.answerType === 'take_photo' && (
@@ -104,6 +158,7 @@ const QuestionRenderer = ({
         <CaptureMedia
           type="augmented_photo"
           value={inputAnswer}
+          overlayImageUrl={augmentedOverlay}
           onChange={setInputAnswer}
         />
       )}

@@ -20,9 +20,15 @@ interface CaptureMediaProps {
   type: 'photo' | 'video' | 'augmented_photo';
   value: string | null;
   onChange: (uri: string | null) => void;
+  overlayImageUrl?: string | null;
 }
 
-const CaptureMedia: React.FC<CaptureMediaProps> = ({ type, value, onChange }) => {
+const CaptureMedia: React.FC<CaptureMediaProps> = ({
+  type,
+  value,
+  onChange,
+  overlayImageUrl,
+}) => {
   const [loading, setLoading] = useState(false);
 
   const requestPermissions = async () => {
@@ -77,10 +83,10 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({ type, value, onChange }) =>
 
     const options: any = {
       mediaType: type === 'video' ? 'video' : 'photo',
-      saveToPhotos: false, // Changed to false to avoid permission issues and extra copies
+      saveToPhotos: type === 'augmented_photo',
       quality: 0.7,
       videoQuality: 'medium',
-      durationLimit: 30, // 30 seconds limit for video
+      durationLimit: 30,
       includeBase64: false,
     };
 
@@ -124,7 +130,15 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({ type, value, onChange }) =>
               paused={true}
             />
           ) : (
-            <Image source={{ uri: value }} style={styles.previewMedia} />
+            <View style={styles.previewWrapper}>
+              <Image source={{ uri: value }} style={styles.previewMedia} />
+              {type === 'augmented_photo' && overlayImageUrl && (
+                <Image
+                  source={{ uri: overlayImageUrl }}
+                  style={styles.overlayImage}
+                />
+              )}
+            </View>
           )}
           <TouchableOpacity style={styles.removeButton} onPress={handleRemove}>
             <Trash2 size={20} color={colors.white} />
@@ -188,9 +202,20 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#000',
   },
+  previewWrapper: {
+    flex: 1,
+  },
   previewMedia: {
     width: '100%',
     height: '100%',
+  },
+  overlayImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.7,
   },
   removeButton: {
     position: 'absolute',

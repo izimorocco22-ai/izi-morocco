@@ -10,7 +10,13 @@ export const handleSubmitAnswer = async (
   const currentQuestion = stateRef.current.currentQuestion;
   if (!currentQuestion) return Alert.alert('Invalid question data');
 
-  const { answerType, options = [], correctAnswers = [] } = currentQuestion;
+  const {
+    answerType,
+    options = [],
+    correctAnswers = [],
+    puzzleAnswerType,
+    puzzleAnswerText,
+  } = currentQuestion;
   let isCorrect = false;
 
   if (answerType === 'mcq' || answerType === 'multiple') {
@@ -28,10 +34,32 @@ export const handleSubmitAnswer = async (
       stateRef.current.inputAnswer.trim().toLowerCase() ===
       correctAnswers[0]?.trim().toLowerCase();
   } else if (answerType === 'puzzle') {
-    const correctAnswer = currentQuestion.puzzleAnswerText;
-    isCorrect =
-      stateRef.current.inputAnswer.trim().toLowerCase() ===
-      correctAnswer?.trim().toLowerCase();
+    if (puzzleAnswerType === 'mcq') {
+      const selectedTexts = stateRef.current.selectedOption.map(
+        (index: number) => options[index]?.text,
+      );
+      isCorrect =
+        JSON.stringify([...selectedTexts].sort()) ===
+        JSON.stringify([...correctAnswers].sort());
+    } else if (puzzleAnswerType === 'code_box') {
+      const user = stateRef.current.inputAnswer || '';
+      const correct = correctAnswers[0] ?? '';
+      isCorrect =
+        user.trim().toLowerCase() === correct.toString().trim().toLowerCase();
+    } else if (puzzleAnswerType === 'number') {
+      isCorrect =
+        stateRef.current.inputAnswer.trim() ===
+        (puzzleAnswerText || '').trim();
+    } else if (puzzleAnswerType === 'text') {
+      isCorrect =
+        stateRef.current.inputAnswer.trim().toLowerCase() ===
+        (puzzleAnswerText || '').trim().toLowerCase();
+    } else {
+      const correctAnswer = currentQuestion.puzzleAnswerText;
+      isCorrect =
+        stateRef.current.inputAnswer.trim().toLowerCase() ===
+        correctAnswer?.trim().toLowerCase();
+    }
   } else if (['take_photo', 'augmented_photo', 'record_video'].includes(answerType)) {
     const localUri = stateRef.current.inputAnswer;
     if (!localUri) {
