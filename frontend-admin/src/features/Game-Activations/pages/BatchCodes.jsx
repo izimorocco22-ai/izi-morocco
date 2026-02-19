@@ -103,6 +103,7 @@ const BatchCodes = () => {
             setQrData({
               id: row._id,
               playerId: row.playerId,
+              playerEmail: row.playerEmail,
               gameId: row?.gameDetails?._id,
               activationCode: row.activationCode,
               gameName: row.gameTitle,

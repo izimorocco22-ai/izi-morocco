@@ -8,7 +8,6 @@ const QR_API = (payload, size = 300) =>
   )}&size=${size}x${size}`;
 
 const GenerateQrModal = ({ open = true, onOpenChange = () => {}, data }) => {
-    console.log({data})
   const [size, setSize] = useState(300);
 
   const payload = useMemo(() => {
@@ -47,6 +46,35 @@ const GenerateQrModal = ({ open = true, onOpenChange = () => {}, data }) => {
     }
   };
 
+  const handleShare = () => {
+    if (!data) return;
+
+    const email = data.playerEmail;
+    if (!email || email === "N/A") {
+      alert("Player email not available to share this code.");
+      return;
+    }
+
+    const subject = `Activation code for ${data.gameName || "game"}`;
+    const lines = [
+      "Hello,",
+      "",
+      `Here is your activation code for ${data.gameName || "the game"}:`,
+      "",
+      `Code: ${data.activationCode || ""}`,
+      "",
+      "You can use this code to activate your game.",
+    ];
+
+    const mailto = `mailto:${encodeURIComponent(
+      email
+    )}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+      lines.join("\n")
+    )}`;
+
+    window.location.href = mailto;
+  };
+
   return (
     <Modal open={open} onOpenChange={onOpenChange} title="Generate QR Code">
       <div className="p-4">
@@ -74,6 +102,9 @@ const GenerateQrModal = ({ open = true, onOpenChange = () => {}, data }) => {
               <Button onClick={handleDownload}>Download PNG</Button>
               <Button variant="outline" onClick={handleCopy}>
                 Copy Payload
+              </Button>
+              <Button variant="outline" onClick={handleShare}>
+                Share via Email
               </Button>
               <Button variant="secondary" onClick={() => onOpenChange(false)}>
                 Close
