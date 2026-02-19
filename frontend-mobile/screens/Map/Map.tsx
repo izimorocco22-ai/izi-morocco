@@ -42,11 +42,60 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   const [blocklyJson, setBlocklyJson] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showList, setShowList] = useState(false);
+  const [mapStyleJson, setMapStyleJson] = useState<string | null>(null);
   useEffect(() => {
     dispatch({ type: 'SET_TASK', payload: questions });
     setBlocklyJson(game?.blocklyJsonRules || null);
     dispatch({ type: 'SET_SCORE', payload: game.score || 0 });
   }, [questions]);
+
+  useEffect(() => {
+    const buildStyle = async () => {
+      try {
+        const token = MAPBOX_ACCESS_TOKEN;
+        if (!token) return;
+        const response = await fetch(
+          `https://api.mapbox.com/styles/v1/mapbox/light-v10?access_token=${token}`,
+        );
+        if (!response.ok) return;
+        const style = await response.json();
+        const filteredLayers = (style.layers || []).filter((layer: any) => {
+          const id = String(layer.id || '').toLowerCase();
+          const sourceLayer = String(layer['source-layer'] || '').toLowerCase();
+          const isLabel =
+            layer.type === 'symbol' ||
+            id.includes('label') ||
+            id.includes('place') ||
+            id.includes('poi') ||
+            id.includes('settlement') ||
+            id.includes('country') ||
+            id.includes('state') ||
+            id.includes('marine') ||
+            id.includes('waterway') ||
+            id.includes('road-label') ||
+            id.includes('motorway-shield') ||
+            sourceLayer.includes('place') ||
+            sourceLayer.includes('poi') ||
+            sourceLayer.includes('settlement') ||
+            sourceLayer.includes('country') ||
+            sourceLayer.includes('state');
+          if (isLabel) return false;
+          const isBoundary =
+            id.includes('boundary') ||
+            id.includes('admin') ||
+            sourceLayer.includes('admin') ||
+            sourceLayer.includes('boundary');
+          if (isBoundary) return false;
+          return true;
+        });
+        const nextStyle = { ...style, layers: filteredLayers };
+        setMapStyleJson(JSON.stringify(nextStyle));
+      } catch (e) {
+        setMapStyleJson(null);
+      }
+    };
+    buildStyle();
+  }, []);
 
   // Keep a ref to state for callbacks that shouldn't re-subscribe or to avoid stale closures.
   const stateRef = useRef(state);
@@ -371,7 +420,8 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
 
         <MapboxGL.MapView
           style={[commonStyles.fullFlex]}
-          styleURL={MapboxGL.StyleURL.Street}
+          styleURL={mapStyleJson ? undefined : MapboxGL.StyleURL.Street}
+          styleJSON={mapStyleJson || undefined}
           onPress={event => handleMapPress(event, stateRef, dispatch)}
           onDidFinishLoadingMap={() => setMapLoaded(true)}
         >

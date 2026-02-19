@@ -35,10 +35,34 @@ const QuestionRenderer = ({
     }
   };
 
-  const augmentedOverlay =
-    question.answerType === 'augmented_photo'
-      ? getCleanImageUrl(question.augmentedPhotoImage)
-      : null;
+  const getAugmentedOverlay = () => {
+    if (question?.augmentedPhotoImage) {
+      const url = getCleanImageUrl(question.augmentedPhotoImage);
+      if (url) return url;
+    }
+
+    if (question?.media?.images && question.media.images.length > 0) {
+      const first = question.media.images[0];
+      const mediaUrl = typeof first === 'string' ? first : first.url || first.path;
+      const cleaned = getCleanImageUrl(mediaUrl);
+      if (cleaned) return cleaned;
+    }
+
+    if (question?.question?.ops && Array.isArray(question.question.ops)) {
+      for (const op of question.question.ops) {
+        if (op.insert?.image) {
+          const cleaned = getCleanImageUrl(op.insert.image);
+          if (cleaned) return cleaned;
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const augmentedOverlay = question.answerType === 'augmented_photo'
+    ? getAugmentedOverlay()
+    : null;
 
   return (
     <View style={styles.container}>

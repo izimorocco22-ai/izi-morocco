@@ -34,6 +34,7 @@ const HomeScreen = ({ navigation }) => {
   const user = useSelector((state: RootState) => state.auth.user);
   const games = useSelector((state: RootState) => state.game.games);
   const [gamesList, setGamesList] = useState(games?.docs || []);
+  const [filteredGames, setFilteredGames] = useState(games?.docs || []);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [searchText, setSearchText] = React.useState('');
@@ -48,10 +49,14 @@ const HomeScreen = ({ navigation }) => {
 
       if (newPage === 1) {
         setGamesList(newGames);
+        setFilteredGames(newGames);
         // Save the first page of games for offline display
         await offlineManager.saveGamesList(newGames);
       } else {
-        setGamesList((prev: any) => [...prev, ...newGames]);
+        setGamesList((prev: any) => {
+          const merged = [...prev, ...newGames];
+          return merged;
+        });
       }
       setHasMore(res?.data?.hasNextPage);
     } catch (error) {
@@ -106,6 +111,26 @@ const HomeScreen = ({ navigation }) => {
     };
     syncResults();
   }, []);
+
+  useEffect(() => {
+    const query = searchText.trim().toLowerCase();
+    if (!query) {
+      setFilteredGames(gamesList);
+      return;
+    }
+
+    const next = gamesList.filter((g: any) => {
+      const titleMatch = g?.title?.toLowerCase().includes(query);
+      const tagMatch = Array.isArray(g?.tags)
+        ? g.tags.some((t: any) =>
+            t?.name ? String(t.name).toLowerCase().includes(query) : false,
+          )
+        : false;
+      return titleMatch || tagMatch;
+    });
+
+    setFilteredGames(next);
+  }, [searchText, gamesList]);
 
   const handleLoadMore = () => {
     if (!isGameLoading && hasMore) {
@@ -269,7 +294,7 @@ const HomeScreen = ({ navigation }) => {
         ]}
       >
         <FlatList
-  data={gamesList}
+        data={filteredGames}
   keyExtractor={(item: any) => item._id}
   renderItem={({ item }) => <Card {...item} />}
   ListHeaderComponent={
