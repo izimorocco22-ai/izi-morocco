@@ -68,6 +68,7 @@ export const handleSubmitAnswer = async (
 
     try {
       console.log('[handleSubmitAnswer] Starting upload for:', localUri);
+
       dispatch({ type: 'SET_LOADING', payload: true });
       
       const uploadResult = await uploadFile(localUri);
