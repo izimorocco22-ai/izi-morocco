@@ -62,6 +62,7 @@ export const handleMapPress = (event: any, stateRef: any, dispatch: any) => {
       comments: target?.comments,
       media: target?.media || null,
       settings: target?.settings || null,
+      augmentedPhotoImage: target?.question?.augmentedPhotoImage,
     },
   });
   dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
@@ -90,6 +91,7 @@ export const handleListQuestionPress = (
       comments: question?.comments,
       media: question?.media || null,
       settings: question?.settings || null,
+      augmentedPhotoImage: question?.question?.augmentedPhotoImage,
     },
   });
   dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });

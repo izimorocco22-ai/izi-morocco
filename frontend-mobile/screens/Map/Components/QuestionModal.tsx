@@ -137,6 +137,18 @@ const QuestionModal = ({
   const [showScrollArrow, setShowScrollArrow] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
 
+  const puzzleInjectedJS = `
+    (function() {
+      try {
+        var style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerHTML = 'body{margin:0;padding:0;} audio{max-width:100%;width:100%;box-sizing:border-box;display:block;}';
+        document.head.appendChild(style);
+      } catch (e) {}
+    })();
+    true;
+  `;
+
   return (
     <View
       style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 ,zIndex:99}]}
@@ -185,7 +197,12 @@ const QuestionModal = ({
               </View>
 
               {questionData && questionData?.answerType === 'puzzle' && (
-                <View style={[styles.webviewContainer, { height: RFValue(300), marginBottom: RFValue(10) }]}>
+                <View
+                  style={[
+                    styles.webviewContainer,
+                    { height: RFValue(300), marginBottom: RFValue(10) },
+                  ]}
+                >
                   <WebView
                     source={{
                       uri: 'https://izimorocco-jeux.online/Puzzle-mots-croises.html',
@@ -194,6 +211,7 @@ const QuestionModal = ({
                     javaScriptEnabled
                     domStorageEnabled
                     startInLoadingState
+                    injectedJavaScript={puzzleInjectedJS}
                     onError={syntheticEvent => {
                       const { nativeEvent } = syntheticEvent;
                       console.warn('WebView error: ', nativeEvent);

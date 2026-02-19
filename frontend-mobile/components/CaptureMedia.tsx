@@ -164,11 +164,14 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
       const outputPath = `${RNFS.DocumentDirectoryPath}/augmented_${timestamp}.jpg`;
       await RNFS.copyFile(uri.replace('file://', ''), outputPath);
       
-      if (Platform.OS === 'android') {
+      if (Platform.OS === 'android' && RNFS.ExternalStorageDirectoryPath) {
         try {
           const dcimPath = `${RNFS.ExternalStorageDirectoryPath}/DCIM/IziMorocco`;
           await RNFS.mkdir(dcimPath).catch(() => {});
-          await RNFS.copyFile(outputPath, `${dcimPath}/augmented_${timestamp}.jpg`);
+          const dcimFilePath = `${dcimPath}/augmented_${timestamp}.jpg`;
+          await RNFS.copyFile(outputPath, dcimFilePath).catch(e => {
+            console.log('Could not copy to DCIM:', e);
+          });
         } catch (e) {
           console.log('Could not save to DCIM:', e);
         }

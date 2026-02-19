@@ -233,6 +233,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             comments: t?.comments,
             media: t?.media || null,
             puzzleAnswerText: t?.question?.puzzleAnswerText,
+            augmentedPhotoImage: t?.question?.augmentedPhotoImage,
           }));
 
           dispatch({ type: 'SET_QUESTION_QUEUE', payload: queuedQuestions });
