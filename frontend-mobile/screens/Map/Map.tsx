@@ -62,30 +62,20 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         const filteredLayers = (style.layers || []).filter((layer: any) => {
           const id = String(layer.id || '').toLowerCase();
           const sourceLayer = String(layer['source-layer'] || '').toLowerCase();
-          const isLabel =
-            layer.type === 'symbol' ||
-            id.includes('label') ||
-            id.includes('place') ||
-            id.includes('poi') ||
-            id.includes('settlement') ||
-            id.includes('country') ||
-            id.includes('state') ||
-            id.includes('marine') ||
-            id.includes('waterway') ||
-            id.includes('road-label') ||
-            id.includes('motorway-shield') ||
-            sourceLayer.includes('place') ||
-            sourceLayer.includes('poi') ||
-            sourceLayer.includes('settlement') ||
-            sourceLayer.includes('country') ||
-            sourceLayer.includes('state');
-          if (isLabel) return false;
-          const isBoundary =
-            id.includes('boundary') ||
-            id.includes('admin') ||
-            sourceLayer.includes('admin') ||
-            sourceLayer.includes('boundary');
-          if (isBoundary) return false;
+
+          const isCountryLabel =
+            id.includes('country-label') ||
+            (layer.type === 'symbol' &&
+              (id.includes('country') || sourceLayer.includes('country')));
+
+          const isCountryBoundary =
+            id.includes('country-boundary') ||
+            id.includes('admin-0') ||
+            sourceLayer.includes('admin-0') ||
+            sourceLayer.includes('country-boundary');
+
+          if (isCountryLabel || isCountryBoundary) return false;
+
           return true;
         });
         const nextStyle = { ...style, layers: filteredLayers };

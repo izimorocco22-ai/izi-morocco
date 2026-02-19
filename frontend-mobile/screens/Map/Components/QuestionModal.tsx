@@ -137,6 +137,8 @@ const QuestionModal = ({
   const [showScrollArrow, setShowScrollArrow] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
 
+  const isPuzzle = questionData?.answerType === 'puzzle';
+
   const puzzleInjectedJS = `
     (function() {
       try {
@@ -144,6 +146,17 @@ const QuestionModal = ({
         style.type = 'text/css';
         style.innerHTML = 'body{margin:0;padding:0;} audio{max-width:100%;width:100%;box-sizing:border-box;display:block;}';
         document.head.appendChild(style);
+
+        var existing = document.querySelector('meta[name="viewport"]');
+        var content = 'width=device-width, initial-scale=0.5, minimum-scale=0.3, maximum-scale=4, user-scalable=1';
+        if (existing) {
+          existing.setAttribute('content', content);
+        } else {
+          var meta = document.createElement('meta');
+          meta.setAttribute('name', 'viewport');
+          meta.setAttribute('content', content);
+          document.head.appendChild(meta);
+        }
       } catch (e) {}
     })();
     true;
@@ -158,6 +171,8 @@ const QuestionModal = ({
           {/* Scrollable Question Area */}
           <View style={styles.whiteBox}>
             <ScrollView
+              scrollEnabled={!isPuzzle}
+              nestedScrollEnabled={!isPuzzle}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={[
                 commonStyles.scrollContainer,
@@ -165,11 +180,13 @@ const QuestionModal = ({
               ]}
               onContentSizeChange={(contentWidth, contentHeight) => {
                 // Detect if content is larger than visible area (approx)
-                if (contentHeight > 300) {
+                if (!isPuzzle && contentHeight > 300) {
                   setShowScrollArrow(true);
                 }
               }}
               onScroll={e => {
+                if (isPuzzle) return;
+
                 const { contentOffset, layoutMeasurement, contentSize } =
                   e.nativeEvent;
 
@@ -200,7 +217,7 @@ const QuestionModal = ({
                 <View
                   style={[
                     styles.webviewContainer,
-                    { height: RFValue(300), marginBottom: RFValue(10) },
+                    { height: RFValue(420), marginBottom: RFValue(10) },
                   ]}
                 >
                   <WebView
@@ -212,6 +229,7 @@ const QuestionModal = ({
                     domStorageEnabled
                     startInLoadingState
                     injectedJavaScript={puzzleInjectedJS}
+                    injectedJavaScriptBeforeContentLoaded={puzzleInjectedJS}
                     onError={syntheticEvent => {
                       const { nativeEvent } = syntheticEvent;
                       console.warn('WebView error: ', nativeEvent);
@@ -228,7 +246,7 @@ const QuestionModal = ({
                 setInputAnswer={setInputAnswer}
               />
             </ScrollView>
-            {showScrollArrow && !isAtBottom && (
+            {showScrollArrow && !isAtBottom && !isPuzzle && (
               <View
                 style={{
                   position: 'absolute',
