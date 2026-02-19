@@ -17,7 +17,6 @@ import Video from 'react-native-video';
 import colors from '../styles/colors';
 import { RFValue } from '../utils/responsive';
 import { Camera, Video as VideoIcon, Trash2, X } from 'lucide-react-native';
-import RNFS from 'react-native-fs';
 import ViewShot from 'react-native-view-shot';
 
 const { width, height } = Dimensions.get('window');
@@ -41,6 +40,9 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
   const viewShotRef = useRef<ViewShot>(null);
   const [cameraLayout, setCameraLayout] = useState({ width, height });
   const [overlayReady, setOverlayReady] = useState(false);
+  const [cameraType, setCameraType] = useState(
+    RNCamera.Constants.Type.back,
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -96,6 +98,23 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
             return false;
           }
         }
+
+        // Request storage permission for saving to gallery
+        if (Platform.Version >= 33) {
+          const storagePermission = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+          );
+          if (storagePermission !== PermissionsAndroid.RESULTS.GRANTED) {
+            console.warn('Storage permission denied');
+          }
+        } else {
+          const storagePermission = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+          );
+          if (storagePermission !== PermissionsAndroid.RESULTS.GRANTED) {
+            console.warn('Storage permission denied');
+          }
+        }
         
         return true;
       } catch (err) {
@@ -123,15 +142,17 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
         }
         setLoading(false);
       }
+      setCameraType(RNCamera.Constants.Type.back);
       setShowCamera(true);
     } else {
       const options: any = {
         mediaType: type === 'video' ? 'video' : 'photo',
-        saveToPhotos: false,
+        saveToPhotos: true,
         quality: 0.8,
         videoQuality: 'medium',
         durationLimit: 30,
         includeBase64: false,
+        cameraType: 'back',
       };
 
       setLoading(true);
@@ -160,11 +181,9 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
     try {
       setLoading(true);
       const uri = await viewShotRef.current.capture();
-      const timestamp = Date.now();
-      const outputPath = `${RNFS.DocumentDirectoryPath}/augmented_${timestamp}.jpg`;
-      await RNFS.copyFile(uri.replace('file://', ''), outputPath);
-      
-      onChange(`file://${outputPath}`);
+      const outputUri = uri.startsWith('file://') ? uri : `file://${uri}`;
+
+      onChange(outputUri);
       setShowCamera(false);
       setLoading(false);
     } catch (error) {
@@ -180,6 +199,14 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
 
   const closeCamera = () => {
     setShowCamera(false);
+  };
+
+  const toggleCameraType = () => {
+    setCameraType(prev =>
+      prev === RNCamera.Constants.Type.back
+        ? RNCamera.Constants.Type.front
+        : RNCamera.Constants.Type.back,
+    );
   };
 
   return (
@@ -202,7 +229,7 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
             <RNCamera
               ref={cameraRef}
               style={styles.fullScreen}
-              type={RNCamera.Constants.Type.back}
+              type={cameraType}
               captureAudio={false}
               androidCameraPermissionOptions={{
                 title: 'Permission to use camera',
@@ -228,7 +255,13 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
           </TouchableOpacity>
 
           <View style={styles.cameraControls}>
-            <View style={styles.placeholder} />
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={toggleCameraType}
+              disabled={loading}
+            >
+              <Camera size={22} color="#fff" />
+            </TouchableOpacity>
             <TouchableOpacity 
               style={styles.captureCircle} 
               onPress={takePicture}
@@ -393,5 +426,13 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 60,
+  },
+  switchButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
