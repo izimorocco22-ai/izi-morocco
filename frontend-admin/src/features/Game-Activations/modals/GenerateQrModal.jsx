@@ -55,15 +55,16 @@ const GenerateQrModal = ({ open = true, onOpenChange = () => {}, data }) => {
       return;
     }
 
-    const subject = `Activation code for ${data.gameName || "game"}`;
+    const subject = `${data.gameName || "Game"} - ${
+      data.activationCode || "Code"
+    }`;
     const lines = [
       "Hello,",
       "",
-      `Here is your activation code for ${data.gameName || "the game"}:`,
+      `Game: ${data.gameName || "Your game"}`,
+      `Activation code: ${data.activationCode || ""}`,
       "",
-      `Code: ${data.activationCode || ""}`,
-      "",
-      "You can use this code to activate your game.",
+      "Use this code to activate and start the game in the izi Morocco app.",
     ];
 
     const mailto = `mailto:${encodeURIComponent(
@@ -72,7 +73,11 @@ const GenerateQrModal = ({ open = true, onOpenChange = () => {}, data }) => {
       lines.join("\n")
     )}`;
 
-    window.location.href = mailto;
+    try {
+      window.open(mailto, "_blank", "noopener,noreferrer");
+    } catch {
+      window.location.href = mailto;
+    }
   };
 
   return (
