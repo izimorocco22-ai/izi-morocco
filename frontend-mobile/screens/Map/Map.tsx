@@ -131,6 +131,14 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   }, [stateRef.current.timerData]);
 
   const cameraRef = useRef<any>(null);
+
+  const listItems =
+    state.list && state.list.length > 0
+      ? state.list
+      : state.targets.filter(
+          t => !state.completedTargets.includes(t.question?._id),
+        );
+
   // show overlay on mount
   useEffect(() => {
     dispatch({ type: 'SET_SHOW_OVERLAY', payload: true });
@@ -509,13 +517,14 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
 
         <ListShowButton
           onPress={() => setShowList(!showList)}
-          count={stateRef.current.list?.length}
+          count={listItems.length}
         />
         {showList && (
           <ListModal
-            state={stateRef.current}
+            state={{ ...stateRef.current, list: listItems }}
             dispatch={dispatch}
-            list={stateRef.current.list}
+            list={listItems}
+            cameraRef={cameraRef}
             onClose={() => {
               setShowList(false);
             }}

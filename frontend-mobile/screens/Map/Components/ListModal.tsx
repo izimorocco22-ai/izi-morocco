@@ -4,8 +4,9 @@ import commonStyles from '../../../styles/commonStyles';
 import colors from '../../../styles/colors';
 import { RFValue } from '../../../utils/responsive';
 import { handleListQuestionPress } from '../utils/mapHandlers';
+import { getCleanImageUrl } from '../../../utils/imageUtils';
 
-const ListModal = ({ state, dispatch, list, onClose }) => {
+const ListModal = ({ state, dispatch, list, onClose, cameraRef }) => {
   return (
     <View
       style={{
@@ -60,15 +61,12 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
             </View>
           ) : (
             list.map((item, index) => {
-              const icon = item?.question?.icon;
-              const uri = (icon && icon.startsWith('http')) 
-                          ? icon 
-                          : `https://res.cloudinary.com/dik1l8tqu/image/upload/v1759483737/${icon}`;
+              const uri = getCleanImageUrl(item?.question?.icon) || undefined;
               return (
-              <>
                 <TouchableOpacity
                   onPress={() => {
-                    handleListQuestionPress(state,item, dispatch);
+                    handleListQuestionPress(state, item, dispatch, cameraRef);
+                    onClose && onClose();
                   }}
                   key={index}
                   style={[
@@ -87,21 +85,27 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
                   ]}
                 >
                   <View>
-                    <Image
-                      source={{
-                        uri: uri,
-                      }}
-                      style={{
-                        width: RFValue(60),
-                        height: RFValue(60),
-                        borderRadius: RFValue(8),
-                        resizeMode: 'cover',
-                      }}
-                      resizeMode="contain"
-                      onError={() =>
-                        console.warn('Image failed to load:', uri)
-                      }
-                    />
+                    {uri ? (
+                      <Image
+                        source={{ uri }}
+                        style={{
+                          width: RFValue(60),
+                          height: RFValue(60),
+                          borderRadius: RFValue(8),
+                          resizeMode: 'cover',
+                        }}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <View
+                        style={{
+                          width: RFValue(60),
+                          height: RFValue(60),
+                          borderRadius: RFValue(8),
+                          backgroundColor: '#ddd',
+                        }}
+                      />
+                    )}
                   </View>
                   <View style={[{ flex: 1 }]}>
                     <Text
@@ -120,8 +124,8 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
                     </Text>
                   </View>
                 </TouchableOpacity>
-              </>
-            )})
+              );
+            })
           )}
         </ScrollView>
       </View>

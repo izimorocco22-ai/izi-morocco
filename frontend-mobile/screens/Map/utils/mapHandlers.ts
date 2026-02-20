@@ -78,35 +78,20 @@ export const handleListQuestionPress = (
   state: any,
   question: any,
   dispatch: any,
+  cameraRef?: any,
 ) => {
-  dispatch({
-    type: 'SET_CURRENT_QUESTION',
-    payload: {
-      _id: question.question?._id,
-      question: question?.question?.questionDescription,
-      answerType: question?.question?.answerType,
-      options: question?.question?.options,
-      correctAnswers: question?.question?.correctAnswers,
-      points: question?.question?.points,
-      comments: question?.comments,
-      media: question?.media || null,
-      settings: question?.settings || null,
-      augmentedPhotoImage: question?.question?.augmentedPhotoImage,
-    },
-  });
-  dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
-  if (question?.settings?.behaviorOption === 'remove_on_answer') {
-    dispatch({
-      type: 'SET_TARGETS',
-      payload: state.list?.filter(
-        t => t.question?._id !== question?.question._id,
-      ),
-    });
-    dispatch({
-      type: 'SET_LIST',
-      payload: state.list?.filter(
-        t => t.question?._id !== question?.question._id,
-      ),
+  if (
+    cameraRef &&
+    cameraRef.current &&
+    typeof question?.longitude === 'number' &&
+    typeof question?.latitude === 'number'
+  ) {
+    cameraRef.current.setCamera({
+      centerCoordinate: [question.longitude, question.latitude],
+      zoomLevel: 16,
+      animationDuration: 1000,
     });
   }
+
+  return;
 };

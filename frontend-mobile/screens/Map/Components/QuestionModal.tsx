@@ -138,6 +138,13 @@ const QuestionModal = ({
   const [isAtBottom, setIsAtBottom] = useState(false);
 
   const isPuzzle = questionData?.answerType === 'puzzle';
+  const [showPuzzleFull, setShowPuzzleFull] = useState(false);
+
+  useEffect(() => {
+    if (!visible) {
+      setShowPuzzleFull(false);
+    }
+  }, [visible, questionData]);
 
   const puzzleInjectedJS = `
     (function() {
@@ -170,50 +177,37 @@ const QuestionModal = ({
         <View style={styles.modalContainer}>
           {/* Scrollable Question Area */}
           <View style={styles.whiteBox}>
-            <ScrollView
-              scrollEnabled={!isPuzzle}
-              nestedScrollEnabled={!isPuzzle}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={[
-                commonStyles.scrollContainer,
-                styles.scrollInner,
-              ]}
-              onContentSizeChange={(contentWidth, contentHeight) => {
-                // Detect if content is larger than visible area (approx)
-                if (!isPuzzle && contentHeight > 300) {
-                  setShowScrollArrow(true);
-                }
-              }}
-              onScroll={e => {
-                if (isPuzzle) return;
-
-                const { contentOffset, layoutMeasurement, contentSize } =
-                  e.nativeEvent;
-
-                const isBottom =
-                  layoutMeasurement.height + contentOffset.y >=
-                  contentSize.height - 20;
-
-                setIsAtBottom(isBottom);
-              }}
-              scrollEventThrottle={16}
-            >
-              {/* Question */}
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#deca88',
-                  borderRadius: RFValue(8),
-                  borderStyle: 'dashed',
-                  marginBottom: RFValue(10),
-                }}
+            {isPuzzle && showPuzzleFull ? (
+              <ScrollView
+                scrollEnabled
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={[
+                  commonStyles.scrollContainer,
+                  styles.scrollInner,
+                ]}
               >
-                <MediaRenderer media={questionData?.media} />
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: RFValue(10),
+                  }}
+                >
+                  <Text style={[commonStyles.h2Text]}>Puzzle</Text>
+                  <SplashButton
+                    buttonStyle={{
+                      paddingHorizontal: RFValue(12),
+                      height: RFValue(32),
+                      borderRadius: RFValue(6),
+                      backgroundColor: '#d8b443',
+                    }}
+                    title="Back"
+                    onPress={() => setShowPuzzleFull(false)}
+                  />
+                </View>
 
-                <QuillRenderer questionName={questionData?.question} />
-              </View>
-
-              {questionData && questionData?.answerType === 'puzzle' && (
                 <View
                   style={[
                     styles.webviewContainer,
@@ -236,30 +230,95 @@ const QuestionModal = ({
                     }}
                   />
                 </View>
-              )}
 
-              <QuestionRenderer
-                question={questionData}
-                selectedOption={selectedOption}
-                setSelectedOption={setSelectedOption}
-                inputAnswer={inputAnswer}
-                setInputAnswer={setInputAnswer}
-              />
-            </ScrollView>
-            {showScrollArrow && !isAtBottom && !isPuzzle && (
-              <View
-                style={{
-                  position: 'absolute',
-                  bottom: RFValue(30),
-                  alignSelf: 'center',
-                  zIndex: 100,
-                }}
-              >
-                <Image
-                  source={require('../../../assets/images/icon/down-arrow.png')}
-                  style={{ width: 30, height: 30, opacity: 0.6 }}
+                <QuestionRenderer
+                  question={questionData}
+                  selectedOption={selectedOption}
+                  setSelectedOption={setSelectedOption}
+                  inputAnswer={inputAnswer}
+                  setInputAnswer={setInputAnswer}
                 />
-              </View>
+              </ScrollView>
+            ) : (
+              <>
+                <ScrollView
+                  scrollEnabled
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={[
+                    commonStyles.scrollContainer,
+                    styles.scrollInner,
+                  ]}
+                  onContentSizeChange={(contentWidth, contentHeight) => {
+                    if (contentHeight > 300) {
+                      setShowScrollArrow(true);
+                    }
+                  }}
+                  onScroll={e => {
+                    const { contentOffset, layoutMeasurement, contentSize } =
+                      e.nativeEvent;
+
+                    const isBottom =
+                      layoutMeasurement.height + contentOffset.y >=
+                      contentSize.height - 20;
+
+                    setIsAtBottom(isBottom);
+                  }}
+                  scrollEventThrottle={16}
+                >
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#deca88',
+                      borderRadius: RFValue(8),
+                      borderStyle: 'dashed',
+                      marginBottom: RFValue(10),
+                    }}
+                  >
+                    <MediaRenderer media={questionData?.media} />
+
+                    <QuillRenderer questionName={questionData?.question} />
+                  </View>
+
+                  {questionData && questionData?.answerType === 'puzzle' && (
+                    <View style={{ marginBottom: RFValue(10) }}>
+                      <SplashButton
+                        buttonStyle={{
+                          width: '100%',
+                          height: RFValue(42),
+                          borderRadius: RFValue(8),
+                          backgroundColor: '#d8b443',
+                        }}
+                        title="Open Puzzle"
+                        onPress={() => setShowPuzzleFull(true)}
+                      />
+                    </View>
+                  )}
+
+                  <QuestionRenderer
+                    question={questionData}
+                    selectedOption={selectedOption}
+                    setSelectedOption={setSelectedOption}
+                    inputAnswer={inputAnswer}
+                    setInputAnswer={setInputAnswer}
+                  />
+                </ScrollView>
+                {showScrollArrow && !isAtBottom && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      bottom: RFValue(30),
+                      alignSelf: 'center',
+                      zIndex: 100,
+                    }}
+                  >
+                    <Image
+                      source={require('../../../assets/images/icon/down-arrow.png')}
+                      style={{ width: 30, height: 30, opacity: 0.6 }}
+                    />
+                  </View>
+                )}
+              </>
             )}
           </View>
 
