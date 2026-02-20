@@ -16,7 +16,8 @@ import { launchCamera } from 'react-native-image-picker';
 import Video from 'react-native-video';
 import colors from '../styles/colors';
 import { RFValue } from '../utils/responsive';
-import { Camera, Video as VideoIcon, Trash2, X } from 'lucide-react-native';
+import { Camera, Video as VideoIcon, Trash2, X, Download } from 'lucide-react-native';
+import RNFS from 'react-native-fs';
 import ViewShot from 'react-native-view-shot';
 
 const { width, height } = Dimensions.get('window');
@@ -38,6 +39,7 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
   const [showCamera, setShowCamera] = useState(false);
   const cameraRef = useRef<RNCamera>(null);
   const viewShotRef = useRef<ViewShot>(null);
+  const previewShotRef = useRef<ViewShot>(null);
   const [cameraLayout, setCameraLayout] = useState({ width, height });
   const [overlayReady, setOverlayReady] = useState(false);
   const [cameraType, setCameraType] = useState(
@@ -193,6 +195,64 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
     }
   };
 
+  const downloadImage = async () => {
+    if (!value) return;
+
+    try {
+      if (Platform.OS === 'android') {
+        const permission =
+          Platform.Version >= 33
+            ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+            : PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+
+        const result = await PermissionsAndroid.request(permission);
+        if (result !== PermissionsAndroid.RESULTS.GRANTED) {
+          Alert.alert('Permission Denied', 'Storage permission is required to download image.');
+          return;
+        }
+      }
+
+      let sourceUri: string | null = null;
+
+      if (type === 'augmented_photo' && overlayImageUrl && previewShotRef.current) {
+        const captured = await previewShotRef.current.capture();
+        sourceUri = captured.startsWith('file://') ? captured : `file://${captured}`;
+      } else {
+        const uri = value;
+        if (!uri.startsWith('file://')) {
+          Alert.alert('Error', 'Cannot download this image.');
+          return;
+        }
+        sourceUri = uri;
+      }
+
+      if (!sourceUri) {
+        Alert.alert('Error', 'Failed to prepare image for download.');
+        return;
+      }
+
+      const sourcePath = sourceUri.replace('file://', '');
+      const dir =
+        Platform.OS === 'android'
+          ? RNFS.DownloadDirectoryPath || RNFS.DocumentDirectoryPath
+          : RNFS.DocumentDirectoryPath;
+      const fileName = `chronophage_${Date.now()}.jpg`;
+      const destPath = `${dir}/${fileName}`;
+
+      await RNFS.copyFile(sourcePath, destPath);
+
+      Alert.alert(
+        'Downloaded',
+        Platform.OS === 'android'
+          ? 'Image saved to Downloads folder.'
+          : 'Image saved to app documents folder.',
+      );
+    } catch (error) {
+      console.error('Download image error:', error);
+      Alert.alert('Error', 'Failed to download image.');
+    }
+  };
+
   const handleRemove = () => {
     onChange(null);
   };
@@ -284,21 +344,34 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
               controls={true}
               paused={true}
             />
-          ) : overlayImageUrl ? (
-            <View style={styles.previewMedia}>
-              <Image source={{ uri: value }} style={styles.previewMedia} />
-              <Image
-                source={{ uri: overlayImageUrl }}
-                style={styles.previewOverlay}
-                resizeMode="cover"
-              />
-            </View>
           ) : (
-            <Image source={{ uri: value }} style={styles.previewMedia} />
+            <ViewShot
+              ref={previewShotRef}
+              style={styles.previewMedia}
+              options={{ format: 'jpg', quality: 0.9 }}
+            >
+              {overlayImageUrl ? (
+                <View style={styles.previewMedia}>
+                  <Image source={{ uri: value }} style={styles.previewMedia} />
+                  <Image
+                    source={{ uri: overlayImageUrl }}
+                    style={styles.previewOverlay}
+                    resizeMode="cover"
+                  />
+                </View>
+              ) : (
+                <Image source={{ uri: value }} style={styles.previewMedia} />
+              )}
+            </ViewShot>
           )}
-          <TouchableOpacity style={styles.removeButton} onPress={handleRemove}>
-            <Trash2 size={20} color={colors.white} />
-          </TouchableOpacity>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.downloadButton} onPress={downloadImage}>
+              <Download size={18} color={colors.white} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.removeButton} onPress={handleRemove}>
+              <Trash2 size={20} color={colors.white} />
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
         <TouchableOpacity 
@@ -371,10 +444,20 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   removeButton: {
+    marginLeft: 8,
+    backgroundColor: 'rgba(255, 0, 0, 0.7)',
+    padding: 8,
+    borderRadius: 20,
+  },
+  actionButtons: {
     position: 'absolute',
     top: 10,
     right: 10,
-    backgroundColor: 'rgba(255, 0, 0, 0.7)',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  downloadButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 8,
     borderRadius: 20,
   },
