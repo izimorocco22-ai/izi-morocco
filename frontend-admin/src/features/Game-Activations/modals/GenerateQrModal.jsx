@@ -67,17 +67,13 @@ const GenerateQrModal = ({ open = true, onOpenChange = () => {}, data }) => {
       "Use this code to activate and start the game in the izi Morocco app.",
     ];
 
-    const mailto = `mailto:${encodeURIComponent(
-      email
-    )}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-      lines.join("\n")
-    )}`;
+    const body = lines.join("\n");
 
-    try {
-      window.open(mailto, "_blank", "noopener,noreferrer");
-    } catch {
-      window.location.href = mailto;
-    }
+    const gmailUrl = `https://mail.google.com/mail/u/0/?view=cm&fs=1&to=${encodeURIComponent(
+      email
+    )}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    window.open(gmailUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
