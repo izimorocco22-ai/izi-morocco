@@ -78,18 +78,50 @@ export const handleListQuestionPress = (
   state: any,
   question: any,
   dispatch: any,
-  cameraRef?: any,
 ) => {
-  if (
-    cameraRef &&
-    cameraRef.current &&
-    typeof question?.longitude === 'number' &&
-    typeof question?.latitude === 'number'
-  ) {
-    cameraRef.current.setCamera({
-      centerCoordinate: [question.longitude, question.latitude],
-      zoomLevel: 16,
-      animationDuration: 1000,
-    });
+  let longitude: number | null = null;
+  let latitude: number | null = null;
+
+  if (question) {
+    if (question.longitude != null && question.latitude != null) {
+      longitude = Number(question.longitude);
+      latitude = Number(question.latitude);
+    } else if (question?.question) {
+      if (
+        question.question.longitude != null &&
+        question.question.latitude != null
+      ) {
+        longitude = Number(question.question.longitude);
+        latitude = Number(question.question.latitude);
+      }
+    }
   }
+
+  if ((longitude == null || isNaN(longitude)) && Array.isArray(state.targets)) {
+    const target = state.targets.find(
+      (t: any) => t?.question?._id === question?.question?._id,
+    );
+    if (target) {
+      if (target.longitude != null) {
+        longitude = Number(target.longitude);
+      }
+      if (target.latitude != null) {
+        latitude = Number(target.latitude);
+      }
+    }
+  }
+
+  if (
+    longitude == null ||
+    latitude == null ||
+    isNaN(longitude) ||
+    isNaN(latitude)
+  ) {
+    return;
+  }
+
+  dispatch({
+    type: 'SET_CAMERA_TARGET',
+    payload: { latitude, longitude },
+  });
 };

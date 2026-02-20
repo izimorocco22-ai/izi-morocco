@@ -28,6 +28,7 @@ export const initialState = {
   timerData: [] as any[],
   time: 0,
   list: [] as any[],
+  cameraTarget: null as { latitude: number; longitude: number } | null,
 };
 
 export type State = typeof initialState;
@@ -64,7 +65,11 @@ export type Action =
   | { type: 'SET_TIMER'; payload: any }
   | { type: 'SET_LIST'; payload: string[] }
   | { type: 'UPDATE_TIMER_FINISHED'; payload: any }
-  | { type: 'TRIGGER_MARKER_GETS' };
+  | { type: 'TRIGGER_MARKER_GETS' }
+  | {
+      type: 'SET_CAMERA_TARGET';
+      payload: { latitude: number; longitude: number } | null;
+    };
 
 export function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -152,6 +157,8 @@ export function reducer(state: State, action: Action): State {
       return { ...state, time: action.payload };
     case 'SET_LIST':
       return { ...state, list: action.payload };
+    case 'SET_CAMERA_TARGET':
+      return { ...state, cameraTarget: action.payload };
     default:
       return state;
   }

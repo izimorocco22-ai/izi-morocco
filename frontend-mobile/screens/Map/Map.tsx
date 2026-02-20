@@ -130,8 +130,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     });
   }, [stateRef.current.timerData]);
 
-  const cameraRef = useRef<any>(null);
-
   const listItems =
     state.list && state.list.length > 0
       ? state.list
@@ -428,14 +426,20 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             <>
               {state.location && (
                 <MapboxGL.Camera
-                  ref={cameraRef}
-                  zoomLevel={14}
-                  centerCoordinate={[
-                    state.location?.longitude,
-                    state.location?.latitude,
-                  ]}
-                  followUserLocation
-                  followZoomLevel={14}
+                  zoomLevel={state.cameraTarget ? 16 : 14}
+                  centerCoordinate={
+                    state.cameraTarget
+                      ? [
+                          state.cameraTarget.longitude,
+                          state.cameraTarget.latitude,
+                        ]
+                      : [
+                          state.location?.longitude,
+                          state.location?.latitude,
+                        ]
+                  }
+                  followUserLocation={!state.cameraTarget}
+                  followZoomLevel={state.cameraTarget ? undefined : 14}
                   animationMode={'flyTo'}
                   animationDuration={1000}
                 />
@@ -524,7 +528,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             state={{ ...stateRef.current, list: listItems }}
             dispatch={dispatch}
             list={listItems}
-            cameraRef={cameraRef}
             onClose={() => {
               setShowList(false);
             }}

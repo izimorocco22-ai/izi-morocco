@@ -6,7 +6,7 @@ import { RFValue } from '../../../utils/responsive';
 import { handleListQuestionPress } from '../utils/mapHandlers';
 import { getCleanImageUrl } from '../../../utils/imageUtils';
 
-const ListModal = ({ state, dispatch, list, onClose, cameraRef }) => {
+const ListModal = ({ state, dispatch, list, onClose }) => {
   return (
     <View
       style={{
@@ -65,7 +65,7 @@ const ListModal = ({ state, dispatch, list, onClose, cameraRef }) => {
               return (
                 <TouchableOpacity
                   onPress={() => {
-                    handleListQuestionPress(state, item, dispatch, cameraRef);
+                    handleListQuestionPress(state, item, dispatch);
                     onClose && onClose();
                   }}
                   key={index}
