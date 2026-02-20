@@ -92,6 +92,4 @@ export const handleListQuestionPress = (
       animationDuration: 1000,
     });
   }
-
-  return;
 };
