@@ -18,5 +18,6 @@ export const ROUTES = {
   GAME_ACTIVATION: "/game-activation",
   GAME_ACTIVATION_GROUP: "/game-activation/group/:groupId",
   PLAYER_ADMIN: "/player-admin",
+  TEAMS: "/teams",
   NOT_FOUND: "*",
 };

@@ -11,7 +11,6 @@ import TagIcon from "../components/svgs/TagIcon";
 import Puzzles from "../components/svgs/PuzzlesIcon";
 import ActivationIcon from "../components/svgs/ActivationIcon";
 import PlayerIcon from "../components/svgs/PlayerIcon";
-
 const sidebars = () => [
   {
     id: "dashboard",
@@ -61,6 +60,13 @@ const sidebars = () => [
     icon: PlayerIcon,
     to: ROUTES.PLAYER_ADMIN,
     children: ["player-admin"],
+  },
+  {
+    id: "teams",
+    label: "Team Management",
+    icon: UsersIcon,
+    to: ROUTES.TEAMS,
+    children: ["teams"],
   },
   {
     id: "game-activation",

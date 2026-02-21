@@ -17,6 +17,7 @@ import GameActivation from "../features/Game-Activations/pages/GameActivation";
 import BatchCodes from "../features/Game-Activations/pages/BatchCodes";
 import PlayerAdmin from "../features/PlayerAdmin/pages/PlayerAdmin";
 import BlocklyEditor from "../features/Games/components/Blockly2";
+import Teams from "../features/Teams/pages/Teams";
 
 export default function AppRoutes() {
   return (
@@ -47,6 +48,7 @@ export default function AppRoutes() {
         <Route path={ROUTES.GAME_ACTIVATION} element={<GameActivation />} />
         <Route path={ROUTES.GAME_ACTIVATION_GROUP} element={<BatchCodes />} />
         <Route path={ROUTES.PLAYER_ADMIN} element={<PlayerAdmin />} />
+        <Route path={ROUTES.TEAMS} element={<Teams />} />
       </Route>
 
       {/* Catch-all route - redirect any unknown route to dashboard for authenticated users */}
