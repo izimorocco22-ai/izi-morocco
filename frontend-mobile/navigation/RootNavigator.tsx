@@ -22,6 +22,7 @@ import ResetPassword from '../screens/Auth/ResetPassword';
 import HomeScreen from '../screens/Main/HomeScreen';
 import AboutScreen from '../screens/Main/AboutScreen';
 import SettingsScreen from '../screens/Main/SettingsScreen';
+import TeamManagementScreen from '../screens/Main/TeamManagementScreen';
 import { Congratulation } from '../screens/Map/Components/Congratulation';
 
 const Stack = createStackNavigator();
@@ -56,6 +57,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="TeamManagement" component={TeamManagementScreen} />
       <Stack.Screen name="Map" component={Map} />
       <Stack.Screen name="BottomTabs" component={BottomTabs} />
       <Stack.Screen name="Avatar" component={ChooseAvatar} />

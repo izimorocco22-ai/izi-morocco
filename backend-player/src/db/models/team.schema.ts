@@ -14,6 +14,10 @@ const TeamSchema = new mongoose.Schema(
       required: true,
       unique: true,
       index: true
+    },
+    members: {
+      type: [String],
+      default: []
     }
   },
   {
@@ -24,4 +28,3 @@ const TeamSchema = new mongoose.Schema(
 )
 
 export default mongoose.model('Teams', TeamSchema)
-

@@ -1,6 +1,6 @@
-// screens/Auth/SignInScreen.tsx
-import React, { useState } from 'react';
-import { View, Text, Dimensions, TouchableOpacity, Image } from 'react-native';
+// screens/GameLogin/GameLogin.tsx
+import React, { useRef, useState } from 'react';
+import { View, Text, Dimensions, TouchableOpacity, Image, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import colors from '../../styles/colors';
 import commonStyles from '../../styles/commonStyles';
@@ -12,6 +12,9 @@ import { useDispatch } from 'react-redux';
 import { gameLogin } from '../../store/gameSlice';
 import { ToastAndroid } from 'react-native';
 import { offlineManager } from '../../utils/offlineManager';
+import ApiService from '../../utils/apiService';
+import { apiPaths } from '../../utils/apiPaths';
+import CustomInput from '../../components/CustomInput';
 
 const { height } = Dimensions.get('window');
 
@@ -20,7 +23,20 @@ export default function GameLogin({ navigation, route }) {
   const gameId = qrGameID ? qrGameID : game?._id;
   const [activeCode, setActiveCode] = useState(activationCode || '');
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<'single' | 'team'>('single');
+  const [teamName, setTeamName] = useState('');
+  const tabAnim = useRef(new Animated.Value(0)).current;
   const dispatch = useDispatch<any>();
+
+  const switchMode = (next: 'single' | 'team') => {
+    if (next === mode) return;
+    setMode(next);
+    Animated.timing(tabAnim, {
+      toValue: next === 'single' ? 0 : 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
 
   const handleSignIn = async () => {
     setLoading(true);
@@ -28,6 +44,30 @@ export default function GameLogin({ navigation, route }) {
       ToastAndroid.show('Please enter activation code', ToastAndroid.SHORT);
       setLoading(false);
       return;
+    }
+
+    if (mode === 'team') {
+      if (!teamName.trim()) {
+        ToastAndroid.show('Please enter team name', ToastAndroid.SHORT);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        await ApiService({
+          method: 'POST',
+          endpoint: apiPaths.teamJoin,
+          data: { name: teamName.trim() },
+        });
+      } catch (error: any) {
+        const msg =
+          error?.response?.data?.message ||
+          error?.message ||
+          'Unable to join team';
+        ToastAndroid.show(msg, ToastAndroid.LONG);
+        setLoading(false);
+        return;
+      }
     }
 
     try {
@@ -100,13 +140,92 @@ export default function GameLogin({ navigation, route }) {
               { flex: 1, width: '100%' },
             ]}
           >
-            <View style={{ marginBottom: RFValue(40) }}>
-              <Text style={[commonStyles.h1Text, { textAlign: 'center' }]}>
+            <View style={{ marginBottom: RFValue(20) }}>
+              <Text
+                style={[
+                  commonStyles.h1Text,
+                  { textAlign: 'center', color: colors.black },
+                ]}
+              >
                 Game Login
               </Text>
-              <Text style={[commonStyles.pText, { textAlign: 'center' }]}>
-                After Enter the credentials you can start the game
+              <Text
+                style={[
+                  commonStyles.pText,
+                  { textAlign: 'center', color: colors.black },
+                ]}
+              >
+                After enter the credentials you can start the game
               </Text>
+            </View>
+
+            <View
+              style={{
+                flexDirection: 'row',
+                borderRadius: 999,
+                backgroundColor: 'rgba(255,255,255,0.6)',
+                padding: 4,
+                marginBottom: RFValue(20),
+                overflow: 'hidden',
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={{
+                    paddingVertical: RFValue(8),
+                    alignItems: 'center',
+                  }}
+                  onPress={() => switchMode('single')}
+                >
+                  <Text
+                    style={{
+                      color: '#000',
+                      fontWeight: mode === 'single' ? '700' : '500',
+                    }}
+                  >
+                    Single
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={{ flex: 1 }}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={{
+                    paddingVertical: RFValue(8),
+                    alignItems: 'center',
+                  }}
+                  onPress={() => switchMode('team')}
+                >
+                  <Text
+                    style={{
+                      color: '#000',
+                      fontWeight: mode === 'team' ? '700' : '500',
+                    }}
+                  >
+                    Team
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <Animated.View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  top: 4,
+                  bottom: 4,
+                  width: '50%',
+                  borderRadius: 999,
+                  backgroundColor: 'white',
+                  transform: [
+                    {
+                      translateX: tabAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 150],
+                      }),
+                    },
+                  ],
+                }}
+              />
             </View>
 
             <CustomInput
@@ -116,6 +235,18 @@ export default function GameLogin({ navigation, route }) {
               onChangeText={setActiveCode}
               placeholder="Enter your Game ID"
             />
+
+            {mode === 'team' && (
+              <View style={{ marginTop: RFValue(12), width: '100%' }}>
+                <CustomInput
+                  error={null}
+                  label="Team Name"
+                  value={teamName}
+                  onChangeText={setTeamName}
+                  placeholder="Enter your Team Name"
+                />
+              </View>
+            )}
 
             <SplashButton
               onPress={handleSignIn}

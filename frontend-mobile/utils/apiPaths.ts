@@ -18,4 +18,6 @@ export const apiPaths = {
   // team
   teamCreate: "team",
   teamMe: "team/me",
+  teamJoin: "team/join",
+  teamMembers: "team/members",
 };
