@@ -14,7 +14,6 @@ import { ToastAndroid } from 'react-native';
 import { offlineManager } from '../../utils/offlineManager';
 import ApiService from '../../utils/apiService';
 import { apiPaths } from '../../utils/apiPaths';
-import CustomInput from '../../components/CustomInput';
 
 const { height } = Dimensions.get('window');
 
