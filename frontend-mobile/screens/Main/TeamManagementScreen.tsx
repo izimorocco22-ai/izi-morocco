@@ -125,6 +125,7 @@ export default function TeamManagementScreen() {
               value={teamName}
               onChangeText={setTeamName}
               style={styles.input}
+              placeholderTextColor="#999"
             />
             <SplashButton
               onPress={handleCreateTeam}
@@ -184,6 +185,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     marginBottom: RFValue(12),
+    color: '#000',
   },
   button: {
     backgroundColor: '#2f73fd',

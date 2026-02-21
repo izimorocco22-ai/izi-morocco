@@ -168,6 +168,25 @@ export default function GameLogin({ navigation, route }) {
                 overflow: 'hidden',
               }}
             >
+              <Animated.View
+                pointerEvents="none"
+                style={{
+                  position: 'absolute',
+                  top: 4,
+                  bottom: 4,
+                  width: '50%',
+                  borderRadius: 999,
+                  backgroundColor: 'white',
+                  transform: [
+                    {
+                      translateX: tabAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 150],
+                      }),
+                    },
+                  ],
+                }}
+              />
               <View style={{ flex: 1 }}>
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -206,25 +225,6 @@ export default function GameLogin({ navigation, route }) {
                   </Text>
                 </TouchableOpacity>
               </View>
-              <Animated.View
-                pointerEvents="none"
-                style={{
-                  position: 'absolute',
-                  top: 4,
-                  bottom: 4,
-                  width: '50%',
-                  borderRadius: 999,
-                  backgroundColor: 'white',
-                  transform: [
-                    {
-                      translateX: tabAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 150],
-                      }),
-                    },
-                  ],
-                }}
-              />
             </View>
 
             <CustomInput
