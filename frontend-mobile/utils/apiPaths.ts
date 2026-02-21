@@ -14,4 +14,8 @@ export const apiPaths = {
   infoGame: "game-info",
   gameLogin: "game-login",
   upload: "upload",
+
+  // team
+  teamCreate: "team",
+  teamMe: "team/me",
 };

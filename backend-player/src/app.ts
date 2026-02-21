@@ -9,6 +9,7 @@ import authRoutes from './routes/auth'
 import playerRoutes from './routes/player'
 import gamesRoutes from './routes/games'
 import uploadRoutes from './routes/upload'
+import teamRoutes from './routes/team'
 import results from './routes/results'
 
 const port = process.env.PORT || '3000'
@@ -36,6 +37,7 @@ app.use('/player', playerRoutes)
 app.use('/games', gamesRoutes)
 app.use('/upload', uploadRoutes)
 app.use('/result', results)
+app.use('/team', teamRoutes)
 
 app.use(errorHandler)
 
