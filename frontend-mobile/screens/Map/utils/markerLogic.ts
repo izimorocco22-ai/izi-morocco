@@ -28,6 +28,7 @@ export const markerGets = (
 
   // ✅ Collect all tasks to show in one go
   const showTaskIds: string[] = [];
+  const playgroundTaskIds: string[] = [];
 
   result.forEach((r: any) => {
     if (r?.showTag) {
@@ -106,6 +107,8 @@ export const markerGets = (
     // }
     else if (r?.finish) {
       dispatch({ type: 'SET_NAVIGATE_FINISH', payload: true });
+    } else if (r?.playground && Array.isArray(r.taskId)) {
+      playgroundTaskIds.push(...r.taskId);
     }
   });
 
@@ -126,6 +129,16 @@ export const markerGets = (
       });
     }
 
+    dispatch({ type: 'SET_TASK', payload: updatedTasks });
+  }
+
+  if (playgroundTaskIds.length > 0) {
+    const uniquePlaygroundIds = Array.from(new Set(playgroundTaskIds));
+    const updatedTasks = safeTasks.map(q =>
+      uniquePlaygroundIds.includes(q.question?._id)
+        ? { ...q, isShownOnPlayground: true }
+        : q,
+    );
     dispatch({ type: 'SET_TASK', payload: updatedTasks });
   }
 };
