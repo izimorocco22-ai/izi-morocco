@@ -193,49 +193,46 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
     if (!blocklyData?.blocksJson?.flow) return;
 
     const flow = blocklyData.blocksJson.flow;
+    const tasksInCurrentPlayground = new Set();
     let foundPendingTask = null;
-    let needsUpdate = false;
 
-    dispatch((dispatch, getState) => {
-      const currentSelectedQuestions = getState().games.selectedQuestions;
-      const updatedQuestions = currentSelectedQuestions.map((field) => {
-        // Check if this task should be on current playground
-        let shouldBeHere = false;
-        
-        for (const rule of flow) {
-          if (rule.type === 'when_then' && rule.do) {
-            for (const action of rule.do) {
-              if (
-                action.type === 'show_tasks_on_playground' &&
-                action.task &&
-                action.task.id === field.id
-              ) {
-                if (action.playground === playgroundIndex) {
-                  shouldBeHere = true;
-                  
-                  // Check if needs placement
-                  if (!field.isPlacedCanvas || field.playgroundIndex !== playgroundIndex) {
-                    if (!foundPendingTask) {
-                      foundPendingTask = field;
-                    }
-                  }
-                } else if (field.isPlacedCanvas && field.playgroundIndex === playgroundIndex) {
-                  // Task is placed here but should be on different playground - remove it
-                  needsUpdate = true;
-                  return { ...field, isPlacedCanvas: false, x: undefined, y: undefined, playgroundIndex: undefined };
-                }
+    // Collect all tasks that should be on this playground
+    for (const rule of flow) {
+      if (rule.type === 'when_then' && rule.do) {
+        for (const action of rule.do) {
+          if (
+            action.type === 'show_tasks_on_playground' &&
+            action.playground === playgroundIndex &&
+            action.task
+          ) {
+            const taskId = action.task.id;
+            tasksInCurrentPlayground.add(taskId);
+            
+            const question = selectedQuestions.find((q) => q.id === taskId);
+            if (question) {
+              // Check if task is placed on a different playground
+              if (question.isPlacedCanvas && question.playgroundIndex !== playgroundIndex) {
+                // Auto-move: remove from old playground, mark as pending for new one
+                dispatch((dispatch, getState) => {
+                  const currentSelectedQuestions = getState().games.selectedQuestions;
+                  const updatedQuestions = currentSelectedQuestions.map((field) =>
+                    field.id === taskId
+                      ? { ...field, isPlacedCanvas: false, x: undefined, y: undefined, playgroundIndex: undefined }
+                      : field
+                  );
+                  dispatch(setSelectedQuestions(updatedQuestions));
+                });
+              }
+              
+              // Check if needs placement on current playground
+              if (!question.isPlacedCanvas || question.playgroundIndex !== playgroundIndex) {
+                foundPendingTask = question;
               }
             }
           }
         }
-        
-        return field;
-      });
-
-      if (needsUpdate) {
-        dispatch(setSelectedQuestions(updatedQuestions));
       }
-    });
+    }
 
     setPendingBlocklyTask(foundPendingTask);
   }, [blocklyData, selectedQuestions, playgroundIndex, dispatch]);
