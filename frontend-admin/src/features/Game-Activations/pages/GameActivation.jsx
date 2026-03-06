@@ -125,7 +125,7 @@ const GameActivation = () => {
             "flex flex-row justify-between items-center"
           )}
         >
-          <h1 className="text-2xl font-bold">Game Activation</h1>
+          <h1 className="text-2xl font-bold">Game Ticket</h1>
           <div className="flex gap-2">
             <Button onClick={() => setOpenModal(true)}>
               Create Multipal Ticket 
