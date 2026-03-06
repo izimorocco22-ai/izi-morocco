@@ -72,6 +72,7 @@ export default function CreateUpdateGame() {
           isPlacedCanvas: q.isPlacedCanvas || false,
           x: q.x,
           y: q.y,
+          iconSize: q.iconSize || 40
         };
       }) || []
     );

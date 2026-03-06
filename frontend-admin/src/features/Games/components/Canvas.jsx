@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CrossIcon from "../../../components/svgs/CrossIcon";
 import {
@@ -42,7 +42,8 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
   const dispatch = useDispatch();
 
   const [displayPlacedQuestions, setDisplayPlacedQuestions] = useState(false);
-  const { selectedQuestion, selectedQuestions, getGameInfobyIdApi } =
+  const [pendingBlocklyTask, setPendingBlocklyTask] = useState(null);
+  const { selectedQuestion, selectedQuestions, getGameInfobyIdApi, blocklyData } =
     useSelector((state) => state.games);
   
   const playgroundImage = playgroundData?.image
@@ -60,6 +61,12 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
     playgroundData?.name ||
     getGameInfobyIdApi?.data?.response?.playgroundName ||
     "Untitled Playground";
+
+  const playgroundIndex = playgroundData
+    ? (getGameInfobyIdApi?.data?.response?.playgrounds || []).findIndex(
+        (pg) => pg.name === playgroundData.name
+      ) + 1
+    : 1;
 
   // --- 1. NEW REFS FOR DRAGGING ---
   // We use Refs for logic to avoid stale closures in event listeners
@@ -178,11 +185,41 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
     [handleDrag, handleDragEnd]
   );
 
+  // --- Check for Blockly pending tasks ---
+  useEffect(() => {
+    if (!blocklyData?.blocksJson?.flow) return;
+
+    const flow = blocklyData.blocksJson.flow;
+    let foundPendingTask = null;
+
+    for (const rule of flow) {
+      if (rule.type === 'when_then' && rule.do) {
+        for (const action of rule.do) {
+          if (
+            action.type === 'show_tasks_on_playground' &&
+            action.playground === playgroundIndex &&
+            action.task
+          ) {
+            const taskId = action.task.id;
+            const question = selectedQuestions.find((q) => q.id === taskId);
+            if (question && !question.isPlacedCanvas) {
+              foundPendingTask = question;
+              break;
+            }
+          }
+        }
+      }
+      if (foundPendingTask) break;
+    }
+
+    setPendingBlocklyTask(foundPendingTask);
+  }, [blocklyData, selectedQuestions, playgroundIndex]);
+
   // --- Placement Logic ---
 
   const handleCanvasClick = useCallback(
     (e) => {
-      const currentSelectedQuestion = selectedQuestion;
+      const currentSelectedQuestion = selectedQuestion || pendingBlocklyTask;
       if (!currentSelectedQuestion || !canvasContainerRef.current) return;
 
       const rect = canvasContainerRef.current.getBoundingClientRect();
@@ -214,8 +251,9 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
         dispatch(setSelectedQuestions(updatedQuestions));
         dispatch(setSelectedQuestion(null));
       });
+      setPendingBlocklyTask(null);
     },
-    [selectedQuestion, dispatch]
+    [selectedQuestion, pendingBlocklyTask, dispatch]
   );
 
   // --- Removal Logic ---
@@ -240,6 +278,10 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
   // --- Marker Component ---
 
   const QuestionMarker = ({ question }) => {
+    const [isResizing, setIsResizing] = useState(false);
+    const [iconSize, setIconSize] = useState(question.iconSize || 40);
+    const resizeStartRef = useRef({ size: 40, mouseX: 0, mouseY: 0 });
+
     const isDragging = draggedQuestion && draggedQuestion.id === question.id;
 
     // If dragging, use px. If placed, use %.
@@ -255,6 +297,52 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
     const pixelRadius = question.locationRadius
       ? Math.max(50, Math.min(200, question.locationRadius / 5))
       : 100;
+
+    const handleResizeStart = useCallback((e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsResizing(true);
+      resizeStartRef.current = {
+        size: iconSize,
+        mouseX: e.clientX,
+        mouseY: e.clientY,
+      };
+
+      const handleResizeMove = (moveEvent) => {
+        const deltaX = moveEvent.clientX - resizeStartRef.current.mouseX;
+        const deltaY = moveEvent.clientY - resizeStartRef.current.mouseY;
+        const delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        const direction = deltaX + deltaY > 0 ? 1 : -1;
+        const newSize = Math.max(20, Math.min(200, resizeStartRef.current.size + delta * direction * 0.5));
+        setIconSize(newSize);
+      };
+
+      const handleResizeEnd = () => {
+        setIsResizing(false);
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+        
+        // Save the new size
+        dispatch((dispatch, getState) => {
+          const currentSelectedQuestions = getState().games.selectedQuestions;
+          const updatedQuestions = currentSelectedQuestions.map((field) =>
+            field.id === question.id
+              ? { ...field, iconSize }
+              : field
+          );
+          dispatch(setSelectedQuestions(updatedQuestions));
+        });
+      };
+
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+    }, [iconSize, question.id, dispatch]);
+
+    useEffect(() => {
+      if (question.iconSize !== undefined) {
+        setIconSize(question.iconSize);
+      }
+    }, [question.iconSize]);
 
     return (
       <div
@@ -285,8 +373,8 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
         <div
           className="custom-canvas-marker relative"
           style={{
-            width: "40px",
-            height: "40px",
+            width: `${iconSize}px`,
+            height: `${iconSize}px`,
             opacity: isDragging ? "0.7" : "1",
           }}
         >
@@ -305,6 +393,24 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
               boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
               cursor: isDragging ? "grabbing" : "grab",
             }}
+          />
+          {/* Resize Handle */}
+          <div
+            onMouseDown={handleResizeStart}
+            style={{
+              position: 'absolute',
+              bottom: '-5px',
+              right: '-5px',
+              width: '16px',
+              height: '16px',
+              background: question.radiusColor || '#3B82F6',
+              borderRadius: '50%',
+              cursor: 'nwse-resize',
+              border: '2px solid white',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              zIndex: 10,
+            }}
+            onClick={(e) => e.stopPropagation()}
           />
         </div>
 
@@ -334,7 +440,7 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
           className="shadow-2xl border-4 border-white inline-block self-center relative"
           onClick={handleCanvasClick}
           style={{
-            cursor: selectedQuestion ? "crosshair" : "default",
+            cursor: selectedQuestion || pendingBlocklyTask ? "crosshair" : "default",
             overflow: "visible",
           }}
         >
@@ -353,15 +459,21 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
         {/* --- Panels --- */}
 
         {/* Instruction Box */}
-        {selectedQuestion && (
+        {(selectedQuestion || pendingBlocklyTask) && (
           <div className="absolute top-4 left-4 bg-blue-500 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm pointer-events-none">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                 <span className="text-blue-500 font-bold">!</span>
               </div>
               <div>
-                <h3 className="font-semibold">Place Question</h3>
-                <p className="text-sm opacity-90">Click on the map</p>
+                <h3 className="font-semibold">
+                  {pendingBlocklyTask ? 'Click to set in playground' : 'Place Question'}
+                </h3>
+                <p className="text-sm opacity-90">
+                  {pendingBlocklyTask
+                    ? `Place ${pendingBlocklyTask.name}`
+                    : 'Click on the map'}
+                </p>
               </div>
             </div>
           </div>

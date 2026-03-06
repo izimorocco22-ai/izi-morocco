@@ -41,7 +41,11 @@ const GameQuestionsSchema = new mongoose.Schema(
           type: Object,
           required: false,
           default: null
-
+        },
+        iconSize: {
+          type: Number,
+          required: false,
+          default: 40
         }
       }
     ],

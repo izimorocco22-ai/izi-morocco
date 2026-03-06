@@ -42,6 +42,7 @@ const RulesCondition = ({
         isPlacedCanvas: pq.isPlacedCanvas,
         x: pq.x,
         y: pq.y,
+        iconSize: pq.iconSize || 40
       };
     });
     const purePayload = {
