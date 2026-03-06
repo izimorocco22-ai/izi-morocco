@@ -82,16 +82,22 @@ export default function GameLogin({ navigation, route }) {
       // Check offline capability
       try {
         const offlineGame = await offlineManager.loadGame(gameId);
-        if (offlineGame) {
-           ToastAndroid.show('Playing in Offline Mode', ToastAndroid.LONG);
-           navigation.navigate('Map', {
-             questions: offlineGame?.game?.questions || [],
-             game: offlineGame?.game,
-             activeCode,
-             gameId,
-           });
-           setLoading(false);
-           return;
+        const offlineCore = offlineGame && offlineGame.game ? offlineGame.game : null;
+
+        if (offlineCore) {
+          const offlineQuestions = Array.isArray(offlineCore.questions)
+            ? offlineCore.questions
+            : [];
+
+          ToastAndroid.show('Playing in Offline Mode', ToastAndroid.LONG);
+          navigation.navigate('Map', {
+            questions: offlineQuestions,
+            game: offlineCore,
+            activeCode,
+            gameId,
+          });
+          setLoading(false);
+          return;
         }
       } catch (e) {
         console.log('Offline load failed', e);

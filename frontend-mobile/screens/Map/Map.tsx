@@ -44,10 +44,12 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   const [showList, setShowList] = useState(false);
   const [mapStyleJson, setMapStyleJson] = useState<string | null>(null);
   useEffect(() => {
-    dispatch({ type: 'SET_TASK', payload: questions });
+    dispatch({ type: 'SET_TASK', payload: questions || [] });
     setBlocklyJson(game?.blocklyJsonRules || null);
-    dispatch({ type: 'SET_SCORE', payload: game.score || 0 });
-  }, [questions]);
+    const initialScore =
+      game && typeof game.score === 'number' ? game.score : 0;
+    dispatch({ type: 'SET_SCORE', payload: initialScore });
+  }, [questions, game]);
 
   useEffect(() => {
     const buildStyle = async () => {

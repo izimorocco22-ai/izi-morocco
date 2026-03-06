@@ -1,12 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNFS from 'react-native-fs';
-import { getCleanImageUrl } from './imageUtils';
+import { getCleanImageUrl, getCleanMediaUrl } from './imageUtils';
 
 const GAME_PREFIX = 'offline_game_';
 const GAME_LIST_KEY = 'offline_game_list';
 const PENDING_RESULTS_KEY = 'pending_game_results';
-const CLOUDINARY_BASE_IMAGE = "https://res.cloudinary.com/dik1l8tqu/image/upload/v1759483737/";
-const CLOUDINARY_BASE_VIDEO = "https://res.cloudinary.com/dik1l8tqu/video/upload/v1759483737/";
 
 export const offlineManager = {
   // --- Game Data Management ---
@@ -21,56 +19,96 @@ export const offlineManager = {
       const gameData = JSON.parse(JSON.stringify(data));
       
       // 2. Process questions to download media
-      if (gameData.game && gameData.game.questions) {
+      if (gameData.game && Array.isArray(gameData.game.questions)) {
         for (const question of gameData.game.questions) {
-            if (question.media) {
-                 // Handle Images
-                 if (question.media.images && Array.isArray(question.media.images)) {
-                     const newImages = [];
-                     for (const img of question.media.images) {
-                         // Construct full URL if it's a relative path (ID)
-                         const url = (typeof img === 'string' && img.startsWith('http')) 
-                            ? img 
-                            : CLOUDINARY_BASE_IMAGE + img;
-                         
-                         const localPath = await downloadMedia(url);
-                         newImages.push(localPath || img); 
-                     }
-                     question.media.images = newImages;
-                 }
-                 
-                 // Handle Videos (Cloudinary)
-                 if (question.media.videos && Array.isArray(question.media.videos)) {
-                     const newVideos = [];
-                     for (const vid of question.media.videos) {
-                         const url = (typeof vid === 'string' && vid.startsWith('http')) 
-                            ? vid 
-                            : CLOUDINARY_BASE_VIDEO + vid;
-                         
-                         const localPath = await downloadMedia(url);
-                         newVideos.push(localPath || vid);
-                     }
-                     question.media.videos = newVideos;
-                 }
-
-                 // Handle Audios
-                 if (question.media.audios && Array.isArray(question.media.audios)) {
-                    const newAudios = [];
-                    for (const audio of question.media.audios) {
-                        if (audio && audio.url) {
-                            const url = (audio.url.startsWith('http'))
-                                ? audio.url
-                                : CLOUDINARY_BASE_VIDEO + audio.url; // Uses video base url per QuestionModal
-                            
-                            const localPath = await downloadMedia(url);
-                            newAudios.push({ ...audio, url: localPath || audio.url });
-                        } else {
-                            newAudios.push(audio);
-                        }
-                    }
-                    question.media.audios = newAudios;
-                 }
+          if (question.media) {
+            if (question.media.images && Array.isArray(question.media.images)) {
+              const newImages = [];
+              for (const img of question.media.images) {
+                const raw =
+                  typeof img === 'string'
+                    ? img
+                    : img && typeof img === 'object' && 'url' in img
+                    ? (img as any).url
+                    : '';
+                const url = getCleanMediaUrl(raw, 'image');
+                const localPath =
+                  url && typeof url === 'string' && url.startsWith('http')
+                    ? await downloadMedia(url)
+                    : null;
+                newImages.push(localPath || img);
+              }
+              question.media.images = newImages;
             }
+
+            if (question.media.videos && Array.isArray(question.media.videos)) {
+              const newVideos = [];
+              for (const vid of question.media.videos) {
+                const raw =
+                  typeof vid === 'string'
+                    ? vid
+                    : vid && typeof vid === 'object' && 'url' in vid
+                    ? (vid as any).url
+                    : '';
+                const url = getCleanMediaUrl(raw, 'video');
+                const localPath =
+                  url && typeof url === 'string' && url.startsWith('http')
+                    ? await downloadMedia(url)
+                    : null;
+                newVideos.push(localPath || vid);
+              }
+              question.media.videos = newVideos;
+            }
+
+            if (question.media.audios && Array.isArray(question.media.audios)) {
+              const newAudios = [];
+              for (const audio of question.media.audios) {
+                if (audio && audio.url) {
+                  const url = getCleanMediaUrl(audio.url, 'video');
+                  const localPath =
+                    url && typeof url === 'string' && url.startsWith('http')
+                      ? await downloadMedia(url)
+                      : null;
+                  newAudios.push({
+                    ...audio,
+                    url: localPath || audio.url,
+                  });
+                } else {
+                  newAudios.push(audio);
+                }
+              }
+              question.media.audios = newAudios;
+            }
+          }
+
+          if (
+            question.question &&
+            question.question.ops &&
+            Array.isArray(question.question.ops)
+          ) {
+            for (const op of question.question.ops) {
+              if (op.insert && typeof op.insert.image === 'string') {
+                const imgUrl = getCleanMediaUrl(op.insert.image, 'image');
+                const localImg =
+                  imgUrl && typeof imgUrl === 'string' && imgUrl.startsWith('http')
+                    ? await downloadMedia(imgUrl)
+                    : null;
+                if (localImg) {
+                  op.insert.image = localImg;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (gameData.game && gameData.game.thumbnail) {
+        const thumbUrl = getCleanImageUrl(gameData.game.thumbnail);
+        if (thumbUrl && thumbUrl.startsWith('http')) {
+          const localThumb = await downloadMedia(thumbUrl);
+          if (localThumb) {
+            gameData.game.thumbnail = localThumb;
+          }
         }
       }
 
@@ -103,6 +141,76 @@ export const offlineManager = {
   isGameOfflineAvailable: async (gameId: string) => {
       const data = await AsyncStorage.getItem(`${GAME_PREFIX}${gameId}`);
       return !!data;
+  },
+
+  /**
+   * Update stored game state (questions/score/status) without re-downloading media.
+   */
+  updateGameState: async (
+    gameId: string,
+    {
+      questions,
+      score,
+      status,
+    }: { questions?: any; score?: number; status?: string },
+  ) => {
+    try {
+      const existing = await AsyncStorage.getItem(`${GAME_PREFIX}${gameId}`);
+      if (!existing) {
+        return false;
+      }
+
+      const data = JSON.parse(existing);
+      if (!data.game) {
+        data.game = {};
+      }
+
+      if (questions) {
+        if (Array.isArray(questions) && Array.isArray(data.game.questions)) {
+          const byId: Record<string, any> = {};
+          for (const q of data.game.questions) {
+            if (q && q._id) {
+              byId[String(q._id)] = q;
+            }
+          }
+
+          const merged = questions.map((q: any) => {
+            const key = q && q._id ? String(q._id) : undefined;
+            const base = key && byId[key] ? byId[key] : {};
+            return {
+              ...base,
+              latitude: q.latitude ?? base.latitude,
+              longitude: q.longitude ?? base.longitude,
+              radius: q.radius ?? base.radius,
+              order: q.order ?? base.order,
+              isFinished: q.isFinished ?? base.isFinished,
+              isCorrect: q.isCorrect ?? base.isCorrect,
+              userAnswer: q.userAnswer ?? base.userAnswer,
+              isDisplayed: q.isDisplayed ?? base.isDisplayed,
+              isShownOnPlayground:
+                q.isShownOnPlayground ?? base.isShownOnPlayground,
+              points: q.points ?? base.points,
+            };
+          });
+
+          data.game.questions = merged;
+        } else {
+          data.game.questions = questions;
+        }
+      }
+      if (typeof score === 'number') {
+        data.game.score = score;
+      }
+      if (status) {
+        data.game.status = status;
+      }
+
+      await AsyncStorage.setItem(`${GAME_PREFIX}${gameId}`, JSON.stringify(data));
+      return true;
+    } catch (error) {
+      console.error('Failed to update offline game state:', error);
+      return false;
+    }
   },
 
   // --- Game List Management ---
