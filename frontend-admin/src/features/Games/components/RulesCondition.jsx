@@ -42,7 +42,8 @@ const RulesCondition = ({
         isPlacedCanvas: pq.isPlacedCanvas,
         x: pq.x,
         y: pq.y,
-        iconSize: pq.iconSize || 40
+        iconSize: pq.iconSize || 40,
+        playgroundIndex: pq.playgroundIndex || 1
       };
     });
     const purePayload = {

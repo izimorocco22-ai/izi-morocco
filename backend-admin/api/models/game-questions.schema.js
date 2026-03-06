@@ -46,6 +46,11 @@ const GameQuestionsSchema = new mongoose.Schema(
           type: Number,
           required: false,
           default: 40
+        },
+        playgroundIndex: {
+          type: Number,
+          required: false,
+          default: 1
         }
       }
     ],

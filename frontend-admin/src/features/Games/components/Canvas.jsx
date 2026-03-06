@@ -76,7 +76,9 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
   // We still keep State for Rendering (so the UI updates)
   const [draggedQuestion, setDraggedQuestion] = useState(null);
 
-  const placedQuestions = selectedQuestions.filter((q) => q.isPlacedCanvas);
+  const placedQuestions = selectedQuestions.filter(
+    (q) => q.isPlacedCanvas && q.playgroundIndex === playgroundIndex
+  );
 
   const updateQuestionLocation = useCallback(
     (questionId, xPercent, yPercent) => {
@@ -88,13 +90,14 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
               ...field,
               x: xPercent,
               y: yPercent,
+              playgroundIndex: playgroundIndex
             }
             : field
         );
         dispatch(setSelectedQuestions(updatedQuestions));
       });
     },
-    [dispatch]
+    [dispatch, playgroundIndex]
   );
 
   // --- 2. FIXED DRAGGING LOGIC ---
@@ -244,6 +247,7 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
               isPlacedCanvas: true,
               x: xPercent,
               y: yPercent,
+              playgroundIndex: playgroundIndex
             }
             : field
         );
@@ -253,7 +257,7 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
       });
       setPendingBlocklyTask(null);
     },
-    [selectedQuestion, pendingBlocklyTask, dispatch]
+    [selectedQuestion, pendingBlocklyTask, dispatch, playgroundIndex]
   );
 
   // --- Removal Logic ---
@@ -263,7 +267,7 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
         const currentSelectedQuestions = getState().games.selectedQuestions;
         const updatedQuestions = currentSelectedQuestions.map((field) => {
           if (field.id === questionId) {
-            const { x, y, isPlacedCanvas, isSelected, ...rest } = field;
+            const { x, y, isPlacedCanvas, isSelected, playgroundIndex, ...rest } = field;
             return rest;
           }
           return field;

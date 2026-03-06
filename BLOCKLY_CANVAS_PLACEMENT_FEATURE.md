@@ -3,6 +3,23 @@
 ## Overview
 This feature allows tasks to be automatically placed on the playground canvas when added via Blockly's "show tasks on playground" block. Users can then resize and move the task icons on the canvas.
 
+## Issues Fixed
+
+### Issue 1: Position Not Saving
+**Problem**: Canvas position was not being saved properly.
+**Solution**: Added `playgroundIndex` to track which playground each task belongs to. This ensures positions are saved and loaded correctly for each specific playground.
+
+### Issue 2: Tasks Showing on Wrong Playground
+**Problem**: Tasks placed on Playground 1 were also showing on Playground 2.
+**Solution**: 
+- Added `playgroundIndex` field to filter tasks by playground
+- Updated `placedQuestions` filter to only show tasks for the current playground:
+  ```javascript
+  const placedQuestions = selectedQuestions.filter(
+    (q) => q.isPlacedCanvas && q.playgroundIndex === playgroundIndex
+  );
+  ```
+
 ## Changes Made
 
 ### 1. Frontend - Canvas Component (`frontend-admin/src/features/Games/components/Canvas.jsx`)
@@ -161,12 +178,18 @@ return {
 
 #### Changes:
 - Added `iconSize` field to the questions schema
+- Added `playgroundIndex` field to track which playground the task belongs to
 
 ```javascript
 iconSize: {
   type: Number,
   required: false,
   default: 40
+},
+playgroundIndex: {
+  type: Number,
+  required: false,
+  default: 1
 }
 ```
 

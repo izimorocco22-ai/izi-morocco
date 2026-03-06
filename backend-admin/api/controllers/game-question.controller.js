@@ -62,7 +62,8 @@ export const upsertGameQuestionsController = async (req, res) => {
         type: 'Point',
         coordinates: [q.x, q.y]
       },
-      iconSize: q.iconSize || 40
+      iconSize: q.iconSize || 40,
+      playgroundIndex: q.playgroundIndex || 1
     }));
 
     const existingDoc = await GameQuestions.findOne({ game: gameId });
@@ -101,7 +102,8 @@ export const upsertGameQuestionsController = async (req, res) => {
         isPacedCanvas: q.isPlacedCanvas,
         x: q.canvasLocation?.coordinates[0],
         y: q.canvasLocation?.coordinates[1],
-        iconSize: q.iconSize || 40
+        iconSize: q.iconSize || 40,
+        playgroundIndex: q.playgroundIndex || 1
       })),
       createdAt: gameQuestions.createdAt,
       updatedAt: gameQuestions.updatedAt
@@ -232,7 +234,8 @@ export const getGameQuestionsController = async (req, res) => {
                 isPlacedCanvas: '$$q.isPlacedCanvas',
                 x: { $arrayElemAt: ['$$q.canvasLocation.coordinates', 1] },
                 y: { $arrayElemAt: ['$$q.canvasLocation.coordinates', 0] },
-                iconSize: { $ifNull: ['$$q.iconSize', 40] }
+                iconSize: { $ifNull: ['$$q.iconSize', 40] },
+                playgroundIndex: { $ifNull: ['$$q.playgroundIndex', 1] }
               }
             }
           },
