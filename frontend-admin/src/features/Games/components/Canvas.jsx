@@ -303,6 +303,7 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
   const QuestionMarker = ({ question }) => {
     const [isResizing, setIsResizing] = useState(false);
     const [iconSize, setIconSize] = useState(question.iconSize || 40);
+    const [showPopup, setShowPopup] = useState(false);
     const resizeStartRef = useRef({ size: 40, mouseX: 0, mouseY: 0 });
 
     const isDragging = draggedQuestion && draggedQuestion.id === question.id;
@@ -384,6 +385,10 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
             height: `${iconSize}px`,
             opacity: isDragging ? "0.7" : "1",
           }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowPopup(!showPopup);
+          }}
         >
           <img
             src={iconUrl}
@@ -421,17 +426,19 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
           />
         </div>
 
-        {/* Popup */}
-        <div className="absolute left-full top-0 ml-2 bg-white p-2 rounded shadow-md w-40 text-xs hidden sm:block z-30">
-          <h4 className="font-bold truncate">{question.name}</h4>
-          <p className="text-gray-600">
-            {isDragging
-              ? "Moving..."
-              : `Pos: ${parseFloat(question.x).toFixed(1)}%, ${parseFloat(
-                question.y
-              ).toFixed(1)}%`}
-          </p>
-        </div>
+        {/* Popup - Only show when clicked */}
+        {showPopup && (
+          <div className="absolute left-full top-0 ml-2 bg-white p-2 rounded shadow-md w-40 text-xs hidden sm:block z-30">
+            <h4 className="font-bold truncate">{question.name}</h4>
+            <p className="text-gray-600">
+              {isDragging
+                ? "Moving..."
+                : `Pos: ${parseFloat(question.x).toFixed(1)}%, ${parseFloat(
+                  question.y
+                ).toFixed(1)}%`}
+            </p>
+          </div>
+        )}
       </div>
     );
   };
