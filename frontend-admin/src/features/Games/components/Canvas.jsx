@@ -188,13 +188,15 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
     [handleDrag, handleDragEnd]
   );
 
-  // --- Check for Blockly pending tasks ---
+  // --- Check for Blockly pending tasks and auto-move ---
   useEffect(() => {
     if (!blocklyData?.blocksJson?.flow) return;
 
     const flow = blocklyData.blocksJson.flow;
+    const tasksInCurrentPlayground = new Set();
     let foundPendingTask = null;
 
+    // Collect all tasks that should be on this playground
     for (const rule of flow) {
       if (rule.type === 'when_then' && rule.do) {
         for (const action of rule.do) {
@@ -204,19 +206,36 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
             action.task
           ) {
             const taskId = action.task.id;
+            tasksInCurrentPlayground.add(taskId);
+            
             const question = selectedQuestions.find((q) => q.id === taskId);
-            if (question && !question.isPlacedCanvas) {
-              foundPendingTask = question;
-              break;
+            if (question) {
+              // Check if task is placed on a different playground
+              if (question.isPlacedCanvas && question.playgroundIndex !== playgroundIndex) {
+                // Auto-move: remove from old playground, mark as pending for new one
+                dispatch((dispatch, getState) => {
+                  const currentSelectedQuestions = getState().games.selectedQuestions;
+                  const updatedQuestions = currentSelectedQuestions.map((field) =>
+                    field.id === taskId
+                      ? { ...field, isPlacedCanvas: false, x: undefined, y: undefined, playgroundIndex: undefined }
+                      : field
+                  );
+                  dispatch(setSelectedQuestions(updatedQuestions));
+                });
+              }
+              
+              // Check if needs placement on current playground
+              if (!question.isPlacedCanvas || question.playgroundIndex !== playgroundIndex) {
+                foundPendingTask = question;
+              }
             }
           }
         }
       }
-      if (foundPendingTask) break;
     }
 
     setPendingBlocklyTask(foundPendingTask);
-  }, [blocklyData, selectedQuestions, playgroundIndex]);
+  }, [blocklyData, selectedQuestions, playgroundIndex, dispatch]);
 
   // --- Placement Logic ---
 
