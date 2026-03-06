@@ -303,7 +303,6 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
   const QuestionMarker = ({ question }) => {
     const [isResizing, setIsResizing] = useState(false);
     const [iconSize, setIconSize] = useState(question.iconSize || 40);
-    const [showTooltip, setShowTooltip] = useState(false);
     const resizeStartRef = useRef({ size: 40, mouseX: 0, mouseY: 0 });
 
     const isDragging = draggedQuestion && draggedQuestion.id === question.id;
@@ -376,10 +375,6 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
           transition: isDragging ? "none" : "left 0.1s, top 0.1s",
         }}
         onMouseDown={(e) => handleDragStart(e, question)}
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowTooltip(!showTooltip);
-        }}
       >
         {/* Icon */}
         <div
@@ -427,18 +422,16 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
         </div>
 
         {/* Popup */}
-        {showTooltip && (
-          <div className="absolute left-full top-0 ml-2 bg-white p-2 rounded shadow-md w-40 text-xs z-30">
-            <h4 className="font-bold truncate">{question.name}</h4>
-            <p className="text-gray-600">
-              {isDragging
-                ? "Moving..."
-                : `Pos: ${parseFloat(question.x).toFixed(1)}%, ${parseFloat(
-                  question.y
-                ).toFixed(1)}%`}
-            </p>
-          </div>
-        )}
+        <div className="absolute left-full top-0 ml-2 bg-white p-2 rounded shadow-md w-40 text-xs hidden sm:block z-30">
+          <h4 className="font-bold truncate">{question.name}</h4>
+          <p className="text-gray-600">
+            {isDragging
+              ? "Moving..."
+              : `Pos: ${parseFloat(question.x).toFixed(1)}%, ${parseFloat(
+                question.y
+              ).toFixed(1)}%`}
+          </p>
+        </div>
       </div>
     );
   };
