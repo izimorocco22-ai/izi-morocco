@@ -76,24 +76,41 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
   // We still keep State for Rendering (so the UI updates)
   const [draggedQuestion, setDraggedQuestion] = useState(null);
 
-  const placedQuestions = selectedQuestions.filter(
-    (q) => q.isPlacedCanvas && q.playgroundIndex === playgroundIndex
-  );
+  const placedQuestions = selectedQuestions.filter((q) => {
+    if (!q.playgroundPlacements) return false;
+    return q.playgroundPlacements[playgroundIndex] !== undefined;
+  }).map((q) => {
+    const placement = q.playgroundPlacements[playgroundIndex];
+    return {
+      ...q,
+      x: placement.x,
+      y: placement.y,
+      iconSize: placement.iconSize || q.iconSize || 40
+    };
+  });
 
   const updateQuestionLocation = useCallback(
     (questionId, xPercent, yPercent) => {
       dispatch((dispatch, getState) => {
         const currentSelectedQuestions = getState().games.selectedQuestions;
-        const updatedQuestions = currentSelectedQuestions.map((field) =>
-          field.id === questionId
-            ? {
+        const updatedQuestions = currentSelectedQuestions.map((field) => {
+          if (field.id === questionId) {
+            const placements = field.playgroundPlacements || {};
+            placements[playgroundIndex] = {
+              ...placements[playgroundIndex],
+              x: xPercent,
+              y: yPercent
+            };
+            return {
               ...field,
+              playgroundPlacements: placements,
               x: xPercent,
               y: yPercent,
               playgroundIndex: playgroundIndex
-            }
-            : field
-        );
+            };
+          }
+          return field;
+        });
         dispatch(setSelectedQuestions(updatedQuestions));
       });
     },
@@ -205,9 +222,12 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
           ) {
             const taskId = action.task.id;
             const question = selectedQuestions.find((q) => q.id === taskId);
-            if (question && !question.isPlacedCanvas) {
-              foundPendingTask = question;
-              break;
+            if (question) {
+              const isAlreadyPlacedHere = question.playgroundPlacements && question.playgroundPlacements[playgroundIndex];
+              if (!isAlreadyPlacedHere) {
+                foundPendingTask = question;
+                break;
+              }
             }
           }
         }
@@ -239,18 +259,29 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
 
       dispatch((dispatch, getState) => {
         const currentSelectedQuestions = getState().games.selectedQuestions;
-        const updatedQuestions = currentSelectedQuestions.map((field) =>
-          field.id === currentSelectedQuestion.id
-            ? {
+        const updatedQuestions = currentSelectedQuestions.map((field) => {
+          if (field.id === currentSelectedQuestion.id) {
+            // Initialize playgroundPlacements if not exists
+            const placements = field.playgroundPlacements || {};
+            placements[playgroundIndex] = {
+              x: xPercent,
+              y: yPercent,
+              iconSize: field.iconSize || 40
+            };
+            
+            return {
               ...field,
               isSelected: false,
               isPlacedCanvas: true,
+              playgroundPlacements: placements,
+              // Keep current playground data for backward compatibility
               x: xPercent,
               y: yPercent,
               playgroundIndex: playgroundIndex
-            }
-            : field
-        );
+            };
+          }
+          return field;
+        });
 
         dispatch(setSelectedQuestions(updatedQuestions));
         dispatch(setSelectedQuestion(null));
@@ -266,9 +297,19 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
       dispatch((dispatch, getState) => {
         const currentSelectedQuestions = getState().games.selectedQuestions;
         const updatedQuestions = currentSelectedQuestions.map((field) => {
-          if (field.id === questionId) {
-            const { x, y, isPlacedCanvas, isSelected, playgroundIndex, ...rest } = field;
-            return rest;
+          if (field.id === questionId && field.playgroundPlacements) {
+            const placements = { ...field.playgroundPlacements };
+            delete placements[playgroundIndex];
+            
+            // If no more placements, remove canvas placement flags
+            const hasAnyPlacements = Object.keys(placements).length > 0;
+            
+            return {
+              ...field,
+              playgroundPlacements: placements,
+              isPlacedCanvas: hasAnyPlacements,
+              ...(hasAnyPlacements ? {} : { x: undefined, y: undefined, playgroundIndex: undefined })
+            };
           }
           return field;
         });
@@ -276,7 +317,7 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
         dispatch(setSelectedQuestions(updatedQuestions));
       });
     },
-    [dispatch]
+    [dispatch, playgroundIndex]
   );
 
   // --- Marker Component ---
@@ -334,11 +375,19 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
         // Save the new size
         dispatch((dispatch, getState) => {
           const currentSelectedQuestions = getState().games.selectedQuestions;
-          const updatedQuestions = currentSelectedQuestions.map((field) =>
-            field.id === question.id
-              ? { ...field, iconSize }
-              : field
-          );
+          const updatedQuestions = currentSelectedQuestions.map((field) => {
+            if (field.id === question.id) {
+              const placements = field.playgroundPlacements || {};
+              if (placements[playgroundIndex]) {
+                placements[playgroundIndex] = {
+                  ...placements[playgroundIndex],
+                  iconSize
+                };
+              }
+              return { ...field, playgroundPlacements: placements, iconSize };
+            }
+            return field;
+          });
           dispatch(setSelectedQuestions(updatedQuestions));
         });
       };
@@ -358,20 +407,6 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
         }}
         onMouseDown={(e) => handleDragStart(e, question)}
       >
-        {/* Radius Circle */}
-        <div
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            left: `${-pixelRadius + 20}px`,
-            top: `${-pixelRadius + 20}px`,
-            width: `${pixelRadius * 2}px`,
-            height: `${pixelRadius * 2}px`,
-            background: colorWithOpacity(question.radiusColor, 0.1),
-            border: `2px solid ${question.radiusColor || "#3B82F6"}`,
-            opacity: isDragging ? "0.8" : "1",
-          }}
-        />
-
         {/* Icon */}
         <div
           className="custom-canvas-marker relative"
