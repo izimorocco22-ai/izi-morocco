@@ -232,8 +232,8 @@ export const getGameQuestionsController = async (req, res) => {
                 order: '$$q.order',
                 isPlaced: '$$q.isPlaced',
                 isPlacedCanvas: '$$q.isPlacedCanvas',
-                x: { $arrayElemAt: ['$$q.canvasLocation.coordinates', 1] },
-                y: { $arrayElemAt: ['$$q.canvasLocation.coordinates', 0] },
+                x: { $arrayElemAt: ['$$q.canvasLocation.coordinates', 0] },
+                y: { $arrayElemAt: ['$$q.canvasLocation.coordinates', 1] },
                 iconSize: { $ifNull: ['$$q.iconSize', 40] },
                 playgroundIndex: { $ifNull: ['$$q.playgroundIndex', 1] }
               }

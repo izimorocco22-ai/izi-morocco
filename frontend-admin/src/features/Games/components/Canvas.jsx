@@ -288,6 +288,11 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
 
     const isDragging = draggedQuestion && draggedQuestion.id === question.id;
 
+    // Sync iconSize with question.iconSize when it changes
+    useEffect(() => {
+      setIconSize(question.iconSize || 40);
+    }, [question.iconSize]);
+
     // If dragging, use px. If placed, use %.
     const leftVal = isDragging ? `${draggedQuestion.x}px` : `${question.x}%`;
     const topVal = isDragging ? `${draggedQuestion.y}px` : `${question.y}%`;
@@ -340,13 +345,7 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
 
       document.addEventListener('mousemove', handleResizeMove);
       document.addEventListener('mouseup', handleResizeEnd);
-    }, [iconSize, question.id, dispatch]);
-
-    useEffect(() => {
-      if (question.iconSize !== undefined) {
-        setIconSize(question.iconSize);
-      }
-    }, [question.iconSize]);
+    }, [iconSize, question.id]);
 
     return (
       <div
