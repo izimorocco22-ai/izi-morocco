@@ -353,25 +353,10 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
         style={{
           left: leftVal,
           top: topVal,
-          // Important: Disable transition while dragging to make it snappy
           transition: isDragging ? "none" : "left 0.1s, top 0.1s",
         }}
         onMouseDown={(e) => handleDragStart(e, question)}
       >
-        {/* Radius Circle */}
-        <div
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            left: `${-pixelRadius + 20}px`,
-            top: `${-pixelRadius + 20}px`,
-            width: `${pixelRadius * 2}px`,
-            height: `${pixelRadius * 2}px`,
-            background: colorWithOpacity(question.radiusColor, 0.1),
-            border: `2px solid ${question.radiusColor || "#3B82F6"}`,
-            opacity: isDragging ? "0.8" : "1",
-          }}
-        />
-
         {/* Icon */}
         <div
           className="custom-canvas-marker relative"
