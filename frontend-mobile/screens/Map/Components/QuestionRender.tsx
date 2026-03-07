@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     borderColor: '#deca88',
     borderRadius: 8,
     padding: 10,
-    marginVertical: 5,
+    marginVertical: 3,
     backgroundColor: '#fff',
   },
   selectedOption: {

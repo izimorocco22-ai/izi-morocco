@@ -192,7 +192,7 @@ const QuestionModal = ({
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: RFValue(10),
+                    marginBottom: RFValue(5),
                   }}
                 >
                   <Text style={[commonStyles.h2Text]}>Puzzle</Text>
@@ -211,7 +211,7 @@ const QuestionModal = ({
                 <View
                   style={[
                     styles.webviewContainer,
-                    { height: RFValue(420), marginBottom: RFValue(10) },
+                    { height: RFValue(420), marginBottom: RFValue(5) },
                   ]}
                 >
                   <WebView
@@ -272,7 +272,7 @@ const QuestionModal = ({
                       borderColor: '#deca88',
                       borderRadius: RFValue(8),
                       borderStyle: 'dashed',
-                      marginBottom: RFValue(10),
+                      marginBottom: RFValue(5),
                     }}
                   >
                     <MediaRenderer media={questionData?.media} />
@@ -281,7 +281,7 @@ const QuestionModal = ({
                   </View>
 
                   {questionData && questionData?.answerType === 'puzzle' && (
-                    <View style={{ marginBottom: RFValue(10) }}>
+                    <View style={{ marginBottom: RFValue(5) }}>
                       <SplashButton
                         buttonStyle={{
                           width: '100%',
@@ -371,11 +371,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#f2f2f2',
   },
   scrollInner: {
-    paddingBottom: RFValue(10),
+    paddingBottom: RFValue(5),
   },
   footer: {
     width: '100%',
-    marginTop: RFValue(15),
+    marginTop: RFValue(8),
   },
   submitButton: {
     width: '100%',

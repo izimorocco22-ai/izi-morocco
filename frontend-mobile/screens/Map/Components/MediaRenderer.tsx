@@ -89,19 +89,19 @@ const styles = StyleSheet.create({
     width: "100%",
     aspectRatio: 1,
     borderRadius: RFValue(8),
-    marginBottom: RFValue(10),
+    marginBottom: RFValue(5),
   },
   video: {
     width: "100%",
     height: 220,
     borderRadius: RFValue(8),
-    marginBottom: RFValue(10),
+    marginBottom: RFValue(5),
     backgroundColor: "#000",
   },
   youtubeContainer: {
     width: "100%",
     overflow: "hidden",
-    marginBottom: RFValue(10),
+    marginBottom: RFValue(5),
   },
 });
 

@@ -106,7 +106,7 @@ const QuillRenderer = ({ questionName }) => {
                     width: '100%',
                     aspectRatio:  16/9, // 👈 MAKE SHORT TALLER
                     overflow: 'hidden',
-                    marginVertical: RFValue(10),
+                    marginVertical: RFValue(5),
                   }}
                 >
                   <YoutubePlayer
@@ -137,7 +137,7 @@ const QuillRenderer = ({ questionName }) => {
                   style={{
                     width: '100%',
                     height: 220,
-                    marginVertical: 8,
+                    marginVertical: 4,
                     borderRadius: 8,
                     backgroundColor: '#000',
                   }}
@@ -154,7 +154,7 @@ const QuillRenderer = ({ questionName }) => {
                 style={{
                   width: '100%',
                   height: 230,
-                  marginVertical: 8,
+                  marginVertical: 4,
                   borderRadius: 8,
                   overflow: 'hidden',
                   backgroundColor: '#000',
@@ -199,7 +199,7 @@ const QuillRenderer = ({ questionName }) => {
                   fontSize: 16,
                   color: colors.black,
                   fontFamily: 'Neue-Regular',
-                  marginVertical: 2,
+                  marginVertical: 1,
                 },
                 textStyle,
               ]}
