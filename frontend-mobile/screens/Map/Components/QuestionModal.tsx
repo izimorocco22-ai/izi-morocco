@@ -152,32 +152,13 @@ const QuestionModal = ({
 
   const isPuzzle = questionData?.answerType === 'puzzle';
   const [showPuzzleFull, setShowPuzzleFull] = useState(false);
-  
-  // Try multiple ways to get puzzle URL
-  let puzzleUrl = questionData?.puzzleUrl || 
-                  questionData?.puzzle?.url || 
-                  'https://izi-morocco-delta.vercel.app/puzzle-test.html';
-  
-  // Debug puzzle data
-  console.log('QuestionModal Debug:', {
-    answerType: questionData?.answerType,
-    puzzleUrl: questionData?.puzzleUrl,
-    puzzle: questionData?.puzzle,
-    finalUrl: puzzleUrl,
-    fullQuestionData: questionData
-  });
+  const puzzleUrl = questionData?.puzzleUrl || 'https://izi-morocco-delta.vercel.app/puzzle-default.html';
 
   useEffect(() => {
     if (!visible) {
       setShowPuzzleFull(false);
     }
-  }, [visible]);
-
-  useEffect(() => {
-    // If the question changes, we should probably reset the puzzle view
-    // so the next question's content is shown first
-    setShowPuzzleFull(false);
-  }, [questionData?._id]);
+  }, [visible, questionData]);
 
   const puzzleInjectedJS = `
     (function() {
@@ -262,23 +243,14 @@ const QuestionModal = ({
                       uri: puzzleUrl,
                     }}
                     style={{ flex: 1 }}
-                    javaScriptEnabled={true}
-                    domStorageEnabled={true}
-                    startInLoadingState={true}
-                    allowsInlineMediaPlayback={true}
-                    mediaPlaybackRequiresUserAction={false}
-                    mixedContentMode="compatibility"
+                    javaScriptEnabled
+                    domStorageEnabled
+                    startInLoadingState
                     injectedJavaScript={puzzleInjectedJS}
                     injectedJavaScriptBeforeContentLoaded={puzzleInjectedJS}
-                    onLoadStart={() => console.log('WebView loading started:', puzzleUrl)}
-                    onLoadEnd={() => console.log('WebView loading ended:', puzzleUrl)}
                     onError={syntheticEvent => {
                       const { nativeEvent } = syntheticEvent;
-                      console.error('WebView error:', nativeEvent);
-                    }}
-                    onHttpError={syntheticEvent => {
-                      const { nativeEvent } = syntheticEvent;
-                      console.error('WebView HTTP error:', nativeEvent);
+                      console.warn('WebView error: ', nativeEvent);
                     }}
                   />
                 </View>
