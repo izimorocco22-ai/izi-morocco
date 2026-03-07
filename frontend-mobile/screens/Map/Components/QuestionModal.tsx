@@ -171,7 +171,13 @@ const QuestionModal = ({
     if (!visible) {
       setShowPuzzleFull(false);
     }
-  }, [visible, questionData]);
+  }, [visible]);
+
+  useEffect(() => {
+    // If the question changes, we should probably reset the puzzle view
+    // so the next question's content is shown first
+    setShowPuzzleFull(false);
+  }, [questionData?._id]);
 
   const puzzleInjectedJS = `
     (function() {

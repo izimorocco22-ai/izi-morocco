@@ -30,6 +30,17 @@ const QuestionSchema = new mongoose.Schema({
     }
   },
 
+  puzzleAnswerType: {
+    type: String,
+    enum: ['code_box', 'number', 'text', 'mcq'],
+    default: null
+  },
+
+  puzzleAnswerText: {
+    type: String,
+    trim: true
+  },
+
   options: [
     {
       text: String,

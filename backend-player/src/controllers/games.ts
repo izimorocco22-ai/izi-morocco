@@ -562,16 +562,21 @@ export const joinGameController = async (req: Request, res: Response) => {
       }
     },
     {
+      $addFields: {
+        tempQuestionDetails: { $arrayElemAt: ['$questionDetails', 0] }
+      }
+    },
+    {
       $lookup: {
         from: 'Puzzles',
-        localField: 'questionDetails.puzzle',
+        localField: 'tempQuestionDetails.puzzle',
         foreignField: '_id',
         as: 'puzzleDetails'
       }
     },
     {
       $addFields: {
-        'questions.questionDetails': { $arrayElemAt: ['$questionDetails', 0] },
+        'questions.questionDetails': '$tempQuestionDetails',
         'questions.settings': { $arrayElemAt: ['$questionSettings', 0] },
         'questions.media': { $arrayElemAt: ['$questionMedia', 0] },
         'questions.comments': { $arrayElemAt: ['$questionComments', 0] },
