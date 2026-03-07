@@ -551,6 +551,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             onSubmit={() => {
               handleSubmitAnswer({ current: state }, dispatch,blocklyJson);
             }}
+            backgroundImage={game?.game?.backGroundImage}
           />
         )}
 

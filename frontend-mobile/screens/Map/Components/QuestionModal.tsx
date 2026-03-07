@@ -7,6 +7,7 @@ import {
   AppState,
   Image,
   Text,
+  ImageBackground,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import Sound from 'react-native-sound';
@@ -25,6 +26,7 @@ const QuestionModal = ({
   inputAnswer,
   setInputAnswer,
   onSubmit,
+  backgroundImage,
 }) => {
   const soundRef = useRef(null);
 
@@ -134,6 +136,16 @@ const QuestionModal = ({
     };
   }, [visible, questionData]);
 
+  const getBackgroundImageUri = () => {
+    if (!backgroundImage) return null;
+    if (backgroundImage.startsWith('http') || backgroundImage.startsWith('file:')) {
+      return backgroundImage;
+    }
+    return `https://res.cloudinary.com/dik1l8tqu/image/upload/v1759483737/${backgroundImage}`;
+  };
+
+  const backgroundUri = getBackgroundImageUri();
+
   const [showScrollArrow, setShowScrollArrow] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
 
@@ -177,6 +189,15 @@ const QuestionModal = ({
         <View style={styles.modalContainer}>
           {/* Scrollable Question Area */}
           <View style={styles.whiteBox}>
+            {backgroundUri && (
+              <ImageBackground
+                source={{ uri: backgroundUri }}
+                style={styles.backgroundImage}
+                resizeMode="cover"
+              >
+                <View style={styles.backgroundOverlay} />
+              </ImageBackground>
+            )}
             {isPuzzle && showPuzzleFull ? (
               <ScrollView
                 scrollEnabled
@@ -363,6 +384,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
+    overflow: 'hidden',
+  },
+  backgroundImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
+  backgroundOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(250, 246, 237, 0.85)',
   },
   webviewContainer: {
     flex: 1,
