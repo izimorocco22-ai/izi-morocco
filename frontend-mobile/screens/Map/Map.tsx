@@ -565,7 +565,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             console.log('Switching to view:', view);
             setCurrentView(view);
           }}
-          isModalOpen={state.modalVisible || state.resultModalVisible}
+          isModalOpen={state.modalVisible || state.resultModalVisible || showList}
         />
 
         <ListShowButton

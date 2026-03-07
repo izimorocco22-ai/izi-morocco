@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   fullBackgroundImage: {
     position: 'absolute',
     top: 0,
-    left: 0,
+    left: 20,
     right: 0,
     bottom: 0,
     width: '100%',
