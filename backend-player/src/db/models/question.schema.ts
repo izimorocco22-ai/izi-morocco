@@ -22,18 +22,12 @@ const QuestionSchema = new mongoose.Schema({
   },
 
   codeBoxConfig: {
-    length: { type: Number },
+    length: { type: Number, default: 4 },
     mode: { 
       type: String, 
-      enum: ['numeric', 'alpha', 'alphanumeric']
-    },
-    _id: false
-  },
-  
-  puzzleAnswerType: {
-    type: String,
-    enum: ['code_box', 'number', 'text', 'mcq'],
-    default: null
+      enum: ['numeric', 'alpha', 'alphanumeric'], 
+      default: 'alphanumeric' 
+    }
   },
 
   options: [
@@ -59,11 +53,6 @@ const QuestionSchema = new mongoose.Schema({
     }
   },
 
-  puzzleAnswerText: {
-    type: String,
-    trim: true
-  },
-
   points: { type: Number, required: true },
 
   tags: {
@@ -74,11 +63,6 @@ const QuestionSchema = new mongoose.Schema({
       }
     ],
     default: []
-  },
-
-  augmentedPhotoImage: {
-    type: String,
-    trim: true
   },
 
   isDeleted: {
@@ -99,55 +83,17 @@ const QuestionSchema = new mongoose.Schema({
 
 
 QuestionSchema.pre('save', function(next) {
-  // Handle no_answer and media types
   if (['no_answer', 'take_photo', 'record_video', 'augmented_photo'].includes(this.answerType)) {
     this.correctAnswers = [];
     this.puzzle = undefined;
-    this.puzzleAnswerType = undefined;
-    this.puzzleAnswerText = undefined;
-    this.codeBoxConfig = undefined;
-    this.options = [];
   }
   
-  // Handle puzzle type
   if (this.answerType === 'puzzle') {
-    if (this.puzzleAnswerType === 'mcq') {
-      // Keep options and correctAnswers for MCQ inside puzzle
-      this.codeBoxConfig = undefined;
-      this.puzzleAnswerText = undefined;
-    } else if (this.puzzleAnswerType === 'code_box') {
-      // Keep codeBoxConfig and correctAnswers (single code string)
-      this.options = [];
-      this.puzzleAnswerText = undefined;
-    } else if (['text', 'number'].includes(this.puzzleAnswerType)) {
-      // Store answer in puzzleAnswerText; clear other fields
-      this.correctAnswers = [];
-      this.options = [];
-      this.codeBoxConfig = undefined;
-    }
+    this.correctAnswers = [];
   }
   
-  // Handle non-puzzle types
   if (this.answerType !== 'puzzle') {
     this.puzzle = undefined;
-    this.puzzleAnswerType = undefined;
-    this.puzzleAnswerText = undefined;
-    
-    if (this.answerType === 'code_box') {
-      // Keep codeBoxConfig for code_box type
-      this.options = [];
-    } else if (['mcq', 'multiple'].includes(this.answerType)) {
-      // Keep options for MCQ types
-      this.codeBoxConfig = undefined;
-    } else {
-      // For text/number, clear both
-      this.codeBoxConfig = undefined;
-      this.options = [];
-    }
-  }
-
-  if (this.answerType !== 'augmented_photo') {
-    this.augmentedPhotoImage = undefined;
   }
   
   next();
