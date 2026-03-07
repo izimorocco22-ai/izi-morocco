@@ -51,6 +51,14 @@ const GameQuestionsSchema = new mongoose.Schema(
           type: Number,
           default: 0,
           min: 0
+        },
+        isShownOnPlayground: {
+          type: Boolean,
+          default: false
+        },
+        playgroundPosition: {
+          x: { type: Number, default: 0 },
+          y: { type: Number, default: 0 }
         }
       }
     ],

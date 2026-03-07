@@ -30,6 +30,8 @@ import ScreenWrapper from '../../components/ScreenWrapper';
 import { getTimerAfterFinished } from './utils/ruleEngine';
 import ListShowButton from './Components/ListShow';
 import ListModal from './Components/ListModal';
+import PlaygroundView from './Components/PlaygroundView';
+import ViewSwitcher from './Components/ViewSwitcher';
 
 MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
@@ -43,6 +45,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showList, setShowList] = useState(false);
   const [mapStyleJson, setMapStyleJson] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'map' | string>('map');
   useEffect(() => {
     dispatch({ type: 'SET_TASK', payload: questions || [] });
     setBlocklyJson(game?.blocklyJsonRules || null);
@@ -430,13 +433,14 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           />
         )}
 
-        <MapboxGL.MapView
-          style={[commonStyles.fullFlex]}
-          styleURL={mapStyleJson ? undefined : MapboxGL.StyleURL.Street}
-          styleJSON={mapStyleJson || undefined}
-          onPress={event => handleMapPress(event, stateRef, dispatch)}
-          onDidFinishLoadingMap={() => setMapLoaded(true)}
-        >
+        {currentView === 'map' ? (
+          <MapboxGL.MapView
+            style={[commonStyles.fullFlex]}
+            styleURL={mapStyleJson ? undefined : MapboxGL.StyleURL.Street}
+            styleJSON={mapStyleJson || undefined}
+            onPress={event => handleMapPress(event, stateRef, dispatch)}
+            onDidFinishLoadingMap={() => setMapLoaded(true)}
+          >
           {mapLoaded && (
             <>
               {state.location && (
@@ -532,7 +536,24 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
                   })}
             </>
           )}
-        </MapboxGL.MapView>
+          </MapboxGL.MapView>
+        ) : (
+          game?.game?.playgroundImage && (
+            <PlaygroundView
+              playgroundImage={game.game.playgroundImage}
+              targets={state.targets}
+              completedTargets={state.completedTargets}
+            />
+          )
+        )}
+
+        {game?.game?.playgroundName && (
+          <ViewSwitcher
+            currentView={currentView}
+            playgroundName={game.game.playgroundName}
+            onViewChange={setCurrentView}
+          />
+        )}
 
         <ListShowButton
           onPress={() => setShowList(!showList)}
