@@ -186,18 +186,18 @@ const QuestionModal = ({
       style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 ,zIndex:99}]}
     >
       <View style={styles.overlay}>
+        {backgroundUri && (
+          <ImageBackground
+            source={{ uri: backgroundUri }}
+            style={styles.fullBackgroundImage}
+            resizeMode="center"
+          >
+            <View style={styles.fullBackgroundOverlay} />
+          </ImageBackground>
+        )}
         <View style={styles.modalContainer}>
           {/* Scrollable Question Area */}
           <View style={styles.whiteBox}>
-            {backgroundUri && (
-              <ImageBackground
-                source={{ uri: backgroundUri }}
-                style={styles.backgroundImage}
-                resizeMode="cover"
-              >
-                <View style={styles.backgroundOverlay} />
-              </ImageBackground>
-            )}
             {isPuzzle && showPuzzleFull ? (
               <ScrollView
                 scrollEnabled
@@ -373,8 +373,8 @@ const styles = StyleSheet.create({
   },
   whiteBox: {
     backgroundColor: '#faf6ed',
-    borderWidth: 2,
-    borderColor: '#deca88',
+    borderWidth: 6,
+    borderColor: '#d4af37',
     borderRadius: RFValue(10),
     padding: RFValue(15),
     width: '100%',
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     overflow: 'hidden',
   },
-  backgroundImage: {
+  fullBackgroundImage: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -395,13 +395,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  backgroundOverlay: {
+  fullBackgroundOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(250, 246, 237, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   webviewContainer: {
     flex: 1,
