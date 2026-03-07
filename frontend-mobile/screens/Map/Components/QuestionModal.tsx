@@ -152,7 +152,20 @@ const QuestionModal = ({
 
   const isPuzzle = questionData?.answerType === 'puzzle';
   const [showPuzzleFull, setShowPuzzleFull] = useState(false);
-  const puzzleUrl = questionData?.puzzleUrl || 'https://izi-morocco-delta.vercel.app/puzzle-default.html';
+  
+  // Try multiple ways to get puzzle URL
+  let puzzleUrl = questionData?.puzzleUrl || 
+                  questionData?.puzzle?.url || 
+                  'https://izi-morocco-delta.vercel.app/puzzle-test.html';
+  
+  // Debug puzzle data
+  console.log('QuestionModal Debug:', {
+    answerType: questionData?.answerType,
+    puzzleUrl: questionData?.puzzleUrl,
+    puzzle: questionData?.puzzle,
+    finalUrl: puzzleUrl,
+    fullQuestionData: questionData
+  });
 
   useEffect(() => {
     if (!visible) {
@@ -243,14 +256,23 @@ const QuestionModal = ({
                       uri: puzzleUrl,
                     }}
                     style={{ flex: 1 }}
-                    javaScriptEnabled
-                    domStorageEnabled
-                    startInLoadingState
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    startInLoadingState={true}
+                    allowsInlineMediaPlayback={true}
+                    mediaPlaybackRequiresUserAction={false}
+                    mixedContentMode="compatibility"
                     injectedJavaScript={puzzleInjectedJS}
                     injectedJavaScriptBeforeContentLoaded={puzzleInjectedJS}
+                    onLoadStart={() => console.log('WebView loading started:', puzzleUrl)}
+                    onLoadEnd={() => console.log('WebView loading ended:', puzzleUrl)}
                     onError={syntheticEvent => {
                       const { nativeEvent } = syntheticEvent;
-                      console.warn('WebView error: ', nativeEvent);
+                      console.error('WebView error:', nativeEvent);
+                    }}
+                    onHttpError={syntheticEvent => {
+                      const { nativeEvent } = syntheticEvent;
+                      console.error('WebView HTTP error:', nativeEvent);
                     }}
                   />
                 </View>

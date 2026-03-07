@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Puzzle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        .puzzle-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+        .puzzle-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .puzzle-content {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .puzzle-question {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="puzzle-container">
+        <h1 class="puzzle-title">🧩 Test Puzzle</h1>
+        <div class="puzzle-content">
+            <p>This is a test puzzle to verify WebView functionality.</p>
+            <div class="puzzle-question">
+                <strong>Question:</strong> What is 2 + 2?
+            </div>
+            <div class="puzzle-question">
+                <strong>Riddle:</strong> I am tall when I am young, and short when I am old. What am I?
+            </div>
+            <p>If you can see this content, the WebView is working correctly!</p>
+        </div>
+    </div>
+    
+    <script>
+        console.log('Test puzzle loaded successfully!');
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded in test puzzle');
+        });
+    </script>
+</body>
+</html>

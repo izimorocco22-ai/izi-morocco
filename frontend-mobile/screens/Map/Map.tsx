@@ -221,21 +221,31 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         if (overlapping.length > 0) {
           dispatch({ type: 'SET_POPUP_SHOWN', payload: true });
 
-          const queuedQuestions = overlapping.map(t => ({
-            _id: t.question?._id,
-            question: t.question?.questionDescription,
-            answerType: t.question?.answerType,
-            options: t.question?.options,
-            correctAnswers: t.question?.correctAnswers,
-            points: t?.question?.points,
-            comments: t?.comments,
-            media: t?.media || null,
-            puzzleAnswerText: t?.question?.puzzleAnswerText,
-            puzzleAnswerType: t?.question?.puzzleAnswerType,
-            puzzleUrl: t?.question?.puzzle?.url,
-            codeBoxConfig: t?.question?.codeBoxConfig,
-            augmentedPhotoImage: t?.question?.augmentedPhotoImage,
-          }));
+          const queuedQuestions = overlapping.map(t => {
+            console.log('Mapping question data:', {
+              questionId: t.question?._id,
+              answerType: t.question?.answerType,
+              puzzle: t.question?.puzzle,
+              puzzleUrl: t?.question?.puzzle?.url
+            });
+            
+            return {
+              _id: t.question?._id,
+              question: t.question?.questionDescription,
+              answerType: t.question?.answerType,
+              options: t.question?.options,
+              correctAnswers: t.question?.correctAnswers,
+              points: t?.question?.points,
+              comments: t?.comments,
+              media: t?.media || null,
+              puzzleAnswerText: t?.question?.puzzleAnswerText,
+              puzzleAnswerType: t?.question?.puzzleAnswerType,
+              puzzleUrl: t?.question?.puzzle?.url,
+              puzzle: t?.question?.puzzle,
+              codeBoxConfig: t?.question?.codeBoxConfig,
+              augmentedPhotoImage: t?.question?.augmentedPhotoImage,
+            };
+          });
 
           dispatch({ type: 'SET_QUESTION_QUEUE', payload: queuedQuestions });
           dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });

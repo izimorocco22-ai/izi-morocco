@@ -719,13 +719,16 @@ export const joinGameController = async (req: Request, res: Response) => {
   ]
   // console.log(gameStatus[0])
   console.dir({ aggregationPipeline }, { depth: null })
+  console.log('Debug: Checking puzzle data in aggregation...')
   if (
     gameStatus[0] !== undefined &&
     gameStatus[0]?.status === GameStatus.IN_PROGRESS
   ) {
     gameDataToSend = gameStatus[0]
+    console.log('Using existing game status, sample question:', gameStatus[0]?.questions?.[0])
   } else {
     const game = await GameQuestions.aggregate(aggregationPipeline)
+    console.log('Fresh game data, sample question:', game[0]?.questions?.[0])
     // console.log('Entered here')
     if (game.length === 0) {
       return res.status(httpStatus.NOT_FOUND).json({
