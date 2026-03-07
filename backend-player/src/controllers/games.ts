@@ -291,12 +291,21 @@ const createPipelineForGameLogs = (
       }
     },
     {
+      $lookup: {
+        from: 'Puzzles',
+        localField: 'questionDetails.puzzle',
+        foreignField: '_id',
+        as: 'puzzleDetails'
+      }
+    },
+    {
       $addFields: {
         'questions.questionDetails': { $arrayElemAt: ['$questionDetails', 0] },
         'questions.settings': { $arrayElemAt: ['$questionSettings', 0] },
         'questions.media': { $arrayElemAt: ['$questionMedia', 0] },
         'questions.comments': { $arrayElemAt: ['$questionComments', 0] },
         'questions.tags': '$tagsDetails',
+        'questions.puzzle': { $arrayElemAt: ['$puzzleDetails', 0] },
         'questions.isFinished': '$questions.isFinished',
         'questions.isCorrect': '$questions.isCorrect',
         'questions.isDisplayed': '$questions.isDisplayed',
@@ -367,6 +376,7 @@ const createPipelineForGameLogs = (
                   '$$q.questionDetails',
                   {
                     tags: '$$q.tags',
+                    puzzle: '$$q.puzzle',
                     icon: { $ifNull: ['$$q.settings.icon', null] },
                     iconName: { $ifNull: ['$$q.settings.iconName', null] },
                     locationRadius: {
@@ -552,12 +562,21 @@ export const joinGameController = async (req: Request, res: Response) => {
       }
     },
     {
+      $lookup: {
+        from: 'Puzzles',
+        localField: 'questionDetails.puzzle',
+        foreignField: '_id',
+        as: 'puzzleDetails'
+      }
+    },
+    {
       $addFields: {
         'questions.questionDetails': { $arrayElemAt: ['$questionDetails', 0] },
         'questions.settings': { $arrayElemAt: ['$questionSettings', 0] },
         'questions.media': { $arrayElemAt: ['$questionMedia', 0] },
         'questions.comments': { $arrayElemAt: ['$questionComments', 0] },
-        'questions.tags': '$tagsDetails'
+        'questions.tags': '$tagsDetails',
+        'questions.puzzle': { $arrayElemAt: ['$puzzleDetails', 0] }
       }
     },
     {
@@ -638,6 +657,7 @@ export const joinGameController = async (req: Request, res: Response) => {
                   '$$q.questionDetails',
                   {
                     tags: '$$q.tags',
+                    puzzle: '$$q.puzzle',
                     icon: { $ifNull: ['$$q.settings.icon', null] },
                     iconName: { $ifNull: ['$$q.settings.iconName', null] },
                     locationRadius: {

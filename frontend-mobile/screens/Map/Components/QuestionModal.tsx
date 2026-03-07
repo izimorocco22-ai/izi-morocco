@@ -152,6 +152,7 @@ const QuestionModal = ({
 
   const isPuzzle = questionData?.answerType === 'puzzle';
   const [showPuzzleFull, setShowPuzzleFull] = useState(false);
+  const puzzleUrl = questionData?.puzzleUrl || 'https://izi-morocco-delta.vercel.app/puzzle-default.html';
 
   useEffect(() => {
     if (!visible) {
@@ -237,8 +238,9 @@ const QuestionModal = ({
                   ]}
                 >
                   <WebView
+                    key={puzzleUrl}
                     source={{
-                      uri: 'https://izimorocco-jeux.online/Puzzle-mots-croises.html',
+                      uri: puzzleUrl,
                     }}
                     style={{ flex: 1 }}
                     javaScriptEnabled

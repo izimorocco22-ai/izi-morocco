@@ -231,6 +231,9 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             comments: t?.comments,
             media: t?.media || null,
             puzzleAnswerText: t?.question?.puzzleAnswerText,
+            puzzleAnswerType: t?.question?.puzzleAnswerType,
+            puzzleUrl: t?.question?.puzzle?.url,
+            codeBoxConfig: t?.question?.codeBoxConfig,
             augmentedPhotoImage: t?.question?.augmentedPhotoImage,
           }));
 
