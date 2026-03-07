@@ -86,7 +86,20 @@ const GameInfoSchema = new mongoose.Schema(
     playgroundName: {
       type: String,
       default: undefined
-    }
+    },
+    playgrounds: [
+      {
+        name: {
+          type: String,
+          required: true
+        },
+        image: {
+          type: String,
+          required: true
+        },
+        _id: false
+      }
+    ]
   },
   {
     timestamps: true,

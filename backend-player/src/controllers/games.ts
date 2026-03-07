@@ -310,6 +310,7 @@ const createPipelineForGameLogs = (
         'questions.isCorrect': '$questions.isCorrect',
         'questions.isDisplayed': '$questions.isDisplayed',
         'questions.isShownOnPlayground': '$questions.isShownOnPlayground',
+        'questions.playgroundPosition': '$questions.playgroundPosition',
         'questions.latitude': '$questions.latitude',
         'questions.longitude': '$questions.longitude'
       }
@@ -340,7 +341,8 @@ const createPipelineForGameLogs = (
               introMessage: '$$g.introMessage',
               finishMessage: '$$g.finishMessage',
               playgroundImage: '$$g.playgroundImage',
-              playgroundName: '$$g.playgroundName'
+              playgroundName: '$$g.playgroundName',
+              playgrounds: '$$g.playgrounds'
             }
           }
         }
@@ -424,6 +426,7 @@ const createPipelineForGameLogs = (
               isCorrect: '$$q.isCorrect',
               isDisplayed: '$$q.isDisplayed',
               isShownOnPlayground: '$$q.isShownOnPlayground',
+              playgroundPosition: '$$q.playgroundPosition',
               latitude: '$$q.latitude',
               longitude: '$$q.longitude'
             }
@@ -618,7 +621,8 @@ export const joinGameController = async (req: Request, res: Response) => {
               introMessage: '$$g.introMessage',
               finishMessage: '$$g.finishMessage',
               playgroundImage: '$$g.playgroundImage',
-              playgroundName: '$$g.playgroundName'
+              playgroundName: '$$g.playgroundName',
+              playgrounds: '$$g.playgrounds'
             }
           }
         }
@@ -704,7 +708,8 @@ export const joinGameController = async (req: Request, res: Response) => {
               isFinished: false,
               isCorrect: false,
               isDisplayed: false,
-              isShownOnPlayground: false
+              isShownOnPlayground: false,
+              playgroundPosition: { $ifNull: ['$$q.playgroundPosition', null] }
             }
           }
         },

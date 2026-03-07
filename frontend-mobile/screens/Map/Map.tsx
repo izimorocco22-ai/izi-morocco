@@ -47,6 +47,14 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   const [mapStyleJson, setMapStyleJson] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'map' | string>('map');
   useEffect(() => {
+    console.log('Game data loaded:', {
+      hasGame: !!game,
+      hasGameGame: !!game?.game,
+      playgroundName: game?.game?.playgroundName,
+      playgroundImage: game?.game?.playgroundImage,
+      playgrounds: game?.game?.playgrounds,
+      fullGameData: JSON.stringify(game?.game)
+    });
     dispatch({ type: 'SET_TASK', payload: questions || [] });
     setBlocklyJson(game?.blocklyJsonRules || null);
     const initialScore =
@@ -537,23 +545,28 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             </>
           )}
           </MapboxGL.MapView>
-        ) : (
-          game?.game?.playgroundImage && (
-            <PlaygroundView
-              playgroundImage={game.game.playgroundImage}
-              targets={state.targets}
-              completedTargets={state.completedTargets}
-            />
-          )
-        )}
+        ) : null}
 
-        {game?.game?.playgroundName && (
-          <ViewSwitcher
+        {currentView !== 'map' && (game?.game?.playgrounds?.length > 0 || game?.game?.playgroundImage) && (
+          <PlaygroundView
+            playgroundImage={game?.game?.playgroundImage}
+            playgrounds={game?.game?.playgrounds}
             currentView={currentView}
-            playgroundName={game.game.playgroundName}
-            onViewChange={setCurrentView}
+            targets={state.targets}
+            completedTargets={state.completedTargets}
           />
         )}
+
+        <ViewSwitcher
+          currentView={currentView}
+          playgrounds={game?.game?.playgrounds}
+          playgroundName={game?.game?.playgroundName}
+          onViewChange={(view) => {
+            console.log('Switching to view:', view);
+            setCurrentView(view);
+          }}
+          isModalOpen={state.modalVisible || state.resultModalVisible}
+        />
 
         <ListShowButton
           onPress={() => setShowList(!showList)}

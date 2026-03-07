@@ -1,27 +1,38 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { colors } from '../../../styles/colors';
+import colors from '../../../styles/colors';
 
 interface ViewSwitcherProps {
   currentView: 'map' | string;
+  playgrounds?: Array<{ name: string; image: string }>;
   playgroundName?: string;
   onViewChange: (view: 'map' | string) => void;
+  isModalOpen?: boolean;
 }
 
 const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
   currentView,
+  playgrounds,
   playgroundName,
   onViewChange,
+  isModalOpen = false,
 }) => {
-  const views = ['Map'];
+  console.log('ViewSwitcher:', { playgrounds, playgroundName, isModalOpen });
   
-  if (playgroundName) {
-    views.push(playgroundName);
-  }
+  if (isModalOpen) return null;
+  
+  const hasPlaygrounds = playgrounds && playgrounds.length > 0;
+  const hasLegacyPlayground = playgroundName;
+  
+  if (!hasPlaygrounds && !hasLegacyPlayground) return null;
+
+  const views = hasPlaygrounds 
+    ? ['Map', ...playgrounds.map(p => p.name)]
+    : ['Map', playgroundName];
 
   return (
     <View style={styles.container}>
-      {views.map((view, index) => {
+      {views.map((view) => {
         const viewKey = view.toLowerCase();
         const isActive = currentView === viewKey;
         
@@ -64,7 +75,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   activeButton: {
-    backgroundColor: colors.primary || '#007AFF',
+    backgroundColor: colors.primary,
   },
   buttonText: {
     color: '#FFFFFF',
