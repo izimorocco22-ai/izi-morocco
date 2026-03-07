@@ -39,6 +39,7 @@ const QuestionModal = ({
     questionData?.answerType === 'multiple' ||
     questionData?.answerType === 'number' ||
     questionData?.answerType === 'text' ||
+    questionData?.answerType === 'code_box' ||
     questionData?.answerType === 'take_photo' ||
     questionData?.answerType === 'augmented_photo' ||
     questionData?.answerType === 'record_video';
@@ -190,7 +191,7 @@ const QuestionModal = ({
           <ImageBackground
             source={{ uri: backgroundUri }}
             style={styles.fullBackgroundImage}
-            resizeMode="center"
+            resizeMode="cover"
           >
             <View style={styles.fullBackgroundOverlay} />
           </ImageBackground>
@@ -394,6 +395,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   fullBackgroundOverlay: {
     position: 'absolute',
