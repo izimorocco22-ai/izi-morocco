@@ -721,7 +721,6 @@ export const joinGameController = async (req: Request, res: Response) => {
                 x: { $ifNull: [{ $arrayElemAt: ['$$q.canvasLocation.coordinates', 0] }, 50] },
                 y: { $ifNull: [{ $arrayElemAt: ['$$q.canvasLocation.coordinates', 1] }, 50] }
               },
-              playgroundIndex: { $ifNull: ['$$q.playgroundIndex', 1] },
               playgroundIndex: { $ifNull: ['$$q.playgroundIndex', 1] }
             }
           }
