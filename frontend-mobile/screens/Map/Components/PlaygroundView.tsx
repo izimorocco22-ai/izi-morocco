@@ -21,8 +21,21 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   targets = [],
   completedTargets = [],
 }) => {
-  const [imageDimensions, setImageDimensions] = useState({ width: screenWidth, height: screenHeight });
+  const [containerDimensions, setContainerDimensions] = useState({ 
+    width: Dimensions.get('window').width, 
+    height: Dimensions.get('window').height 
+  });
+  const [imageDimensions, setImageDimensions] = useState({ 
+    width: Dimensions.get('window').width, 
+    height: Dimensions.get('window').height 
+  });
   
+  const handleLayout = (event: any) => {
+    const { width, height } = event.nativeEvent.layout;
+    setContainerDimensions({ width, height });
+    console.log('Playground container layout:', { width, height });
+  };
+
   try {
   // Get the current playground index based on the view name
   const getCurrentPlaygroundIndex = () => {
@@ -49,14 +62,6 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   
   const playgroundTargets = targets.filter(t => {
     try {
-      console.log('Filtering target:', {
-        questionId: t?.question?._id,
-        isShownOnPlayground: t?.isShownOnPlayground,
-        playgroundIndex: t?.playgroundIndex,
-        currentPlaygroundIndex,
-        isCompleted: completedTargets.includes(t?.question?._id)
-      });
-      
       // Only show tasks that are marked to be shown on playground
       if (!t?.isShownOnPlayground) return false;
       
@@ -76,38 +81,22 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
     }
   });
 
-  console.log('PlaygroundView:', { 
-    playgroundImage, 
-    playgrounds, 
-    playgroundName,
-    currentView,
-    currentPlaygroundIndex,
-    totalTargets: targets.length,
-    filteredTargets: playgroundTargets.length,
-    sampleTarget: targets[0] // Show first target to debug data structure
-  });
-  
   const imageToShow = playgrounds && playgrounds.length > 0
     ? playgrounds.find(p => p.name.toLowerCase() === currentView)?.image
     : playgroundImage;
 
-  console.log('Image to show:', imageToShow);
-
   if (!imageToShow) {
-    return <View style={styles.container} />;
+    return <View style={styles.container} onLayout={handleLayout} />;
   }
 
   // Handle image load to get actual dimensions
   const handleImageLoad = (event: any) => {
     const { width: imgWidth, height: imgHeight } = event.nativeEvent.source;
     setImageDimensions({ width: imgWidth, height: imgHeight });
-    console.log('Image loaded with dimensions:', { width: imgWidth, height: imgHeight });
   };
 
-  console.log('Playground targets:', playgroundTargets.length);
-
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={handleLayout}>
       <Image
         source={{ uri: imageToShow }}
         style={styles.playgroundImage}
@@ -124,52 +113,54 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
           // Calculate position - use playgroundPosition if available, otherwise default
           let xPos, yPos;
           
+          // Default icon size to match admin (40)
+          const iconSize = target?.question?.iconSize || 40;
+
           if (playgroundPos && typeof playgroundPos.x === 'number' && typeof playgroundPos.y === 'number') {
-            // Convert percentage to pixels based on the container size
-            // The image is displayed with 'contain' mode, so we need to calculate the actual display size
-            const containerWidth = screenWidth;
-            const containerHeight = screenHeight;
+            // Convert percentage to pixels based on the actual container size
+            const { width: containerWidth, height: containerHeight } = containerDimensions;
             
             // Calculate the actual displayed image size (with contain mode)
             const imageAspectRatio = imageDimensions.width / imageDimensions.height;
             const containerAspectRatio = containerWidth / containerHeight;
             
-            let displayWidth, displayHeight;
+            let displayWidth, displayHeight, offsetX, offsetY;
+            
             if (imageAspectRatio > containerAspectRatio) {
               // Image is wider, fit to width
               displayWidth = containerWidth;
               displayHeight = containerWidth / imageAspectRatio;
+              offsetX = 0;
+              offsetY = (containerHeight - displayHeight) / 2;
             } else {
               // Image is taller, fit to height
               displayHeight = containerHeight;
               displayWidth = containerHeight * imageAspectRatio;
+              offsetX = (containerWidth - displayWidth) / 2;
+              offsetY = 0;
             }
             
             // Convert percentage to pixels based on actual display size
-            xPos = (playgroundPos.x / 100) * displayWidth;
-            yPos = (playgroundPos.y / 100) * displayHeight;
+            // Admin stores the top-left percentage of the icon, so we use it directly
+            xPos = (playgroundPos.x / 100) * displayWidth + offsetX;
+            yPos = (playgroundPos.y / 100) * displayHeight + offsetY;
             
-            // Center the image in the container
-            const offsetX = (containerWidth - displayWidth) / 2;
-            const offsetY = (containerHeight - displayHeight) / 2;
-            
-            xPos += offsetX;
-            yPos += offsetY;
+            console.log(`Playground positioning debug:`, {
+              questionId: target.question._id,
+              playgroundPos,
+              containerDimensions,
+              imageDimensions,
+              displaySize: { displayWidth, displayHeight },
+              offset: { offsetX, offsetY },
+              finalPosition: { xPos, yPos },
+              iconSize
+            });
           } else {
             // Fallback to center if no position data
-            xPos = screenWidth * 0.5;
-            yPos = screenHeight * 0.5;
+            xPos = containerDimensions.width * 0.5 - (iconSize / 2);
+            yPos = containerDimensions.height * 0.5 - (iconSize / 2);
+            console.log(`No playground position data for question ${target.question._id}, using center fallback`);
           }
-          
-          console.log(`Task ${target.question._id} positioned at playground ${target?.playgroundIndex || 1}:`, {
-            playgroundPosition: playgroundPos,
-            calculatedX: xPos,
-            calculatedY: yPos,
-            screenWidth,
-            screenHeight,
-            imageDimensions,
-            playgroundIndex: target?.playgroundIndex
-          });
           
           return (
             <View
@@ -177,12 +168,14 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
               style={[
                 styles.markerContainer,
                 {
-                  left: xPos - 30, // Center the 60px marker
-                  top: yPos - 30,  // Center the 60px marker
+                  left: xPos, 
+                  top: yPos,
+                  width: iconSize,
+                  height: iconSize,
                 },
               ]}
             >
-              <CustomMarker icon={target?.question?.icon} />
+              <CustomMarker icon={target?.question?.icon} size={iconSize} />
             </View>
           );
         } catch (error) {
@@ -216,8 +209,6 @@ const styles = StyleSheet.create({
   },
   markerContainer: {
     position: 'absolute',
-    width: 60,
-    height: 60,
   },
 });
 

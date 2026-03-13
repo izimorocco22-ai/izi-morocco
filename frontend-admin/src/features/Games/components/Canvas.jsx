@@ -136,7 +136,9 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
       const yPercent = (finalPixelY / rect.height) * 100;
 
       console.log(
-        `📍 Dropped at: ${xPercent.toFixed(2)}%, ${yPercent.toFixed(2)}%`
+        `📍 Dropped at: ${xPercent.toFixed(2)}%, ${yPercent.toFixed(2)}%`,
+        `Playground Index: ${playgroundIndex}`,
+        `Question ID: ${dragItemRef.current.id}`
       );
 
       updateQuestionLocation(dragItemRef.current.id, xPercent, yPercent);
@@ -255,6 +257,12 @@ const QuestionPlacerCanvas = ({ playgroundData }) => {
 
       const xPercent = (pixelX / rect.width) * 100;
       const yPercent = (pixelY / rect.height) * 100;
+
+      console.log(
+        `📍 Canvas Click - Placed at: ${xPercent.toFixed(2)}%, ${yPercent.toFixed(2)}%`,
+        `Playground Index: ${playgroundIndex}`,
+        `Question ID: ${currentSelectedQuestion.id}`
+      );
 
       dispatch((dispatch, getState) => {
         const currentSelectedQuestions = getState().games.selectedQuestions;

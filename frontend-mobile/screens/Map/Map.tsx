@@ -1,5 +1,5 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View, BackHandler, Alert } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 import { MAPBOX_ACCESS_TOKEN } from '@env';
 import commonStyles from '../../styles/commonStyles';
@@ -46,6 +46,42 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   const [showList, setShowList] = useState(false);
   const [mapStyleJson, setMapStyleJson] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'map' | string>('map');
+
+  useEffect(() => {
+    const backAction = () => {
+      if (state.modalVisible || state.resultModalVisible || showList) {
+        if (showList) {
+          setShowList(false);
+        } else if (state.modalVisible) {
+          // If a task is open, we can close it if the user wants to "go back"
+          // but usually these are location-triggered. 
+          // However, to satisfy "stay in game", we just prevent the default back action.
+          dispatch({ type: 'SET_MODAL_VISIBLE', payload: false });
+        } else if (state.resultModalVisible) {
+          dispatch({ type: 'SET_RESULT_MODAL', payload: false });
+        }
+        return true; // handled
+      }
+      
+      Alert.alert('Exit Game?', 'Are you sure you want to leave the game?', [
+        {
+          text: 'Cancel',
+          onPress: () => null,
+          style: 'cancel',
+        },
+        { text: 'YES', onPress: () => navigation.goBack() },
+      ]);
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, [state.modalVisible, state.resultModalVisible, showList, navigation]);
+
   useEffect(() => {
     console.log('Game data loaded:', {
       hasGame: !!game,

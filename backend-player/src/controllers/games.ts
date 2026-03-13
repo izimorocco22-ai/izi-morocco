@@ -427,7 +427,13 @@ const createPipelineForGameLogs = (
               isFinished: '$$q.isFinished',
               isCorrect: '$$q.isCorrect',
               isDisplayed: '$$q.isDisplayed',
-              isShownOnPlayground: '$$q.isShownOnPlayground',
+              isShownOnPlayground: {
+                $cond: {
+                  if: { $eq: ['$$q.isFinished', true] },
+                  then: false, // Reset playground visibility for completed tasks
+                  else: { $ifNull: ['$$q.isShownOnPlayground', false] }
+                }
+              },
               playgroundPosition: {
                 x: '$$q.playgroundPosition.x',
                 y: '$$q.playgroundPosition.y'
@@ -716,7 +722,7 @@ export const joinGameController = async (req: Request, res: Response) => {
               isFinished: false,
               isCorrect: false,
               isDisplayed: false,
-              isShownOnPlayground: false,
+              isShownOnPlayground: { $ifNull: ['$$q.isShownOnPlayground', false] },
               playgroundPosition: {
                 x: { $ifNull: [{ $arrayElemAt: ['$$q.canvasLocation.coordinates', 0] }, 50] },
                 y: { $ifNull: [{ $arrayElemAt: ['$$q.canvasLocation.coordinates', 1] }, 50] }
