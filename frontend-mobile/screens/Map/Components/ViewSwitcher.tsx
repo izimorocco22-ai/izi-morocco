@@ -64,9 +64,9 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 20,
+    top: 120,
     left: 20,
-    right: 80,
+    right: 20,
     zIndex: 1000,
   },
   scrollContent: {
