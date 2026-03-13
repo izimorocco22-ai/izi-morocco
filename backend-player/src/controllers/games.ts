@@ -427,16 +427,66 @@ const createPipelineForGameLogs = (
               isFinished: '$$q.isFinished',
               isCorrect: '$$q.isCorrect',
               isDisplayed: '$$q.isDisplayed',
-              isShownOnPlayground: {
-                $cond: {
-                  if: { $eq: ['$$q.isFinished', true] },
-                  then: false, // Reset playground visibility for completed tasks
-                  else: { $ifNull: ['$$q.isShownOnPlayground', false] }
-                }
-              },
+              isShownOnPlayground: { $ifNull: ['$$q.isShownOnPlayground', false] },
               playgroundPosition: {
-                x: '$$q.playgroundPosition.x',
-                y: '$$q.playgroundPosition.y'
+                x: {
+                  $ifNull: [
+                    '$$q.playgroundPosition.x',
+                    {
+                      $let: {
+                        vars: {
+                          orig: {
+                            $arrayElemAt: [
+                              {
+                                $filter: {
+                                  input: '$gameRules.questions',
+                                  as: 'orig',
+                                  cond: { $eq: ['$$orig.questionId', '$$q._id'] }
+                                }
+                              },
+                              0
+                            ]
+                          }
+                        },
+                        in: {
+                          $ifNull: [
+                            { $arrayElemAt: ['$$orig.canvasLocation.coordinates', 0] },
+                            50
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                y: {
+                  $ifNull: [
+                    '$$q.playgroundPosition.y',
+                    {
+                      $let: {
+                        vars: {
+                          orig: {
+                            $arrayElemAt: [
+                              {
+                                $filter: {
+                                  input: '$gameRules.questions',
+                                  as: 'orig',
+                                  cond: { $eq: ['$$orig.questionId', '$$q._id'] }
+                                }
+                              },
+                              0
+                            ]
+                          }
+                        },
+                        in: {
+                          $ifNull: [
+                            { $arrayElemAt: ['$$orig.canvasLocation.coordinates', 1] },
+                            50
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
               },
               playgroundIndex: { $ifNull: ['$$q.playgroundIndex', 1] },
               latitude: '$$q.latitude',

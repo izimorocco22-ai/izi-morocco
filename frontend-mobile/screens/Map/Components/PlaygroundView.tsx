@@ -65,9 +65,6 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
       // Only show tasks that are marked to be shown on playground
       if (!t?.isShownOnPlayground) return false;
       
-      // Don't show completed tasks
-      if (completedTargets.includes(t?.question?._id)) return false;
-      
       // Filter by playground index - only show tasks assigned to current playground
       if (currentPlaygroundIndex && t?.playgroundIndex) {
         return t.playgroundIndex === currentPlaygroundIndex;

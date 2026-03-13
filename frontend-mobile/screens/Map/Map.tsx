@@ -91,7 +91,31 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       playgrounds: game?.game?.playgrounds,
       fullGameData: JSON.stringify(game?.game)
     });
-    dispatch({ type: 'SET_TASK', payload: questions || [] });
+    const initialTasks = questions || [];
+    dispatch({ type: 'SET_TASK', payload: initialTasks });
+
+    // ✅ Initialize targets and completedTargets based on initial status of tasks
+    // This ensures already completed tasks or tasks marked to show on playground appear after re-entry
+    const initialTargets = initialTasks.filter(
+      t => t.isDisplayed || t.isFinished || t.isShownOnPlayground
+    );
+    const initialCompleted = initialTasks
+      .filter(t => t.isFinished)
+      .map(t => t.question?._id);
+    const initialShown = initialTasks
+      .filter(t => t.isDisplayed || t.isFinished)
+      .map(t => t.question?._id);
+
+    if (initialTargets.length > 0) {
+      dispatch({ type: 'SET_TARGETS', payload: initialTargets });
+    }
+    if (initialCompleted.length > 0) {
+      dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: initialCompleted });
+    }
+    if (initialShown.length > 0) {
+      dispatch({ type: 'ADD_SHOWN_TARGETS', payload: initialShown });
+    }
+
     setBlocklyJson(game?.blocklyJsonRules || null);
     const initialScore =
       game && typeof game.score === 'number' ? game.score : 0;
@@ -224,6 +248,63 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         state.time,
       );
   }, [state.triggerMarker, blocklyJson]);
+
+  // ✅ Effect: Sync state changes to backend whenever tasks are updated
+  useEffect(() => {
+    if (state.task && state.task.length > 0) {
+      const filteredQuestions = state.task.map(q => ({
+        _id: q?.question?._id,
+        latitude: q?.latitude,
+        longitude: q?.longitude,
+        radius: q?.radius,
+        order: q?.order,
+        isFinished: q?.isFinished || false,
+      isCorrect: q?.isCorrect || false,
+      userAnswer: q?.userAnswer || null,
+      isDisplayed: q?.isDisplayed || false,
+      isShownOnPlayground: q?.isShownOnPlayground || false,
+      playgroundIndex: q?.playgroundIndex || 1,
+      playgroundPosition: q?.playgroundPosition,
+      points: q?.question?.points || 0,
+    }));
+
+      const totalScore = filteredQuestions.reduce((acc, q) => {
+        if (q.isFinished && q.isCorrect) {
+          return acc + (q.points || 0);
+        }
+        return acc;
+      }, 0);
+
+      dispatchForApis(
+        finishGame({
+          activationCode: activeCode,
+          gameId,
+          playerId: user?.playerId,
+          questions: filteredQuestions,
+          status: 'in_progress',
+          score: totalScore,
+        }),
+      );
+    }
+  }, [state.task, activeCode, gameId, user?.playerId, dispatchForApis]);
+
+  // ✅ Effect: Sync targets with task list changes
+  useEffect(() => {
+    if (state.task && state.task.length > 0) {
+      const newTargets = state.task.filter(
+        t => t.isDisplayed || t.isFinished || t.isShownOnPlayground
+      );
+      
+      // Update targets in reducer if they differ from current state.targets
+      // We check multiple fields to ensure that updates (like isFinished) are reflected
+      const currentTargetData = state.targets.map(t => `${t.question?._id}_${t.isFinished}_${t.isShownOnPlayground}`).sort().join('|');
+      const newTargetData = newTargets.map(t => `${t.question?._id}_${t.isFinished}_${t.isShownOnPlayground}`).sort().join('|');
+      
+      if (currentTargetData !== newTargetData) {
+        dispatch({ type: 'SET_TARGETS', payload: newTargets });
+      }
+    }
+  }, [state.task, state.targets]);
 
   const onUserLocationUpdate = (locationUpdate: any) => {
     if (!stateRef.current.gpsEnabled) return;
@@ -360,12 +441,13 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       longitude: q?.longitude,
       radius: q?.radius,
       order: q?.order,
-      isFinished: q?.isFinished,
-      isCorrect: q?.isCorrect,
-      userAnswer: q?.userAnswer,
-      isDisplayed: q?.isFinished ? true : false,
-      isShownOnPlayground: q?.isShownOnPlayground,
+      isFinished: q?.isFinished || false,
+      isCorrect: q?.isCorrect || false,
+      userAnswer: q?.userAnswer || null,
+      isDisplayed: q?.isDisplayed || false,
+      isShownOnPlayground: q?.isShownOnPlayground || false,
       playgroundIndex: q?.playgroundIndex || 1,
+      playgroundPosition: q?.playgroundPosition,
       points: q?.question?.points || 0,
     }));
 
