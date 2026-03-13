@@ -311,6 +311,8 @@ const createPipelineForGameLogs = (
         'questions.isDisplayed': '$questions.isDisplayed',
         'questions.isShownOnPlayground': '$questions.isShownOnPlayground',
         'questions.playgroundPosition': '$questions.playgroundPosition',
+        'questions.playgroundIndex': '$questions.playgroundIndex',
+        'questions.canvasLocation': '$questions.canvasLocation',
         'questions.latitude': '$questions.latitude',
         'questions.longitude': '$questions.longitude'
       }
@@ -426,7 +428,11 @@ const createPipelineForGameLogs = (
               isCorrect: '$$q.isCorrect',
               isDisplayed: '$$q.isDisplayed',
               isShownOnPlayground: '$$q.isShownOnPlayground',
-              playgroundPosition: '$$q.playgroundPosition',
+              playgroundPosition: {
+                x: '$$q.playgroundPosition.x',
+                y: '$$q.playgroundPosition.y'
+              },
+              playgroundIndex: { $ifNull: ['$$q.playgroundIndex', 1] },
               latitude: '$$q.latitude',
               longitude: '$$q.longitude'
             }
@@ -579,7 +585,9 @@ export const joinGameController = async (req: Request, res: Response) => {
         'questions.media': { $arrayElemAt: ['$questionMedia', 0] },
         'questions.comments': { $arrayElemAt: ['$questionComments', 0] },
         'questions.tags': '$tagsDetails',
-        'questions.puzzle': { $arrayElemAt: ['$puzzleDetails', 0] }
+        'questions.puzzle': { $arrayElemAt: ['$puzzleDetails', 0] },
+        'questions.playgroundIndex': '$questions.playgroundIndex',
+        'questions.canvasLocation': '$questions.canvasLocation'
       }
     },
     {
@@ -709,7 +717,12 @@ export const joinGameController = async (req: Request, res: Response) => {
               isCorrect: false,
               isDisplayed: false,
               isShownOnPlayground: false,
-              playgroundPosition: { $ifNull: ['$$q.playgroundPosition', null] }
+              playgroundPosition: {
+                x: { $ifNull: [{ $arrayElemAt: ['$$q.canvasLocation.coordinates', 0] }, 50] },
+                y: { $ifNull: [{ $arrayElemAt: ['$$q.canvasLocation.coordinates', 1] }, 50] }
+              },
+              playgroundIndex: { $ifNull: ['$$q.playgroundIndex', 1] },
+              playgroundIndex: { $ifNull: ['$$q.playgroundIndex', 1] }
             }
           }
         },

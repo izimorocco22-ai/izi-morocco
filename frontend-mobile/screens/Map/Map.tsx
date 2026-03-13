@@ -329,6 +329,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       userAnswer: q?.userAnswer,
       isDisplayed: q?.isFinished ? true : false,
       isShownOnPlayground: q?.isShownOnPlayground,
+      playgroundIndex: q?.playgroundIndex || 1,
       points: q?.question?.points || 0,
     }));
 
@@ -551,6 +552,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           <PlaygroundView
             playgroundImage={game?.game?.playgroundImage}
             playgrounds={game?.game?.playgrounds}
+            playgroundName={game?.game?.playgroundName}
             currentView={currentView}
             targets={state.targets}
             completedTargets={state.completedTargets}
