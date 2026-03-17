@@ -144,15 +144,13 @@ export function reducer(state: State, action: Action): State {
       return { ...state, triggerMarker: !state.triggerMarker };
     case 'SET_TIMER_DATA':
       return { ...state, timerData: action.payload };
-      case 'UPDATE_TIMER_FINISHED':
-  return {
-    ...state,
-    timerData: state.timerData.map(t =>
-      t.seconds === action.payload
-        ? { ...t, isFinished: true }
-        : t
-    ),
-  };
+    case 'UPDATE_TIMER_FINISHED':
+      return {
+        ...state,
+        timerData: state.timerData.map(t =>
+          t.seconds === action.payload ? { ...t, isFinished: true } : t,
+        ),
+      };
     case 'SET_TIMER':
       return { ...state, time: action.payload };
     case 'SET_LIST':

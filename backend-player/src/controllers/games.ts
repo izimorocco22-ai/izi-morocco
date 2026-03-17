@@ -362,6 +362,7 @@ const createPipelineForGameLogs = (
         blocklyJsonRules: { $first: '$blocklyJsonRules' },
         blocklyXmlRules: { $first: '$blocklyXmlRules' },
         score: { $first: '$score' },
+        currentTime: { $first: '$currentTime' },
         timerConditions: { $first: '$timerConditions' }
       }
     },
@@ -500,6 +501,7 @@ const createPipelineForGameLogs = (
         updatedAt: 1,
         status: 1,
         score: { $ifNull: ['$score', 0] },
+        currentTime: { $ifNull: ['$currentTime', 0] },
         timerConditions: { $ifNull: ['$timerConditions', []] }
       }
     }
@@ -656,6 +658,7 @@ export const joinGameController = async (req: Request, res: Response) => {
         createdAt: { $first: '$createdAt' },
         updatedAt: { $first: '$updatedAt' },
         score: { $first: '$score' },
+        currentTime: { $first: '$currentTime' },
         timerConditions: { $first: '$timerConditions' }
       }
     },
@@ -862,6 +865,7 @@ export const updateGameLogsController = async (req: Request, res: Response) => {
             req?.body?.status === GameStatus.FINISHED ? new Date() : null,
           updatedAt: new Date(),
           score: req.body?.score || 0,
+          currentTime: req.body?.currentTime || 0,
           timerConditions: req.body?.timerConditions || []
         }
       },

@@ -120,6 +120,10 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     const initialScore =
       game && typeof game.score === 'number' ? game.score : 0;
     dispatch({ type: 'SET_SCORE', payload: initialScore });
+
+    const initialTime =
+      game && typeof game.currentTime === 'number' ? game.currentTime : 0;
+    dispatch({ type: 'SET_TIMER', payload: initialTime });
   }, [questions, game]);
 
   useEffect(() => {
@@ -174,11 +178,11 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      dispatch({ type: 'SET_TIMER', payload: stateRef.current.time });
+      dispatch({ type: 'SET_TIMER', payload: stateRef.current.time + 1 });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [stateRef.current.time]);
+  }, []);
 
   useEffect(() => {
     const sortedTimers = stateRef.current.timerData
@@ -283,10 +287,11 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           questions: filteredQuestions,
           status: 'in_progress',
           score: totalScore,
+          currentTime: state.time,
         }),
       );
     }
-  }, [state.task, activeCode, gameId, user?.playerId, dispatchForApis]);
+  }, [state.task, state.time, activeCode, gameId, user?.playerId, dispatchForApis]);
 
   // ✅ Effect: Sync targets with task list changes
   useEffect(() => {
@@ -688,7 +693,10 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           isModalOpen={state.modalVisible || state.resultModalVisible || showList}
         />
 
-        <GPSStatusIndicator gpsEnabled={state.gpsEnabled} />
+        <GPSStatusIndicator 
+          gpsEnabled={state.gpsEnabled} 
+          visible={!(state.modalVisible || state.resultModalVisible || showList)} 
+        />
 
         <ListShowButton
           onPress={() => setShowList(!showList)}

@@ -46,6 +46,10 @@ const playedGamesSchema = new mongoose.Schema(
     score: {
       type: Number
     },
+    currentTime: {
+      type: Number,
+      default: 0
+    },
     timerConditions: {
       type: Array
     }

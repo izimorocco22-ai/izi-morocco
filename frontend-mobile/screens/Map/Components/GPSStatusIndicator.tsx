@@ -1,12 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const GPSStatusIndicator = ({ gpsEnabled }) => (
-  <View style={styles.container}>
-    <View style={[styles.dot, { backgroundColor: gpsEnabled ? '#4CAF50' : '#FF5722' }]} />
-    <Text style={styles.text}>GPS: {gpsEnabled ? 'Enabled' : 'Disabled'}</Text>
-  </View>
-);
+const GPSStatusIndicator = ({ gpsEnabled, visible = true }) => {
+  if (!visible) return null;
+  return (
+    <View style={styles.container}>
+      <View style={[styles.dot, { backgroundColor: gpsEnabled ? '#4CAF50' : '#FF5722' }]} />
+      <Text style={styles.text}>GPS: {gpsEnabled ? 'Enabled' : 'Disabled'}</Text>
+    </View>
+  );
+};
 
 export default GPSStatusIndicator;
 
