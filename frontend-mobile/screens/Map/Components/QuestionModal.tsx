@@ -1,4 +1,3 @@
-// components/QuestionModal.js
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -10,9 +9,12 @@ import {
   ImageBackground,
   Dimensions,
   StatusBar,
+  Platform,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import Sound from 'react-native-sound';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import DeviceInfo from 'react-native-device-info';
 import QuillRenderer from '../../../components/QuillRenderer';
 import commonStyles from '../../../styles/commonStyles';
 import SplashButton from '../../../components/SplashButton';
@@ -34,6 +36,27 @@ const QuestionModal = ({
   backgroundImage,
 }) => {
   const soundRef = useRef(null);
+  const insets = useSafeAreaInsets();
+  const [hasNavigationBar, setHasNavigationBar] = useState(false);
+
+  // Check if device has navigation bar
+  useEffect(() => {
+    const checkNavigationBar = async () => {
+      if (Platform.OS === 'android') {
+        try {
+          const hasNotch = await DeviceInfo.hasNotch();
+          const brand = await DeviceInfo.getBrand();
+          // Samsung devices often have navigation bars
+          const isSamsung = brand.toLowerCase().includes('samsung');
+          setHasNavigationBar(isSamsung || insets.bottom > 0);
+        } catch (error) {
+          // Fallback: assume navigation bar exists if bottom inset > 0
+          setHasNavigationBar(insets.bottom > 0);
+        }
+      }
+    };
+    checkNavigationBar();
+  }, [insets.bottom]);
 
   // Sequence Index for starting audios
   const startAudioIndex = useRef(0);
@@ -210,7 +233,9 @@ const QuestionModal = ({
           <View style={styles.fullBackgroundOverlay} />
         </ImageBackground>
       )}
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { 
+        paddingBottom: hasNavigationBar ? Math.max(insets.bottom + 20, 60) : Math.max(insets.bottom, 20) 
+      }]}>
         <View style={styles.modalContainer}>
           {/* Scrollable Question Area */}
           <View style={styles.whiteBox}>
@@ -431,11 +456,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#f2f2f2',
   },
   scrollInner: {
-    paddingBottom: RFValue(5),
+    paddingBottom: RFValue(30),
   },
   footer: {
     width: '100%',
     marginTop: RFValue(8),
+    paddingBottom: RFValue(10),
   },
   submitButton: {
     width: '100%',
