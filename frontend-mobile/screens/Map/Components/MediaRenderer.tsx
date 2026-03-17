@@ -27,17 +27,18 @@ const MediaRenderer = ({ media }) => {
     return (
       <View style={styles.youtubeContainer} key={url}>
         <YoutubePlayer
-          height={230}
-          objectSize={'contain'}
+          height={200}
           videoId={videoId}
           play={false}
           initialPlayerParams={{
-            modestbranding: false,
+            modestbranding: true,
             controls: true,
             rel: false,
             showinfo: false,
             playsinline: true,
-            
+          }}
+          webViewStyle={{
+            backgroundColor: 'transparent',
           }}
         />
       </View>
@@ -84,24 +85,27 @@ const MediaRenderer = ({ media }) => {
 const styles = StyleSheet.create({
   mediaWrapper: {
     width: "100%",
+    backgroundColor: "transparent",
   },
   image: {
     width: "100%",
     aspectRatio: 1,
     borderRadius: RFValue(8),
     marginBottom: RFValue(5),
+    backgroundColor: "transparent",
   },
   video: {
     width: "100%",
     height: 220,
     borderRadius: RFValue(8),
     marginBottom: RFValue(5),
-    backgroundColor: "#000",
+    backgroundColor: "transparent",
   },
   youtubeContainer: {
     width: "100%",
     overflow: "hidden",
     marginBottom: RFValue(5),
+    backgroundColor: "transparent",
   },
 });
 

@@ -309,10 +309,6 @@ const QuestionModal = ({
                 >
                   <View
                     style={{
-                      borderWidth: 1,
-                      borderColor: '#deca88',
-                      borderRadius: RFValue(8),
-                      borderStyle: 'dashed',
                       marginBottom: RFValue(5),
                       // No padding here so media can fill width
                     }}
@@ -398,18 +394,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   whiteBox: {
-    backgroundColor: '#faf6ed',
-    borderWidth: 6,
-    borderColor: '#d4af37',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
     borderRadius: RFValue(10),
     padding: 0,
     width: '100%',
     flex: 1,
-    elevation: 8,
-    shadowColor: '#fc9300ff',
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
     overflow: 'hidden',
   },
   fullBackgroundImage: {

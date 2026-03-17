@@ -38,7 +38,7 @@ const SplashScreen2 = ({ navigation }) => {
         setShowPermissionBox(true);
       }
     } else {
-      navigation.replace('Splash3');
+      navigation.replace('SignIn');
     }
   };
 
@@ -49,7 +49,7 @@ const SplashScreen2 = ({ navigation }) => {
         interval: 10000,
         fastInterval: 5000,
       });
-      navigation.replace('Splash3');
+      navigation.replace('SignIn');
     } catch (err) {
       setShowPermissionBox(true);
     }
@@ -71,7 +71,7 @@ const SplashScreen2 = ({ navigation }) => {
           setShowPermissionBox(true);
         }
       } else {
-        navigation.replace('Splash3');
+        navigation.replace('SignIn');
       }
 
       setChecking(false);
