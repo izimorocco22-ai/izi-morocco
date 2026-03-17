@@ -32,6 +32,8 @@ import ListShowButton from './Components/ListShow';
 import ListModal from './Components/ListModal';
 import PlaygroundView from './Components/PlaygroundView';
 import ViewSwitcher from './Components/ViewSwitcher';
+import { clearGameTimer, useGameTimer } from './utils/gameTimer';
+import { storage } from '../../utils/storage';
 
 MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
@@ -69,7 +71,13 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           onPress: () => null,
           style: 'cancel',
         },
-        { text: 'YES', onPress: () => navigation.goBack() },
+        { 
+          text: 'YES', 
+          onPress: () => {
+            // Don't clear timer data when temporarily exiting - let it persist
+            navigation.goBack();
+          }
+        },
       ]);
       return true;
     };
@@ -119,11 +127,17 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     setBlocklyJson(game?.blocklyJsonRules || null);
     const initialScore =
       game && typeof game.score === 'number' ? game.score : 0;
-    dispatch({ type: 'SET_SCORE', payload: initialScore });
+    dispatch({ type: 'SET_SCORE', payload: { replace: true, value: initialScore } });
 
     const initialTime =
       game && typeof game.currentTime === 'number' ? game.currentTime : 0;
     dispatch({ type: 'SET_TIMER', payload: initialTime });
+    
+    console.log('Timer initialization:', {
+      gameCurrentTime: game?.currentTime,
+      initialTime,
+      gameStatus: game?.status
+    });
   }, [questions, game]);
 
   useEffect(() => {
@@ -175,14 +189,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     console.log({ result });
     dispatch({ type: 'SET_TIMER_DATA', payload: result });
   }, [blocklyJson]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      dispatch({ type: 'SET_TIMER', payload: stateRef.current.time + 1 });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     const sortedTimers = stateRef.current.timerData
@@ -253,6 +259,23 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       );
   }, [state.triggerMarker, blocklyJson]);
 
+  // Get timer data from the header component
+  const [, , elapsedTime] = useGameTimer(game, gameId, state.time);
+
+  // Save timer data when component unmounts or app is backgrounded
+  useEffect(() => {
+    return () => {
+      // Save current timer state when component unmounts
+      if (gameId && elapsedTime > 0) {
+        storage.setGameTimer(gameId, {
+          startTime: Date.now() - (elapsedTime * 1000),
+          elapsedTime: elapsedTime,
+          lastUpdateTime: Date.now()
+        });
+      }
+    };
+  }, [gameId, elapsedTime]);
+
   // ✅ Effect: Sync state changes to backend whenever tasks are updated
   useEffect(() => {
     if (state.task && state.task.length > 0) {
@@ -287,11 +310,11 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           questions: filteredQuestions,
           status: 'in_progress',
           score: totalScore,
-          currentTime: state.time,
+          currentTime: elapsedTime || state.time,
         }),
       );
     }
-  }, [state.task, state.time, activeCode, gameId, user?.playerId, dispatchForApis]);
+  }, [state.task, elapsedTime, activeCode, gameId, user?.playerId, dispatchForApis]);
 
   // ✅ Effect: Sync targets with task list changes
   useEffect(() => {
@@ -471,6 +494,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         questions: filteredQuestions,
         status: 'in_progress',
         score: totalScore,
+        currentTime: elapsedTime || state.time,
       }),
     );
 
@@ -523,8 +547,12 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     }
   }, [state.navigateFinish]);
 
-  const handleFinishContinue = () => {
+  const handleFinishContinue = async () => {
     dispatch({ type: 'SET_FINISH_VISIBLE', payload: false });
+    // Clear timer data when game is completed
+    if (gameId) {
+      await clearGameTimer(gameId);
+    }
     navigation.navigate('Congratulation', {
       task: stateRef.current.task,
       activeCode,
@@ -550,7 +578,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   return (
     <ScreenWrapper>
       <View style={[commonStyles.fullFlex, { position: 'relative' }]}>
-        {game && <MapHeader game={game} state={state} />}
+        {game && <MapHeader game={game} state={state} gameId={gameId} />}
 
         {state.showOverlay && game && (
           <GameStartOverlay
@@ -568,6 +596,9 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         {currentView === 'map' ? (
           <MapboxGL.MapView
             style={[commonStyles.fullFlex]}
+            logoEnabled={false}
+            attributionEnabled={false}
+            scaleBarEnabled={true}
             styleURL={mapStyleJson ? undefined : MapboxGL.StyleURL.Street}
             styleJSON={mapStyleJson || undefined}
             onPress={event => handleMapPress(event, stateRef, dispatch)}

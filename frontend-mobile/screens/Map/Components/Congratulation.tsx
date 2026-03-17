@@ -8,6 +8,7 @@ import colors from '../../../styles/colors';
 import { useDispatch, useSelector } from 'react-redux';
 import { finishGame } from '../../../store/gameSlice';
 import { RootState } from '../../../store/store';
+import { clearGameTimer } from '../utils/gameTimer';
 
 export const Congratulation = ({ navigation, route }) => {
   const { task, activeCode, gameId, score } = route.params;
@@ -23,27 +24,37 @@ export const Congratulation = ({ navigation, route }) => {
   });
 
   useEffect(() => {
-    const filteredQuestions = task.map(q => ({
-      _id: q?.question?._id,
-      latitude: q?.latitude,
-      longitude: q?.longitude,
-      radius: q?.radius,
-      order: q?.order,
-      isFinished: q?.isFinished,
-      isCorrect: q?.isCorrect,
-      isDisplayed: q?.isFinished ? true : q?.isDisplayed,
-      isShownOnPlayground: q?.isShownOnPlayground,
-    }));
-    dispatch(
-      finishGame({
-        activationCode: activeCode,
-        gameId,
-        playerId: user?.playerId,
-        questions: filteredQuestions,
-        status: 'finished',
-        score,
-      }),
-    );
+    const finishGameAndClearTimer = async () => {
+      const filteredQuestions = task.map(q => ({
+        _id: q?.question?._id,
+        latitude: q?.latitude,
+        longitude: q?.longitude,
+        radius: q?.radius,
+        order: q?.order,
+        isFinished: q?.isFinished,
+        isCorrect: q?.isCorrect,
+        isDisplayed: q?.isFinished ? true : q?.isDisplayed,
+        isShownOnPlayground: q?.isShownOnPlayground,
+      }));
+      
+      dispatch(
+        finishGame({
+          activationCode: activeCode,
+          gameId,
+          playerId: user?.playerId,
+          questions: filteredQuestions,
+          status: 'finished',
+          score,
+        }),
+      );
+      
+      // Clear timer data when game is finished
+      if (gameId) {
+        await clearGameTimer(gameId);
+      }
+    };
+    
+    finishGameAndClearTimer();
   }, []);
 
   // ✅ Calculate stats

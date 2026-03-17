@@ -56,7 +56,7 @@ export type Action =
   | { type: 'SET_RESULT_MODAL'; payload: boolean }
   | { type: 'SET_IS_ANSWER_CORRECT'; payload: boolean }
   | { type: 'SET_PENDING_OPEN_TASK'; payload: string | null }
-  | { type: 'SET_SCORE'; payload: any | 0 }
+  | { type: 'SET_SCORE'; payload: number | { replace: boolean; value: number } }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_NAVIGATE_FINISH'; payload: boolean }
   | { type: 'SET_INTRO_VISIBLE'; payload: boolean }
@@ -132,7 +132,9 @@ export function reducer(state: State, action: Action): State {
     case 'SET_NAVIGATE_FINISH':
       return { ...state, navigateFinish: action.payload };
     case 'SET_SCORE':
-      return { ...state, score: state.score + (action.payload || 0) };
+      return { ...state, score: typeof action.payload === 'object' && action.payload.replace 
+        ? action.payload.value 
+        : state.score + (action.payload || 0) };
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
     case 'SET_INTRO_VISIBLE':

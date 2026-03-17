@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
+import { storage } from '../../../utils/storage';
 
 /**
  * Converts game time format for display.
@@ -50,59 +51,184 @@ export const ConvertGameTime = (type: any, zoneTime: any, duration: any) => {
 };
 
 /**
- * Custom hook to handle countdown timer
- * Returns [timeLeft, formattedTime]
+ * Custom hook to handle countdown timer with persistence
+ * Returns [timeLeft, formattedTime, elapsedTime]
  */
-export const useGameTimer = (game: any) => {
+export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: number) => {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState<number>(currentElapsedTime || 0);
+  const [gameStartTime, setGameStartTime] = useState<number | null>(null);
 
-  // Initialize total seconds based on type
+  // Initialize timer based on game type and restore from storage if available
   useEffect(() => {
-    if (game?.game?.timeLimit === 'duration' && game?.game?.duration) {
-      const { unit, value } = game.game.duration;
+    const initializeTimer = async () => {
       let totalSeconds = 0;
-      if (unit === 'minutes') totalSeconds = value * 60;
-      else if (unit === 'hours') totalSeconds = value * 3600;
-      else if (unit === 'seconds') totalSeconds = value;
-      setTimeLeft(totalSeconds);
-    } else if (game?.game?.timeLimit === 'end_time' && game?.game?.endTime) {
-      const endTime = new Date(game.game.endTime).getTime();
-      const now = new Date().getTime();
-      const diff = Math.max(0, Math.floor((endTime - now) / 1000));
-      setTimeLeft(diff);
-    } else {
-      setTimeLeft(null);
-    }
-  }, [game]);
+      let storedTimer = null;
 
-  // Countdown interval
+      // Try to get stored timer data if gameId is provided
+      if (gameId) {
+        storedTimer = await storage.getGameTimer(gameId);
+        console.log('Stored timer data:', storedTimer);
+      }
+
+      if (game?.game?.timeLimit === 'duration' && game?.game?.duration) {
+        const { unit, value } = game.game.duration;
+        if (unit === 'minutes') totalSeconds = value * 60;
+        else if (unit === 'hours') totalSeconds = value * 3600;
+        else if (unit === 'seconds') totalSeconds = value;
+
+        console.log('Duration timer setup:', { unit, value, totalSeconds });
+
+        if (storedTimer) {
+          // Resume from stored elapsed time
+          const currentTime = Date.now();
+          const timeSinceLastUpdate = Math.floor((currentTime - storedTimer.lastUpdateTime) / 1000);
+          const totalElapsed = storedTimer.elapsedTime + timeSinceLastUpdate;
+          const remainingTime = Math.max(0, totalSeconds - totalElapsed);
+          
+          console.log('Resuming countdown timer:', {
+            totalSeconds,
+            storedElapsed: storedTimer.elapsedTime,
+            timeSinceLastUpdate,
+            totalElapsed,
+            remainingTime
+          });
+          
+          setElapsedTime(totalElapsed);
+          setTimeLeft(remainingTime);
+          setGameStartTime(storedTimer.startTime);
+        } else {
+          // Start fresh countdown
+          const startTime = Date.now();
+          const initialElapsed = currentElapsedTime || 0;
+          const remainingTime = Math.max(0, totalSeconds - initialElapsed);
+          
+          console.log('Starting fresh countdown:', {
+            totalSeconds,
+            initialElapsed,
+            remainingTime
+          });
+          
+          setTimeLeft(remainingTime);
+          setElapsedTime(initialElapsed);
+          setGameStartTime(startTime);
+          
+          // Store initial timer data
+          if (gameId) {
+            await storage.setGameTimer(gameId, {
+              startTime,
+              elapsedTime: initialElapsed,
+              lastUpdateTime: startTime,
+              totalDuration: totalSeconds
+            });
+          }
+        }
+      } else if (game?.game?.timeLimit === 'end_time' && game?.game?.endTime) {
+        const endTime = new Date(game.game.endTime).getTime();
+        const now = new Date().getTime();
+        const diff = Math.max(0, Math.floor((endTime - now) / 1000));
+        setTimeLeft(diff);
+        setElapsedTime(currentElapsedTime || 0);
+      } else {
+        // No time limit - just track elapsed time
+        setTimeLeft(null);
+        if (storedTimer) {
+          const currentTime = Date.now();
+          const timeSinceLastUpdate = Math.floor((currentTime - storedTimer.lastUpdateTime) / 1000);
+          const totalElapsed = storedTimer.elapsedTime + timeSinceLastUpdate;
+          
+          console.log('Resuming no-limit timer:', {
+            storedElapsed: storedTimer.elapsedTime,
+            timeSinceLastUpdate,
+            totalElapsed
+          });
+          
+          setElapsedTime(totalElapsed);
+          setGameStartTime(storedTimer.startTime);
+        } else {
+          setElapsedTime(currentElapsedTime || 0);
+          const startTime = Date.now();
+          setGameStartTime(startTime);
+          
+          if (gameId) {
+            await storage.setGameTimer(gameId, {
+              startTime,
+              elapsedTime: currentElapsedTime || 0,
+              lastUpdateTime: startTime
+            });
+          }
+        }
+      }
+    };
+
+    initializeTimer();
+  }, [game, gameId, currentElapsedTime]);
+
+  // Update timer every second and persist to storage
   useEffect(() => {
-    if (timeLeft === null) return;
-    if (timeLeft <= 0) {
-      Alert.alert('Time’s up!', 'Your game has ended.');
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev && prev > 0) return prev - 1;
-        clearInterval(interval);
-        return 0;
+    const interval = setInterval(async () => {
+      const currentTime = Date.now();
+      
+      setElapsedTime(prev => {
+        const newElapsed = prev + 1;
+        
+        // Persist to storage every second to ensure no data loss
+        if (gameId) {
+          storage.setGameTimer(gameId, {
+            startTime: gameStartTime || currentTime,
+            elapsedTime: newElapsed,
+            lastUpdateTime: currentTime
+          });
+        }
+        
+        return newElapsed;
       });
+
+      if (timeLeft !== null) {
+        setTimeLeft(prev => {
+          if (prev && prev > 0) {
+            return prev - 1;
+          } else if (prev === 0) {
+            Alert.alert('Time\'s up!', 'Your game time has ended.');
+            return 0;
+          }
+          return prev;
+        });
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timeLeft]);
+  }, [timeLeft, gameId, gameStartTime]);
 
-  // Format mm:ss
-  const formattedTime =
-    timeLeft !== null
-      ? `${Math.floor(timeLeft / 60).toString().padStart(2, '0')}:${(
-          timeLeft % 60
-        )
-          .toString()
-          .padStart(2, '0')}`
-      : null;
+  // Format time for display
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
-  return [timeLeft, formattedTime] as const;
+  // For countdown timers, show time left; for no limit, show elapsed time
+  const formattedTime = timeLeft !== null ? formatTime(timeLeft) : formatTime(elapsedTime);
+  
+  console.log('Timer display:', {
+    timeLeft,
+    elapsedTime,
+    formattedTime,
+    gameTimeLimit: game?.game?.timeLimit,
+    isCountdown: timeLeft !== null
+  });
+
+  return [timeLeft, formattedTime, elapsedTime] as const;
+};
+
+/**
+ * Clear timer data when game is completed
+ */
+export const clearGameTimer = async (gameId: string) => {
+  await storage.clearGameTimer(gameId);
 };
