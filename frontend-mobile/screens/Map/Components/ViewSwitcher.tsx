@@ -19,7 +19,7 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
 }) => {
   console.log('ViewSwitcher:', { playgrounds, playgroundName, isModalOpen });
   
-  if (isModalOpen) return null;
+  // Always show buttons, even when modal is open
   
   const hasPlaygrounds = playgrounds && playgrounds.length > 0;
   const hasLegacyPlayground = playgroundName;

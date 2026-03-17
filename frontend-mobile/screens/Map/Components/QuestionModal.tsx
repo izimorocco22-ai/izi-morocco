@@ -8,6 +8,8 @@ import {
   Image,
   Text,
   ImageBackground,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import Sound from 'react-native-sound';
@@ -17,6 +19,9 @@ import SplashButton from '../../../components/SplashButton';
 import { RFValue } from '../../../utils/responsive';
 import QuestionRenderer from './QuestionRender';
 import MediaRenderer from './MediaRenderer';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const statusBarHeight = StatusBar.currentHeight || 0;
 
 const QuestionModal = ({
   visible,
@@ -185,18 +190,27 @@ const QuestionModal = ({
 
   return (
     <View
-      style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 ,zIndex:99}]}
+      style={[{ 
+        position: 'absolute', 
+        top: -statusBarHeight,
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        width: screenWidth,
+        height: screenHeight + statusBarHeight,
+        zIndex: 99 
+      }]}
     >
+      {backgroundUri && (
+        <ImageBackground
+          source={{ uri: backgroundUri }}
+          style={styles.fullBackgroundImage}
+          resizeMode="cover"
+        >
+          <View style={styles.fullBackgroundOverlay} />
+        </ImageBackground>
+      )}
       <View style={styles.overlay}>
-        {backgroundUri && (
-          <ImageBackground
-            source={{ uri: backgroundUri }}
-            style={styles.fullBackgroundImage}
-            resizeMode="cover"
-          >
-            <View style={styles.fullBackgroundOverlay} />
-          </ImageBackground>
-        )}
         <View style={styles.modalContainer}>
           {/* Scrollable Question Area */}
           <View style={styles.whiteBox}>
@@ -216,6 +230,7 @@ const QuestionModal = ({
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     marginBottom: RFValue(5),
+                    paddingHorizontal: RFValue(10),
                   }}
                 >
                   <Text style={[commonStyles.h2Text]}>Puzzle</Text>
@@ -234,7 +249,7 @@ const QuestionModal = ({
                 <View
                   style={[
                     styles.webviewContainer,
-                    { height: RFValue(420), marginBottom: RFValue(5) },
+                    { height: RFValue(420), marginBottom: RFValue(5), marginHorizontal: RFValue(10) },
                   ]}
                 >
                   <WebView
@@ -255,13 +270,15 @@ const QuestionModal = ({
                   />
                 </View>
 
-                <QuestionRenderer
-                  question={questionData}
-                  selectedOption={selectedOption}
-                  setSelectedOption={setSelectedOption}
-                  inputAnswer={inputAnswer}
-                  setInputAnswer={setInputAnswer}
-                />
+                <View style={{ paddingHorizontal: RFValue(10) }}>
+                  <QuestionRenderer
+                    question={questionData}
+                    selectedOption={selectedOption}
+                    setSelectedOption={setSelectedOption}
+                    inputAnswer={inputAnswer}
+                    setInputAnswer={setInputAnswer}
+                  />
+                </View>
               </ScrollView>
             ) : (
               <>
@@ -297,11 +314,14 @@ const QuestionModal = ({
                       borderRadius: RFValue(8),
                       borderStyle: 'dashed',
                       marginBottom: RFValue(5),
+                      // No padding here so media can fill width
                     }}
                   >
                     <MediaRenderer media={questionData?.media} />
 
-                    <QuillRenderer questionName={questionData?.question} />
+                    <View style={{ paddingHorizontal: RFValue(10) }}>
+                      <QuillRenderer questionName={questionData?.question} />
+                    </View>
                   </View>
 
                   {questionData && questionData?.answerType === 'puzzle' && (
@@ -319,13 +339,15 @@ const QuestionModal = ({
                     </View>
                   )}
 
-                  <QuestionRenderer
-                    question={questionData}
-                    selectedOption={selectedOption}
-                    setSelectedOption={setSelectedOption}
-                    inputAnswer={inputAnswer}
-                    setInputAnswer={setInputAnswer}
-                  />
+                  <View style={{ paddingHorizontal: RFValue(10) }}>
+                    <QuestionRenderer
+                      question={questionData}
+                      selectedOption={selectedOption}
+                      setSelectedOption={setSelectedOption}
+                      inputAnswer={inputAnswer}
+                      setInputAnswer={setInputAnswer}
+                    />
+                  </View>
                 </ScrollView>
                 {showScrollArrow && !isAtBottom && (
                   <View
@@ -363,10 +385,11 @@ const QuestionModal = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: RFValue(20),
+    paddingTop: statusBarHeight + RFValue(20),
   },
   modalContainer: {
     width: '100%',
@@ -379,7 +402,7 @@ const styles = StyleSheet.create({
     borderWidth: 6,
     borderColor: '#d4af37',
     borderRadius: RFValue(10),
-    padding: RFValue(15),
+    padding: 0,
     width: '100%',
     flex: 1,
     elevation: 8,
@@ -392,13 +415,11 @@ const styles = StyleSheet.create({
   fullBackgroundImage: {
     position: 'absolute',
     top: 0,
-    left: 20,
+    left: 0,
     right: 0,
     bottom: 0,
     width: '100%',
     height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   fullBackgroundOverlay: {
     position: 'absolute',
