@@ -55,7 +55,7 @@ const MediaRenderer = ({ media }) => {
             key={`img-${index}`}
             source={{ uri }}
             style={styles.image}
-            resizeMode="cover"
+            resizeMode="contain"
           />
         );
       })}
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    minHeight: RFValue(150),
+    aspectRatio: 1,
     borderRadius: RFValue(8),
     marginBottom: RFValue(5),
   },

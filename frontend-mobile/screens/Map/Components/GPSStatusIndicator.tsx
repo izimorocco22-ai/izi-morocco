@@ -13,7 +13,7 @@ export default GPSStatusIndicator;
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 60,
+    top: 120,
     right: 10,
     backgroundColor: 'rgba(0,0,0,0.7)',
     padding: 10,
@@ -22,6 +22,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#fff',
+    zIndex: 1001,
   },
   dot: { width: 10, height: 10, borderRadius: 5, marginRight: 6 },
   text: { color: 'white', fontSize: 12, fontWeight: 'bold' },

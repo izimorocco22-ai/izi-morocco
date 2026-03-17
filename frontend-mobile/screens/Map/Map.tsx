@@ -677,6 +677,17 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           />
         )}
 
+        <ViewSwitcher
+          currentView={currentView}
+          playgrounds={game?.game?.playgrounds}
+          playgroundName={game?.game?.playgroundName}
+          onViewChange={(view) => {
+            console.log('Switching to view:', view);
+            setCurrentView(view);
+          }}
+          isModalOpen={state.modalVisible || state.resultModalVisible || showList}
+        />
+
         <GPSStatusIndicator gpsEnabled={state.gpsEnabled} />
 
         <ListShowButton
@@ -693,17 +704,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             }}
           />
         )}
-
-        <ViewSwitcher
-          currentView={currentView}
-          playgrounds={game?.game?.playgrounds}
-          playgroundName={game?.game?.playgroundName}
-          onViewChange={(view) => {
-            console.log('Switching to view:', view);
-            setCurrentView(view);
-          }}
-          isModalOpen={state.modalVisible || state.resultModalVisible || showList}
-        />
 
         {!state.showOverlay && state.modalVisible && !state.introVisible && (
           <QuestionModal
