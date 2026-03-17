@@ -54,10 +54,15 @@ export const markerGets = (
         });
       }
     } else if (r?.activate && r?.taskId) {
+      console.log('Activate rule triggered for task:', r.taskId);
       const questionToOpen = safeTasks.find(
         t => t?.question?._id === r.taskId && !t.isDisplayed,
       );
       if (questionToOpen) {
+        console.log('Opening task immediately:', {
+          taskId: r.taskId,
+          taskName: questionToOpen.question?.questionName
+        });
         dispatch({
           type: 'UPDATE_TASK_ITEM',
           payload: { id: r.taskId, updates: { isDisplayed: true } },
@@ -73,9 +78,17 @@ export const markerGets = (
             points: questionToOpen?.question?.points,
             comments: questionToOpen?.comments,
             media: questionToOpen?.media || null,
+            puzzleAnswerText: questionToOpen?.question?.puzzleAnswerText,
+            puzzleAnswerType: questionToOpen?.question?.puzzleAnswerType,
+            puzzleUrl: questionToOpen?.question?.puzzle?.url,
+            puzzle: questionToOpen?.question?.puzzle,
+            codeBoxConfig: questionToOpen?.question?.codeBoxConfig,
+            augmentedPhotoImage: questionToOpen?.question?.augmentedPhotoImage,
           },
         });
         dispatch({ type: 'SET_PENDING_OPEN_TASK', payload: r.taskId });
+      } else {
+        console.log('Task not found or already displayed:', r.taskId);
       }
     }
     // 🔹 Collect all showTask ids

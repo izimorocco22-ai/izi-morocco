@@ -115,6 +115,19 @@ export const handleSubmitAnswer = async (
   });
 
   dispatch({ type: 'SET_IS_ANSWER_CORRECT', payload: isCorrect });
+  
+  // ✅ If answer is correct, immediately check for activate rules
+  if (isCorrect) {
+    console.log('Answer is correct, checking for activate rules for task:', currentQuestion._id);
+    markerGets(
+      stateRef.current.task,
+      blocklyJson,
+      dispatch,
+      stateRef.current,
+      stateRef.current.time,
+    );
+  }
+  
   if (
     currentQuestion?.settings?.behaviorOption === 'keep_until_correct' &&
     isCorrect
