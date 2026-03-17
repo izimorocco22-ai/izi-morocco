@@ -95,16 +95,45 @@ export const markerGets = (
         });
       }
       if (r?.list) {
-        dispatch({
-          type: 'SET_LIST',
-          payload: [...currentState.list, ...questionsToAdd],
+        // For list, only include tasks that are not finished yet
+        const listTasks = safeTasks.filter(
+          t => r.idsToShow.includes(t.question?._id) && !t.isFinished
+        );
+        console.log('Setting list tasks:', {
+          idsToShow: r.idsToShow,
+          listTasks: listTasks.map(t => ({ id: t.question?._id, name: t.question?.questionName, isFinished: t.isFinished })),
+          currentListLength: currentState.list.length
         });
+        // Only set list if there are unfinished tasks
+        if (listTasks.length > 0) {
+          dispatch({
+            type: 'SET_LIST',
+            payload: listTasks,
+          });
+        }
       }
       dispatch({ type: 'SET_TASK', payload: updatedTasks });
     }
-    // else if (r?.list && r?.taskId) {
-    //   showTaskIds.push(r?.taskId);
-    // }
+    else if (r?.list && r?.taskId) {
+      const taskToList = safeTasks.find(
+        t => t?.question?._id === r.taskId && !t.isFinished
+      );
+      if (taskToList) {
+        const updatedTasks = safeTasks.map(q =>
+          q.question?._id === r.taskId ? { ...q, isDisplayed: true } : q,
+        );
+        dispatch({ type: 'SET_TASK', payload: updatedTasks });
+        dispatch({
+          type: 'SET_TARGETS',
+          payload: mergeUnique(currentState.targets, [taskToList]),
+        });
+        // Only add to list if task is not finished
+        dispatch({
+          type: 'SET_LIST',
+          payload: [taskToList],
+        });
+      }
+    }
     else if (r?.finish) {
       dispatch({ type: 'SET_NAVIGATE_FINISH', payload: true });
     } else if (r?.playground && Array.isArray(r.taskId)) {

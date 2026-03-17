@@ -213,12 +213,19 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     });
   }, [stateRef.current.timerData]);
 
-  const listItems =
-    state.list && state.list.length > 0
-      ? state.list
-      : state.targets.filter(
-          t => !state.completedTargets.includes(t.question?._id),
-        );
+  // Only show tasks that are specifically added to the list via admin rules
+  const listItems = state.list || [];
+  
+  // Debug logging to track list items
+  console.log('List items debug:', {
+    stateListLength: state.list?.length || 0,
+    listItems: listItems.map(item => ({
+      id: item.question?._id,
+      name: item.question?.questionName,
+      isFinished: item.isFinished
+    })),
+    showListButton: listItems.length > 0
+  });
 
   // show overlay on mount
   useEffect(() => {
@@ -729,10 +736,13 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           visible={!(state.modalVisible || state.resultModalVisible || showList)} 
         />
 
-        <ListShowButton
-          onPress={() => setShowList(!showList)}
-          count={listItems.length}
-        />
+        {/* Only show list button when there are actual tasks in the list */}
+        {listItems.length > 0 && (
+          <ListShowButton
+            onPress={() => setShowList(!showList)}
+            count={listItems.length}
+          />
+        )}
         {showList && (
           <ListModal
             state={{ ...stateRef.current, list: listItems }}

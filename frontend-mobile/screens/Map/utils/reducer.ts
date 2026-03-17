@@ -63,7 +63,7 @@ export type Action =
   | { type: 'SET_FINISH_VISIBLE'; payload: boolean }
   | { type: 'SET_TIMER_DATA'; payload: any }
   | { type: 'SET_TIMER'; payload: any }
-  | { type: 'SET_LIST'; payload: string[] }
+  | { type: 'SET_LIST'; payload: any[] }
   | { type: 'UPDATE_TIMER_FINISHED'; payload: any }
   | { type: 'TRIGGER_MARKER_GETS' }
   | {
