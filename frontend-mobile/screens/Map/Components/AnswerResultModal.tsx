@@ -69,11 +69,7 @@ const AnswerResultModal = ({
             </>
           )}
 
-          <SplashButton
-            buttonStyle={{ backgroundColor: '#d8b443' }}
-            title="OK"
-            onPress={onNext}
-          />
+
         </View>
       </View>
     </Modal>

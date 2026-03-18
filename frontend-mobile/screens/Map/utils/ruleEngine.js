@@ -17,12 +17,15 @@ export const analyzeDataRule = (markerJson, questionFromMain, extras = {}) => {
     questions = questionFromMain || [];
     SCORE = extras?.score || 0;
     TIMER = extras?.timer+1 || 0;
-    console.log({TIMER})
+    console.log({TIMER, questionsCount: questions.length, finishedCount: questions.filter(q => q.isFinished).length})
 
     if (!Array.isArray(rules) || rules.length === 0) return [{ finish: true }];
 
-    // Pre-index all data for O(1) lookups
+    // Pre-index all data for O(1) lookups - rebuild every time to ensure fresh state
     buildIndexes();
+    
+    // Clear condition cache to ensure fresh evaluation
+    conditionCache.clear();
 
     const processtheWholeData = [];
     for (const rule of rules) {
@@ -48,12 +51,17 @@ const buildIndexes = () => {
     conditionCache.clear();
     correctMap.clear();
 
+    console.log('🔄 Building indexes for', questions.length, 'questions');
+    
     for (const q of questions) {
         const id = q.question._id?.toString();
         if (!id) continue;
 
         questionMap.set(id, q);
-        if (q.isFinished) finishedMap.add(id);
+        if (q.isFinished) {
+            finishedMap.add(id);
+            console.log('✅ Task marked as finished:', id, q.question?.questionName);
+        }
         if (q.isDisplayed) displayedMap.add(id);
         if (q.isShownOnPlayground) playgroundMap.add(id);
         if (q.isCorrect) correctMap.add(id);
@@ -67,6 +75,13 @@ const buildIndexes = () => {
             }
         }
     }
+    
+    console.log('📊 Index summary:', {
+        totalQuestions: questionMap.size,
+        finishedTasks: finishedMap.size,
+        displayedTasks: displayedMap.size,
+        correctTasks: correctMap.size
+    });
 };
 
 // ------------------------------------------------------
@@ -116,8 +131,22 @@ const processRule = (rule, n) => {
 
         // need to perform all tasks logic here
         case "activate": {
-            if (rule?.task?.id && !checkIfTaskFinished(rule?.task?.id))
-                return { activate: true, taskId: rule?.task?.id };
+            console.log('🎯 Processing activate rule for task:', rule?.task?.id);
+            const taskId = rule?.task?.id;
+            const isTaskFinished = checkIfTaskFinished(taskId);
+            console.log('📋 Task status check:', {
+                taskId,
+                isFinished: isTaskFinished,
+                finishedTasks: Array.from(finishedMap),
+                questionExists: questionMap.has(taskId)
+            });
+            
+            if (taskId && !isTaskFinished) {
+                console.log('✅ Activate rule will trigger for task:', taskId);
+                return { activate: true, taskId: taskId };
+            } else {
+                console.log('❌ Activate rule blocked - task finished or not found:', taskId);
+            }
             break;
         }
 

@@ -116,16 +116,42 @@ export const handleSubmitAnswer = async (
 
   dispatch({ type: 'SET_IS_ANSWER_CORRECT', payload: isCorrect });
   
-  // ✅ If answer is correct, immediately check for activate rules
+  // ✅ Only show result modal for incorrect answers - skip OK popup for correct answers
+  if (!isCorrect) {
+    dispatch({ type: 'SET_RESULT_MODAL', payload: true });
+  }
+  
+  // ✅ Mark task as completed immediately for rule engine
   if (isCorrect) {
-    console.log('Answer is correct, checking for activate rules for task:', currentQuestion._id);
-    markerGets(
-      stateRef.current.task,
-      blocklyJson,
-      dispatch,
-      stateRef.current,
-      stateRef.current.time,
+    console.log('Answer is correct, marking task as completed for activate rules:', currentQuestion._id);
+    
+    // 🔥 CRITICAL: Update the task state immediately with completion status
+    const updatedTasks = stateRef.current.task.map(t => 
+      t.question?._id === currentQuestion._id 
+        ? { ...t, isFinished: true, isCorrect: true, userAnswer: stateRef.current.inputAnswer }
+        : t
     );
+    
+    // Update the state immediately
+    dispatch({ type: 'SET_TASK', payload: updatedTasks });
+    
+    // Add to completed targets immediately
+    dispatch({
+      type: 'ADD_COMPLETED_TARGETS',
+      payload: [currentQuestion._id],
+    });
+    
+    // Call markerGets with the updated task state after ensuring state propagation
+    setTimeout(() => {
+      console.log('🚀 Calling markerGets with completed task state');
+      markerGets(
+        updatedTasks,
+        blocklyJson,
+        dispatch,
+        { ...stateRef.current, task: updatedTasks, completedTargets: [...stateRef.current.completedTargets, currentQuestion._id] },
+        stateRef.current.time,
+      );
+    }, 200); // Increased delay to ensure all state updates are processed
   }
   
   if (

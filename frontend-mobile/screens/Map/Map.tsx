@@ -33,7 +33,6 @@ import ListModal from './Components/ListModal';
 import PlaygroundView from './Components/PlaygroundView';
 import ViewSwitcher from './Components/ViewSwitcher';
 import { clearGameTimer, useGameTimer } from './utils/gameTimer';
-import { storage } from '../../utils/storage';
 
 MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
@@ -269,20 +268,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   // Get timer data from the header component
   const [, , elapsedTime] = useGameTimer(game, gameId, state.time);
 
-  // Save timer data when component unmounts or app is backgrounded
-  useEffect(() => {
-    return () => {
-      // Save current timer state when component unmounts
-      if (gameId && elapsedTime > 0) {
-        storage.setGameTimer(gameId, {
-          startTime: Date.now() - (elapsedTime * 1000),
-          elapsedTime: elapsedTime,
-          lastUpdateTime: Date.now()
-        });
-      }
-    };
-  }, [gameId, elapsedTime]);
-
   // ✅ Effect: Sync state changes to backend whenever tasks are updated
   useEffect(() => {
     if (state.task && state.task.length > 0) {
@@ -322,6 +307,16 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       );
     }
   }, [state.task, elapsedTime, activeCode, gameId, user?.playerId, dispatchForApis]);
+
+  // ✅ Effect: Update list to remove completed tasks
+  useEffect(() => {
+    if (state.list && state.list.length > 0) {
+      const updatedList = state.list.filter(item => !item.isFinished);
+      if (updatedList.length !== state.list.length) {
+        dispatch({ type: 'SET_LIST', payload: updatedList });
+      }
+    }
+  }, [state.task]);
 
   // ✅ Effect: Sync targets with task list changes
   useEffect(() => {
@@ -416,8 +411,12 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             type: 'SET_CURRENT_QUESTION',
             payload: queuedQuestions[0],
           });
-          dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
           dispatch({ type: 'SET_SELECTED_OPTION', payload: [] });
+          
+          // Add small delay to ensure state is synchronized before showing modal
+          setTimeout(() => {
+            dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
+          }, 100);
 
           // mark tasks as displayed for overlapping ones
           queuedQuestions.forEach(q => {
@@ -456,7 +455,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       });
     }
 
-    // ✅ Update task after pressing Next/OK
+    // ✅ Update task after pressing Next button
     const newTasks = stateRef.current.task.map(t => {
       if (t.question?._id === currentQuestion?._id) {
         return {
@@ -470,6 +469,18 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     });
 
     dispatch({ type: 'SET_TASK', payload: newTasks });
+    
+    // ✅ Add completed task to completedTargets immediately
+    if (isCorrect) {
+      dispatch({
+        type: 'ADD_COMPLETED_TARGETS',
+        payload: [currentQuestion?._id],
+      });
+    }
+    
+    // ✅ Check for activate rules AFTER state is updated - but don't duplicate the call from questionHandlers
+    // The markerGets call in questionHandlers.ts should handle auto-opening
+    
     const filteredQuestions = newTasks.map(q => ({
       _id: q?.question?._id,
       latitude: q?.latitude,
@@ -505,7 +516,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       }),
     );
 
-    dispatch({ type: 'TRIGGER_MARKER_GETS' });
     // continue to next question logic
     dispatch({ type: 'SET_RESULT_MODAL', payload: false });
     dispatch({ type: 'SET_SELECTED_OPTION', payload: [] });
@@ -522,6 +532,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         payload: questionQueue[nextIndex],
       });
     } else {
+      // Add completed task to completedTargets when finishing the question queue
       dispatch({
         type: 'ADD_COMPLETED_TARGETS',
         payload: questionQueue.map(q => q._id),
@@ -530,23 +541,16 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       dispatch({ type: 'SET_POPUP_SHOWN', payload: false });
       dispatch({ type: 'SET_QUESTION_QUEUE', payload: [] });
       dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
-      dispatch({ type: 'SET_PENDING_OPEN_TASK', payload: null });
+      
+      // Update the list to remove completed tasks
+      const updatedList = state.list.filter(item => 
+        !questionQueue.some(q => q._id === item.question?._id)
+      );
+      dispatch({ type: 'SET_LIST', payload: updatedList });
     }
   };
 
-  // Effect: if pendingOpenTaskId is set (from markerGets activate), open modal reliably (no setTimeout)
-  useEffect(() => {
-    const pending = state.pendingOpenTaskId;
-    if (!pending) return;
-
-    // currentQuestion should already be set by markerGets, so simply open modal now.
-    dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
-    // clear pending
-    dispatch({ type: 'SET_PENDING_OPEN_TASK', payload: null });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.pendingOpenTaskId]);
-
-  // Effect: when navigateFinish becomes true, navigate to Congratulation screen with current tasks
+// Effect: when navigateFinish becomes true, navigate to Congratulation screen with current tasks
   useEffect(() => {
     if (state.navigateFinish) {
       dispatch({ type: 'SET_FINISH_VISIBLE', payload: true });
@@ -556,10 +560,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
 
   const handleFinishContinue = async () => {
     dispatch({ type: 'SET_FINISH_VISIBLE', payload: false });
-    // Clear timer data when game is completed
-    if (gameId) {
-      await clearGameTimer(gameId);
-    }
     navigation.navigate('Congratulation', {
       task: stateRef.current.task,
       activeCode,
@@ -767,31 +767,43 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
               dispatch({ type: 'SET_INPUT_ANSWER', payload: val })
             }
             onSubmit={() => {
-              handleSubmitAnswer({ current: state }, dispatch,blocklyJson);
+              // ✅ Check answer correctness before submitting
+              const currentQuestion = state.currentQuestion;
+              let isCorrect = false;
+              
+              if (currentQuestion?.answerType === 'mcq' || currentQuestion?.answerType === 'multiple') {
+                const selectedTexts = state.selectedOption.map(
+                  (index: number) => currentQuestion.options[index]?.text,
+                );
+                isCorrect =
+                  JSON.stringify([...selectedTexts].sort()) ===
+                  JSON.stringify([...currentQuestion.correctAnswers].sort());
+              } else if (currentQuestion?.answerType === 'number') {
+                isCorrect =
+                  state.inputAnswer.trim() === currentQuestion.correctAnswers[0]?.trim();
+              } else if (currentQuestion?.answerType === 'text' || currentQuestion?.answerType === 'code_box') {
+                isCorrect =
+                  state.inputAnswer.trim().toLowerCase() ===
+                  currentQuestion.correctAnswers[0]?.trim().toLowerCase();
+              } else {
+                isCorrect = true; // For media types, assume correct
+              }
+              
+              handleSubmitAnswer({ current: state }, dispatch, blocklyJson);
+              
+              // ✅ For correct answers, automatically proceed to next question
+              // For incorrect answers, result modal will show with OK button
+              if (isCorrect) {
+                setTimeout(() => {
+                  handleNextQuestion();
+                }, 250);
+              }
             }}
             backgroundImage={game?.game?.backGroundImage}
           />
         )}
 
-        <AnswerResultModal
-          visible={state.resultModalVisible}
-          isCorrect={state.isAnswerCorrect}
-          commentsAfterFinishingQuestion={state.currentQuestion}
-          onNext={() => {
-            markerGets(
-              stateRef.current.task,
-              blocklyJson,
-              dispatch,
-              state,
-              state.time,
-            ); // Trigger next tasks
-            handleNextQuestion(); // Perform your normal logic
-            dispatch({ type: 'SET_LOADING', payload: true });
-            setTimeout(() => {
-              dispatch({ type: 'SET_LOADING', payload: false });
-            }, 2000);
-          }}
-        />
+
 
         {game?.game?.introMessage && game?.status !== 'in_progress' && (
           <IntroMessage

@@ -18,11 +18,22 @@ export const markerGets = (
   currentState: any,
   timer: any,
 ) => {
+  console.log('🔍 markerGets called with:', {
+    tasksCount: tasks?.length,
+    hasBlocklyJson: !!blocklyJson,
+    timer,
+    currentScore: currentState?.score,
+    finishedTasks: tasks?.filter(t => t.isFinished).length,
+    displayedTasks: tasks?.filter(t => t.isDisplayed).length
+  });
+  
   const safeTasks = Array.isArray(tasks) ? [...tasks] : [];
   const result = analyzeDataRule(blocklyJson, safeTasks, {
     score: currentState?.score,
     timer,
   });
+
+  console.log('🎯 Rule engine result:', result);
 
   if (!Array.isArray(result)) return;
 
@@ -54,41 +65,76 @@ export const markerGets = (
         });
       }
     } else if (r?.activate && r?.taskId) {
-      console.log('Activate rule triggered for task:', r.taskId);
+      console.log('🎯 Activate rule triggered for task:', r.taskId);
       const questionToOpen = safeTasks.find(
-        t => t?.question?._id === r.taskId && !t.isDisplayed,
+        t => t?.question?._id === r.taskId && !t.isDisplayed && !t.isFinished,
       );
       if (questionToOpen) {
-        console.log('Opening task immediately:', {
+        console.log('✅ Opening task immediately:', {
           taskId: r.taskId,
-          taskName: questionToOpen.question?.questionName
+          taskName: questionToOpen.question?.questionName,
+          currentDisplayedTasks: safeTasks.filter(t => t.isDisplayed).length,
+          currentFinishedTasks: safeTasks.filter(t => t.isFinished).length
         });
+        
+        // Update task as displayed
+        const updatedTasks = safeTasks.map(q =>
+          q.question?._id === r.taskId ? { ...q, isDisplayed: true } : q,
+        );
+        dispatch({ type: 'SET_TASK', payload: updatedTasks });
+        
+        // Set up question queue with single question
+        const questionData = {
+          _id: questionToOpen.question?._id,
+          question: questionToOpen?.question?.questionDescription,
+          answerType: questionToOpen?.question?.answerType,
+          options: questionToOpen?.question?.options,
+          correctAnswers: questionToOpen?.question?.correctAnswers,
+          points: questionToOpen?.question?.points,
+          comments: questionToOpen?.comments,
+          media: questionToOpen?.media || null,
+          puzzleAnswerText: questionToOpen?.question?.puzzleAnswerText,
+          puzzleAnswerType: questionToOpen?.question?.puzzleAnswerType,
+          puzzleUrl: questionToOpen?.question?.puzzle?.url,
+          puzzle: questionToOpen?.question?.puzzle,
+          codeBoxConfig: questionToOpen?.question?.codeBoxConfig,
+          augmentedPhotoImage: questionToOpen?.question?.augmentedPhotoImage,
+        };
+        
+        // Set up the question queue and current question
+        dispatch({ type: 'SET_QUESTION_QUEUE', payload: [questionData] });
+        dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
+        dispatch({ type: 'SET_CURRENT_QUESTION', payload: questionData });
+        dispatch({ type: 'SET_SELECTED_OPTION', payload: [] });
+        dispatch({ type: 'SET_INPUT_ANSWER', payload: '' });
+        
+        // Add to shown targets
         dispatch({
-          type: 'UPDATE_TASK_ITEM',
-          payload: { id: r.taskId, updates: { isDisplayed: true } },
+          type: 'ADD_SHOWN_TARGETS',
+          payload: [questionToOpen.question?._id],
         });
+        
+        // Add to targets for display
         dispatch({
-          type: 'SET_CURRENT_QUESTION',
-          payload: {
-            _id: questionToOpen.question?._id,
-            question: questionToOpen?.question?.questionDescription,
-            answerType: questionToOpen?.question?.answerType,
-            options: questionToOpen?.question?.options,
-            correctAnswers: questionToOpen?.question?.correctAnswers,
-            points: questionToOpen?.question?.points,
-            comments: questionToOpen?.comments,
-            media: questionToOpen?.media || null,
-            puzzleAnswerText: questionToOpen?.question?.puzzleAnswerText,
-            puzzleAnswerType: questionToOpen?.question?.puzzleAnswerType,
-            puzzleUrl: questionToOpen?.question?.puzzle?.url,
-            puzzle: questionToOpen?.question?.puzzle,
-            codeBoxConfig: questionToOpen?.question?.codeBoxConfig,
-            augmentedPhotoImage: questionToOpen?.question?.augmentedPhotoImage,
-          },
+          type: 'SET_TARGETS',
+          payload: [...currentState.targets, questionToOpen],
         });
-        dispatch({ type: 'SET_PENDING_OPEN_TASK', payload: r.taskId });
+        
+        // 🔥 CRITICAL: Open modal with a small delay to ensure all state updates are processed
+        setTimeout(() => {
+          dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
+        }, 50);
+        
       } else {
-        console.log('Task not found or already displayed:', r.taskId);
+        console.log('❌ Task not found, already displayed, or already finished:', {
+          taskId: r.taskId,
+          availableTasks: safeTasks.map(t => ({
+            id: t.question?._id,
+            name: t.question?.questionName,
+            isDisplayed: t.isDisplayed,
+            isFinished: t.isFinished
+          }))
+        });
       }
     }
     // 🔹 Collect all showTask ids
@@ -117,13 +163,11 @@ export const markerGets = (
           listTasks: listTasks.map(t => ({ id: t.question?._id, name: t.question?.questionName, isFinished: t.isFinished })),
           currentListLength: currentState.list.length
         });
-        // Only set list if there are unfinished tasks
-        if (listTasks.length > 0) {
-          dispatch({
-            type: 'SET_LIST',
-            payload: listTasks,
-          });
-        }
+        // Always update the list, even if empty, to remove completed tasks
+        dispatch({
+          type: 'SET_LIST',
+          payload: listTasks,
+        });
       }
       dispatch({ type: 'SET_TASK', payload: updatedTasks });
     }
@@ -144,6 +188,12 @@ export const markerGets = (
         dispatch({
           type: 'SET_LIST',
           payload: [taskToList],
+        });
+      } else {
+        // If task is finished or not found, clear the list
+        dispatch({
+          type: 'SET_LIST',
+          payload: [],
         });
       }
     }

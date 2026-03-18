@@ -211,16 +211,21 @@ const QuestionModal = ({
     true;
   `;
 
+  // Add loading state check to ensure modal renders properly
+  if (!visible || !questionData || !questionData.question) {
+    return null;
+  }
+
   return (
     <View
       style={[{ 
         position: 'absolute', 
-        top: -statusBarHeight,
+        top: 0,
         left: 0, 
         right: 0, 
         bottom: 0,
         width: screenWidth,
-        height: screenHeight + statusBarHeight,
+        height: screenHeight,
         zIndex: 99 
       }]}
     >
@@ -410,7 +415,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: RFValue(20),
-    paddingTop: statusBarHeight + RFValue(20),
+    paddingTop: RFValue(40), // Fixed padding instead of statusBarHeight calculation
   },
   modalContainer: {
     width: '100%',

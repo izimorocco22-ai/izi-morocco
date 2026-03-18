@@ -79,6 +79,46 @@ export const handleListQuestionPress = (
   question: any,
   dispatch: any,
 ) => {
+  // Directly open the task modal instead of just navigating to location
+  const questionData = {
+    _id: question.question?._id,
+    question: question.question?.questionDescription,
+    answerType: question.question?.answerType,
+    options: question.question?.options,
+    correctAnswers: question.question?.correctAnswers,
+    points: question.question?.points,
+    comments: question?.comments,
+    media: question?.media || null,
+    settings: question?.settings || null,
+    puzzleAnswerText: question?.question?.puzzleAnswerText,
+    puzzleAnswerType: question?.question?.puzzleAnswerType,
+    puzzleUrl: question?.question?.puzzle?.url,
+    puzzle: question?.question?.puzzle,
+    codeBoxConfig: question?.question?.codeBoxConfig,
+    augmentedPhotoImage: question?.question?.augmentedPhotoImage,
+  };
+
+  // Set up the question queue with just this single question
+  dispatch({ type: 'SET_QUESTION_QUEUE', payload: [questionData] });
+  dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
+  dispatch({ type: 'SET_CURRENT_QUESTION', payload: questionData });
+  dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
+  dispatch({ type: 'SET_SELECTED_OPTION', payload: [] });
+  dispatch({ type: 'SET_INPUT_ANSWER', payload: '' });
+
+  // Mark the task as displayed
+  dispatch({
+    type: 'UPDATE_TASK_ITEM',
+    payload: { id: question.question?._id, updates: { isDisplayed: true } },
+  });
+
+  // Add to shown targets to prevent location-based triggering
+  dispatch({
+    type: 'ADD_SHOWN_TARGETS',
+    payload: [question.question?._id],
+  });
+
+  // Optional: Still navigate camera to the location for context
   let longitude: number | null = null;
   let latitude: number | null = null;
 
@@ -111,17 +151,16 @@ export const handleListQuestionPress = (
     }
   }
 
+  // Navigate camera to location if coordinates are available
   if (
-    longitude == null ||
-    latitude == null ||
-    isNaN(longitude) ||
-    isNaN(latitude)
+    longitude != null &&
+    latitude != null &&
+    !isNaN(longitude) &&
+    !isNaN(latitude)
   ) {
-    return;
+    dispatch({
+      type: 'SET_CAMERA_TARGET',
+      payload: { latitude, longitude },
+    });
   }
-
-  dispatch({
-    type: 'SET_CAMERA_TARGET',
-    payload: { latitude, longitude },
-  });
 };
