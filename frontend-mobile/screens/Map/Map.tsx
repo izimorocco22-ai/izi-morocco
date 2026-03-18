@@ -448,12 +448,14 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
 
     if (isCorrect) {
       const gained = currentQuestion?.points || 0;
+      // Update total score
       dispatch({
         type: 'SET_SCORE',
         payload: gained,
       });
     }
 
+    // ✅ Update task after pressing Next button
     const newTasks = stateRef.current.task.map(t => {
       if (t.question?._id === currentQuestion?._id) {
         return {
@@ -468,12 +470,16 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
 
     dispatch({ type: 'SET_TASK', payload: newTasks });
     
+    // ✅ Add completed task to completedTargets immediately
     if (isCorrect) {
       dispatch({
         type: 'ADD_COMPLETED_TARGETS',
         payload: [currentQuestion?._id],
       });
     }
+    
+    // ✅ Check for activate rules AFTER state is updated - but don't duplicate the call from questionHandlers
+    // The markerGets call in questionHandlers.ts should handle auto-opening
     
     const filteredQuestions = newTasks.map(q => ({
       _id: q?.question?._id,
@@ -761,9 +767,37 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
               dispatch({ type: 'SET_INPUT_ANSWER', payload: val })
             }
             onSubmit={() => {
-              handleSubmitAnswer({ current: state }, dispatch, blocklyJson, () => {
-                handleNextQuestion();
-              });
+              // ✅ Check answer correctness before submitting
+              const currentQuestion = state.currentQuestion;
+              let isCorrect = false;
+              
+              if (currentQuestion?.answerType === 'mcq' || currentQuestion?.answerType === 'multiple') {
+                const selectedTexts = state.selectedOption.map(
+                  (index: number) => currentQuestion.options[index]?.text,
+                );
+                isCorrect =
+                  JSON.stringify([...selectedTexts].sort()) ===
+                  JSON.stringify([...currentQuestion.correctAnswers].sort());
+              } else if (currentQuestion?.answerType === 'number') {
+                isCorrect =
+                  state.inputAnswer.trim() === currentQuestion.correctAnswers[0]?.trim();
+              } else if (currentQuestion?.answerType === 'text' || currentQuestion?.answerType === 'code_box') {
+                isCorrect =
+                  state.inputAnswer.trim().toLowerCase() ===
+                  currentQuestion.correctAnswers[0]?.trim().toLowerCase();
+              } else {
+                isCorrect = true; // For media types, assume correct
+              }
+              
+              handleSubmitAnswer({ current: state }, dispatch, blocklyJson);
+              
+              // ✅ For correct answers, automatically proceed to next question
+              // For incorrect answers, result modal will show with OK button
+              if (isCorrect) {
+                setTimeout(() => {
+                  handleNextQuestion();
+                }, 500); // Small delay to ensure state updates
+              }
             }}
             backgroundImage={game?.game?.backGroundImage}
           />
