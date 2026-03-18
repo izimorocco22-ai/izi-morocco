@@ -80,7 +80,9 @@ const buildIndexes = () => {
         totalQuestions: questionMap.size,
         finishedTasks: finishedMap.size,
         displayedTasks: displayedMap.size,
-        correctTasks: correctMap.size
+        correctTasks: correctMap.size,
+        finishedTaskIds: Array.from(finishedMap),
+        allTaskIds: Array.from(questionMap.keys())
     });
 };
 
@@ -132,20 +134,31 @@ const processRule = (rule, n) => {
         // need to perform all tasks logic here
         case "activate": {
             console.log('🎯 Processing activate rule for task:', rule?.task?.id);
-            const taskId = rule?.task?.id;
+            const taskId = rule?.task?.id?.toString(); // Ensure string comparison
             const isTaskFinished = checkIfTaskFinished(taskId);
+            const taskExists = questionMap.has(taskId);
+            const isTaskDisplayed = displayedMap.has(taskId);
             console.log('📋 Task status check:', {
                 taskId,
                 isFinished: isTaskFinished,
+                isDisplayed: isTaskDisplayed,
+                taskExists,
                 finishedTasks: Array.from(finishedMap),
-                questionExists: questionMap.has(taskId)
+                displayedTasks: Array.from(displayedMap),
+                allTaskIds: Array.from(questionMap.keys())
             });
             
-            if (taskId && !isTaskFinished) {
+            if (taskId && taskExists && !isTaskFinished && !isTaskDisplayed) {
                 console.log('✅ Activate rule will trigger for task:', taskId);
                 return { activate: true, taskId: taskId };
             } else {
-                console.log('❌ Activate rule blocked - task finished or not found:', taskId);
+                console.log('❌ Activate rule blocked:', {
+                    reason: !taskId ? 'No taskId' : !taskExists ? 'Task not found' : isTaskFinished ? 'Task already finished' : 'Task already displayed',
+                    taskId,
+                    taskExists,
+                    isFinished: isTaskFinished,
+                    isDisplayed: isTaskDisplayed
+                });
             }
             break;
         }
@@ -465,7 +478,12 @@ const checkIfAnswerIsCorrect = (task, isCorrect) => {
     }
 };
 
-const checkIfTaskFinished = (taskId) => finishedMap.has(taskId);
+const checkIfTaskFinished = (taskId) => {
+    const taskIdStr = taskId?.toString();
+    const isFinished = finishedMap.has(taskIdStr);
+    console.log('🔍 checkIfTaskFinished:', { taskId, taskIdStr, isFinished, finishedMapSize: finishedMap.size });
+    return isFinished;
+};
 
 const checkIfShownOnPlayground = (taskIds, tags = []) => {
     if (tags.length > 0) {
@@ -483,8 +501,11 @@ const getFinishedButNotDisplayedTaskIds = () => {
 };
 
 const getUnDisplayedTaskFromID = (id) => {
-    const q = questionMap.get(id);
-    return q && q.isDisplayed === false ? q.question._id : null;
+    const idStr = id?.toString();
+    const q = questionMap.get(idStr);
+    const result = q && q.isDisplayed === false ? q.question._id : null;
+    console.log('🔍 getUnDisplayedTaskFromID:', { id, idStr, found: !!q, isDisplayed: q?.isDisplayed, result });
+    return result;
 };
 
 

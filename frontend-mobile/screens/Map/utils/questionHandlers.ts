@@ -141,17 +141,21 @@ export const handleSubmitAnswer = async (
       payload: [currentQuestion._id],
     });
     
-    // Call markerGets with the updated task state after ensuring state propagation
-    setTimeout(() => {
-      console.log('🚀 Calling markerGets with completed task state');
-      markerGets(
-        updatedTasks,
-        blocklyJson,
-        dispatch,
-        { ...stateRef.current, task: updatedTasks, completedTargets: [...stateRef.current.completedTargets, currentQuestion._id] },
-        stateRef.current.time,
-      );
-    }, 200); // Increased delay to ensure all state updates are processed
+    // Call markerGets immediately with the updated task state for activate rules
+    console.log('🚀 Calling markerGets with completed task state for activate rules');
+    const updatedState = { 
+      ...stateRef.current, 
+      task: updatedTasks, 
+      completedTargets: [...stateRef.current.completedTargets, currentQuestion._id] 
+    };
+    
+    markerGets(
+      updatedTasks,
+      blocklyJson,
+      dispatch,
+      updatedState,
+      stateRef.current.time,
+    );
   }
   
   if (
@@ -165,5 +169,7 @@ export const handleSubmitAnswer = async (
       ),
     });
   }
-  dispatch({ type: 'SET_RESULT_MODAL', payload: true });
+  
+  // ✅ REMOVED: Don't show result modal for correct answers
+  // dispatch({ type: 'SET_RESULT_MODAL', payload: true });
 };

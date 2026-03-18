@@ -791,12 +791,18 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
               
               handleSubmitAnswer({ current: state }, dispatch, blocklyJson);
               
-              // ✅ For correct answers, automatically proceed to next question
-              // For incorrect answers, result modal will show with OK button
+              // ✅ For correct answers, check if activate rule will open new modal
+              // If so, don't call handleNextQuestion (let activate rule handle it)
               if (isCorrect) {
                 setTimeout(() => {
-                  handleNextQuestion();
-                }, 250);
+                  // Only proceed if modal is still showing the same question
+                  // If activate rule opened a new question, currentQuestion will be different
+                  if (stateRef.current.currentQuestion?._id === currentQuestion?._id) {
+                    handleNextQuestion();
+                  } else {
+                    console.log('✅ Activate rule opened new question, skipping handleNextQuestion');
+                  }
+                }, 150); // Delay to let activate rule fire first
               }
             }}
             backgroundImage={game?.game?.backGroundImage}

@@ -24,7 +24,8 @@ export const markerGets = (
     timer,
     currentScore: currentState?.score,
     finishedTasks: tasks?.filter(t => t.isFinished).length,
-    displayedTasks: tasks?.filter(t => t.isDisplayed).length
+    displayedTasks: tasks?.filter(t => t.isDisplayed).length,
+    completedTargets: currentState?.completedTargets?.length || 0
   });
   
   const safeTasks = Array.isArray(tasks) ? [...tasks] : [];
@@ -101,6 +102,9 @@ export const markerGets = (
           augmentedPhotoImage: questionToOpen?.question?.augmentedPhotoImage,
         };
         
+        // Clear result modal but don't reset modal visibility to avoid race condition
+        dispatch({ type: 'SET_RESULT_MODAL', payload: false });
+        
         // Set up the question queue and current question
         dispatch({ type: 'SET_QUESTION_QUEUE', payload: [questionData] });
         dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
@@ -120,10 +124,9 @@ export const markerGets = (
           payload: [...currentState.targets, questionToOpen],
         });
         
-        // 🔥 CRITICAL: Open modal with a small delay to ensure all state updates are processed
-        setTimeout(() => {
-          dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
-        }, 50);
+        // 🔥 CRITICAL: Open modal immediately - no setTimeout to avoid race with handleNextQuestion
+        console.log('🚀 Opening modal for activated task:', r.taskId);
+        dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
         
       } else {
         console.log('❌ Task not found, already displayed, or already finished:', {
