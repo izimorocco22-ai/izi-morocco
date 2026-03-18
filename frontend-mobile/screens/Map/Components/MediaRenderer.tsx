@@ -90,21 +90,18 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     aspectRatio: 1,
-    borderRadius: RFValue(8),
-    marginBottom: RFValue(5),
+    borderRadius: RFValue(1),
     backgroundColor: "transparent",
   },
   video: {
     width: "100%",
     height: 220,
-    borderRadius: RFValue(8),
-    marginBottom: RFValue(5),
+    borderRadius: RFValue(1),
     backgroundColor: "transparent",
   },
   youtubeContainer: {
     width: "100%",
     overflow: "hidden",
-    marginBottom: RFValue(5),
     backgroundColor: "transparent",
   },
 });

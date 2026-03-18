@@ -6,6 +6,7 @@ export const handleSubmitAnswer = async (
   stateRef: any,
   dispatch: any,
   blocklyJson: any,
+  onComplete?: () => void,
 ) => {
   const currentQuestion = stateRef.current.currentQuestion;
   if (!currentQuestion) return Alert.alert('Invalid question data');
@@ -116,47 +117,51 @@ export const handleSubmitAnswer = async (
 
   dispatch({ type: 'SET_IS_ANSWER_CORRECT', payload: isCorrect });
   
-  // ✅ Only show result modal for incorrect answers - skip OK popup for correct answers
   if (!isCorrect) {
     dispatch({ type: 'SET_RESULT_MODAL', payload: true });
+    if (onComplete) onComplete();
+    return;
   }
   
-  // ✅ Mark task as completed immediately for rule engine
-  if (isCorrect) {
-    console.log('Answer is correct, marking task as completed for activate rules:', currentQuestion._id);
-    
-    // 🔥 CRITICAL: Update the task state immediately with completion status
-    const updatedTasks = stateRef.current.task.map(t => 
-      t.question?._id === currentQuestion._id 
-        ? { ...t, isFinished: true, isCorrect: true, userAnswer: stateRef.current.inputAnswer }
-        : t
-    );
-    
-    // Update the state immediately
-    dispatch({ type: 'SET_TASK', payload: updatedTasks });
-    
-    // Add to completed targets immediately
-    dispatch({
-      type: 'ADD_COMPLETED_TARGETS',
-      payload: [currentQuestion._id],
-    });
-    
-    // Call markerGets immediately with the updated task state for activate rules
-    console.log('🚀 Calling markerGets with completed task state for activate rules');
-    const updatedState = { 
-      ...stateRef.current, 
-      task: updatedTasks, 
-      completedTargets: [...stateRef.current.completedTargets, currentQuestion._id] 
-    };
-    
-    markerGets(
-      updatedTasks,
-      blocklyJson,
-      dispatch,
-      updatedState,
-      stateRef.current.time,
-    );
-  }
+  console.log('Answer is correct, marking task as completed for activate rules:', currentQuestion._id);
+  const updatedTasks = stateRef.current.task.map(t => 
+    t.question?._id === currentQuestion._id 
+      ? { ...t, isFinished: true, isCorrect: true, userAnswer: stateRef.current.inputAnswer }
+      : t
+  );
+  
+  dispatch({ type: 'SET_TASK', payload: updatedTasks });
+  
+  dispatch({
+    type: 'ADD_COMPLETED_TARGETS',
+    payload: [currentQuestion._id],
+  });
+  
+  console.log('🚀 Calling markerGets with completed task state for activate rules');
+  const updatedState = { 
+    ...stateRef.current, 
+    task: updatedTasks, 
+    completedTargets: [...stateRef.current.completedTargets, currentQuestion._id] 
+  };
+  
+  markerGets(
+    updatedTasks,
+    blocklyJson,
+    dispatch,
+    updatedState,
+    stateRef.current.time,
+  );
+  
+  // Wait a bit to see if activate rule opened a new modal
+  setTimeout(() => {
+    // If modal is still showing the same question, call onComplete to proceed
+    if (stateRef.current.currentQuestion?._id === currentQuestion._id) {
+      console.log('✅ No activate rule fired, proceeding with normal flow');
+      if (onComplete) onComplete();
+    } else {
+      console.log('✅ Activate rule opened new question, skipping normal flow');
+    }
+  }, 200);
   
   if (
     currentQuestion?.settings?.behaviorOption === 'keep_until_correct' &&
@@ -169,7 +174,4 @@ export const handleSubmitAnswer = async (
       ),
     });
   }
-  
-  // ✅ REMOVED: Don't show result modal for correct answers
-  // dispatch({ type: 'SET_RESULT_MODAL', payload: true });
 };

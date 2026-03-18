@@ -134,30 +134,26 @@ const processRule = (rule, n) => {
         // need to perform all tasks logic here
         case "activate": {
             console.log('🎯 Processing activate rule for task:', rule?.task?.id);
-            const taskId = rule?.task?.id?.toString(); // Ensure string comparison
+            const taskId = rule?.task?.id?.toString();
             const isTaskFinished = checkIfTaskFinished(taskId);
             const taskExists = questionMap.has(taskId);
-            const isTaskDisplayed = displayedMap.has(taskId);
             console.log('📋 Task status check:', {
                 taskId,
                 isFinished: isTaskFinished,
-                isDisplayed: isTaskDisplayed,
                 taskExists,
                 finishedTasks: Array.from(finishedMap),
-                displayedTasks: Array.from(displayedMap),
                 allTaskIds: Array.from(questionMap.keys())
             });
             
-            if (taskId && taskExists && !isTaskFinished && !isTaskDisplayed) {
+            if (taskId && taskExists && !isTaskFinished) {
                 console.log('✅ Activate rule will trigger for task:', taskId);
                 return { activate: true, taskId: taskId };
             } else {
                 console.log('❌ Activate rule blocked:', {
-                    reason: !taskId ? 'No taskId' : !taskExists ? 'Task not found' : isTaskFinished ? 'Task already finished' : 'Task already displayed',
+                    reason: !taskId ? 'No taskId' : !taskExists ? 'Task not found' : 'Task already finished',
                     taskId,
                     taskExists,
-                    isFinished: isTaskFinished,
-                    isDisplayed: isTaskDisplayed
+                    isFinished: isTaskFinished
                 });
             }
             break;

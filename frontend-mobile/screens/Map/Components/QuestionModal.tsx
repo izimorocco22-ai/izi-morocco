@@ -339,8 +339,7 @@ const QuestionModal = ({
                 >
                   <View
                     style={{
-                      marginBottom: RFValue(5),
-                      // No padding here so media can fill width
+                      marginBottom: RFValue(1),
                     }}
                   >
                     <MediaRenderer media={questionData?.media} />
@@ -415,7 +414,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: RFValue(20),
-    paddingTop: RFValue(40), // Fixed padding instead of statusBarHeight calculation
+    paddingTop: RFValue(120), // Add top padding to start below Map/Playground buttons
   },
   modalContainer: {
     width: '100%',
