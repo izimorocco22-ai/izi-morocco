@@ -126,7 +126,7 @@ export const handleSubmitAnswer = async (
   console.log('Answer is correct, marking task as completed for activate rules:', currentQuestion._id);
   const updatedTasks = stateRef.current.task.map(t => 
     t.question?._id === currentQuestion._id 
-      ? { ...t, isFinished: true, isCorrect: true, userAnswer: stateRef.current.inputAnswer }
+      ? { ...t, isFinished: true, isCorrect: true, isDisplayed: true, userAnswer: stateRef.current.inputAnswer }
       : t
   );
   

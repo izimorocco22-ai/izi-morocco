@@ -1,8 +1,8 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { Text, TouchableOpacity, View, BackHandler, Alert, StyleSheet } from 'react-native';
+import { Text, TouchableOpacity, View, BackHandler, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 import { MAPBOX_ACCESS_TOKEN } from '@env';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import commonStyles from '../../styles/commonStyles';
 import QuestionModal from './Components/QuestionModal';
 import CustomMarker from './Components/CustomMarker';
@@ -191,6 +191,20 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     dispatch({ type: 'SET_TIMER_DATA', payload: result });
   }, [blocklyJson]);
 
+  // ✅ NEW: Trigger markerGets when both blocklyJson and tasks are ready
+  useEffect(() => {
+    if (blocklyJson && state.task && state.task.length > 0) {
+      console.log('🔄 Initial markerGets trigger - evaluating rules with fresh data');
+      markerGets(
+        state.task,
+        blocklyJson,
+        dispatch,
+        state,
+        state.time,
+      );
+    }
+  }, [blocklyJson, state.task.length]);
+
   useEffect(() => {
     const sortedTimers = stateRef.current.timerData
       .filter(t => t.type === 'timer' && !t.isFinished) // only timers
@@ -255,17 +269,19 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Run markerGets when markerJson OR the task list changes
+  // Run markerGets when triggerMarker changes (for manual triggers after completing tasks)
   useEffect(() => {
-    if (blocklyJson)
+    if (blocklyJson && state.task && state.task.length > 0 && state.triggerMarker !== initialState.triggerMarker) {
+      console.log('🔄 Manual markerGets trigger after task completion');
       markerGets(
-        stateRef.current.task,
+        state.task,
         blocklyJson,
         dispatch,
         state,
         state.time,
       );
-  }, [state.triggerMarker, blocklyJson]);
+    }
+  }, [state.triggerMarker]);
 
   // Get timer data from the header component
   const [, , elapsedTime] = useGameTimer(game, gameId, state.time);
@@ -310,15 +326,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     }
   }, [state.task, elapsedTime, activeCode, gameId, user?.playerId, dispatchForApis]);
 
-  // ✅ Effect: Update list to remove completed tasks
-  useEffect(() => {
-    if (state.list && state.list.length > 0) {
-      const updatedList = state.list.filter(item => !item.isFinished);
-      if (updatedList.length !== state.list.length) {
-        dispatch({ type: 'SET_LIST', payload: updatedList });
-      }
-    }
-  }, [state.task]);
+
 
   // ✅ Effect: Sync targets with task list changes
   useEffect(() => {
@@ -514,7 +522,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         questions: filteredQuestions,
         status: 'in_progress',
         score: totalScore,
-        currentTime: elapsedTime || state.time,
+        currentTime: elapsedTime || stateRef.current.time,
       }),
     );
 
@@ -545,7 +553,9 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
       
       // Update the list to remove completed tasks
-      const updatedList = state.list.filter(item => 
+      // ✅ Using stateRef.current.list instead of state.list to avoid stale closure
+      const currentList = stateRef.current.list || [];
+      const updatedList = currentList.filter(item => 
         !questionQueue.some(q => q._id === item.question?._id)
       );
       dispatch({ type: 'SET_LIST', payload: updatedList });
@@ -574,10 +584,9 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     if (isRefreshing) return;
     
     setIsRefreshing(true);
-    dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
-      // Re-fetch game data
+      // Re-fetch game data from server
       const result = await dispatchForApis(
         gameLogin({ activeCode, gameId })
       ).unwrap();
@@ -586,38 +595,61 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         const refreshedGame = result.data;
         const refreshedQuestions = refreshedGame.questions || [];
         
-        // Update tasks with refreshed data
+        console.log('Refreshed game data:', {
+          questionsCount: refreshedQuestions.length,
+          score: refreshedGame.score
+        });
+        
+        // Clear existing state
+        dispatch({ type: 'SET_TARGETS', payload: [] });
+        dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: [] });
+        dispatch({ type: 'ADD_SHOWN_TARGETS', payload: [] });
+        
+        // Update tasks with fresh data
         dispatch({ type: 'SET_TASK', payload: refreshedQuestions });
         
-        // Update targets and completed targets
-        const refreshedTargets = refreshedQuestions.filter(
+        // Recalculate targets based on fresh data
+        const newTargets = refreshedQuestions.filter(
           t => t.isDisplayed || t.isFinished || t.isShownOnPlayground
         );
-        const refreshedCompleted = refreshedQuestions
+        const newCompleted = refreshedQuestions
           .filter(t => t.isFinished)
           .map(t => t.question?._id);
-        const refreshedShown = refreshedQuestions
+        const newShown = refreshedQuestions
           .filter(t => t.isDisplayed || t.isFinished)
           .map(t => t.question?._id);
         
-        dispatch({ type: 'SET_TARGETS', payload: refreshedTargets });
-        dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: refreshedCompleted });
-        dispatch({ type: 'ADD_SHOWN_TARGETS', payload: refreshedShown });
+        dispatch({ type: 'SET_TARGETS', payload: newTargets });
+        dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: newCompleted });
+        dispatch({ type: 'ADD_SHOWN_TARGETS', payload: newShown });
         
         // Update score
         const refreshedScore = refreshedGame.score || 0;
         dispatch({ type: 'SET_SCORE', payload: { replace: true, value: refreshedScore } });
         
-        // Trigger marker logic to show new tasks
-        dispatch({ type: 'TRIGGER_MARKER_GETS' });
+        // Update blockly rules if changed
+        if (refreshedGame.blocklyJsonRules) {
+          setBlocklyJson(refreshedGame.blocklyJsonRules);
+        }
+        
+        // Trigger marker logic to re-evaluate and display tasks
+        setTimeout(() => {
+          markerGets(
+            refreshedQuestions,
+            refreshedGame.blocklyJsonRules || blocklyJson,
+            dispatch,
+            stateRef.current,
+            state.time,
+          );
+        }, 100);
         
         console.log('Game refreshed successfully');
       }
     } catch (error) {
       console.error('Failed to refresh game:', error);
+      Alert.alert('Refresh Failed', 'Could not refresh game data. Please try again.');
     } finally {
       setIsRefreshing(false);
-      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
@@ -790,8 +822,13 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             style={styles.refreshButton}
             onPress={handleRefreshGame}
             disabled={isRefreshing}
+            activeOpacity={0.7}
           >
-            <Icon name="refresh" size={24} color="#FFFFFF" />
+            {isRefreshing ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <MaterialIcons name="refresh" size={28} color="#FFFFFF" />
+            )}
           </TouchableOpacity>
         )}
 
@@ -865,19 +902,21 @@ const styles = StyleSheet.create({
   refreshButton: {
     position: 'absolute',
     top: 120,
-    right: 20,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(0, 122, 255, 0.9)',
+    left: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
     zIndex: 999,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 });
 

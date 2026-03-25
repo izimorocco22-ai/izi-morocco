@@ -118,6 +118,11 @@ const processRule = (rule, n) => {
 
         case "when_then": {
             const condition = evaluateCondition(rule?.condition);
+            console.log('🔍 when_then condition evaluation:', {
+                condition: rule?.condition,
+                result: condition,
+                finishedTasks: Array.from(finishedMap)
+            });
             if (condition) {
                 const doThen = rule?.do || [];
                 const processed = [];
@@ -126,7 +131,10 @@ const processRule = (rule, n) => {
                     if (Array.isArray(res)) processed.push(...res);
                     else if (res) processed.push(res);
                 }
+                console.log('✅ when_then actions processed:', processed);
                 return processed;
+            } else {
+                console.log('❌ when_then condition FALSE, skipping actions');
             }
             break;
         }
@@ -217,12 +225,17 @@ const processRule = (rule, n) => {
                     }
                 case "tasks_range":
                     const rangeIds = getRange(task?.start, task?.end);
+                    const filteredIds = rangeIds.filter(id => !finishedMap.has(id));
+                    console.log('📋 show_in_list tasks_range:', {
+                        start: task?.start,
+                        end: task?.end,
+                        rangeIds,
+                        finishedTasks: Array.from(finishedMap),
+                        filteredIds,
+                        willShowInList: filteredIds.length
+                    });
                     return {
-                        list: true, idsToShow: rangeIds
-                            .filter(id => {
-                                const question = questionMap.get(id);
-                                return question && !question.isFinished;
-                            })
+                        list: true, idsToShow: filteredIds
                     };
                 case "tasks_with_tag": {
                     const tagName = task?.tag;
@@ -343,15 +356,18 @@ const evaluateCondition = (condition) => {
 // ------------------------------------------------------
 // Task evaluation helpers
 // ------------------------------------------------------
-//this method is used for the evalutation of task which are finished and displayed
+//this method is used for the evalutation of task which are finished
 const evaluateTasks = (taskList) => {
     const type = taskList?.type;
+    console.log('🔍 evaluateTasks called:', { type, taskList });
     switch (type) {
         case "task":
-            return checkIfTaskFinished(taskList?.id);
+            const result = checkIfTaskFinished(taskList?.id);
+            console.log('🔍 Task evaluation result:', { taskId: taskList?.id, result });
+            return result;
         case "all_tasks":
             return Array.from(questionMap.values())
-                .every(q => q.isFinished === true && q.isDisplayed === true);
+                .every(q => q.isFinished === true);
         case "tasks_with_tag": {
             const tagName = taskList?.tag?.toLowerCase();
             const taggedIds = tagMap.get(tagName) || [];
@@ -359,7 +375,9 @@ const evaluateTasks = (taskList) => {
         }
         case "tasks_range": {
             let taskIds = getRange(taskList?.start, taskList?.end);
-            return taskIds.every(id => finishedMap.has(id));
+            const allFinished = taskIds.every(id => finishedMap.has(id));
+            console.log('🔍 tasks_range evaluation:', { taskIds, finishedMap: Array.from(finishedMap), allFinished });
+            return allFinished;
         }
         default:
             throw new Error(`Unknown task type: ${type} in evaluateTasks`);

@@ -41,6 +41,7 @@ export const markerGets = (
   // ✅ Collect all tasks to show in one go
   const showTaskIds: string[] = [];
   const playgroundTaskIds: string[] = [];
+  const listTaskIds: string[] = [];
 
   result.forEach((r: any) => {
     if (r?.showTag) {
@@ -62,7 +63,7 @@ export const markerGets = (
         dispatch({ type: 'SET_TASK', payload: updatedTasks });
         dispatch({
           type: 'SET_TARGETS',
-          payload: [...currentState.targets, ...QuestionsByTags],
+          payload: mergeUnique(currentState.targets, QuestionsByTags),
         });
       }
     } else if (r?.activate && r?.taskId) {
@@ -121,7 +122,7 @@ export const markerGets = (
         // Add to targets for display
         dispatch({
           type: 'SET_TARGETS',
-          payload: [...currentState.targets, questionToOpen],
+          payload: mergeUnique(currentState.targets, [questionToOpen]),
         });
         
         // 🔥 CRITICAL: Open modal immediately - no setTimeout to avoid race with handleNextQuestion
@@ -144,61 +145,15 @@ export const markerGets = (
     else if (r?.showTask && r?.idToShow) {
       showTaskIds.push(r.idToShow);
     } else if ((r?.showAll || r?.list) && Array.isArray(r.idsToShow)) {
-      const updatedTasks = safeTasks.map(q =>
-        r.idsToShow.includes(q.question?._id) ? { ...q, isDisplayed: true } : q,
-      );
-      const questionsToAdd = safeTasks.filter(
-        t => r.idsToShow.includes(t.question?._id) && !t.isDisplayed,
-      );
-      if (questionsToAdd.length > 0) {
-        dispatch({
-          type: 'SET_TARGETS',
-          payload: [...currentState.targets, ...questionsToAdd],
-        });
+      if (r?.showAll) {
+        showTaskIds.push(...r.idsToShow);
       }
       if (r?.list) {
-        // For list, only include tasks that are not finished yet
-        const listTasks = safeTasks.filter(
-          t => r.idsToShow.includes(t.question?._id) && !t.isFinished
-        );
-        console.log('Setting list tasks:', {
-          idsToShow: r.idsToShow,
-          listTasks: listTasks.map(t => ({ id: t.question?._id, name: t.question?.questionName, isFinished: t.isFinished })),
-          currentListLength: currentState.list.length
-        });
-        // Always update the list, even if empty, to remove completed tasks
-        dispatch({
-          type: 'SET_LIST',
-          payload: listTasks,
-        });
+        listTaskIds.push(...r.idsToShow);
       }
-      dispatch({ type: 'SET_TASK', payload: updatedTasks });
     }
     else if (r?.list && r?.taskId) {
-      const taskToList = safeTasks.find(
-        t => t?.question?._id === r.taskId && !t.isFinished
-      );
-      if (taskToList) {
-        const updatedTasks = safeTasks.map(q =>
-          q.question?._id === r.taskId ? { ...q, isDisplayed: true } : q,
-        );
-        dispatch({ type: 'SET_TASK', payload: updatedTasks });
-        dispatch({
-          type: 'SET_TARGETS',
-          payload: mergeUnique(currentState.targets, [taskToList]),
-        });
-        // Only add to list if task is not finished
-        dispatch({
-          type: 'SET_LIST',
-          payload: [taskToList],
-        });
-      } else {
-        // If task is finished or not found, clear the list
-        dispatch({
-          type: 'SET_LIST',
-          payload: [],
-        });
-      }
+      listTaskIds.push(r.taskId);
     }
     else if (r?.finish) {
       dispatch({ type: 'SET_NAVIGATE_FINISH', payload: true });
@@ -207,24 +162,62 @@ export const markerGets = (
     }
   });
 
-  // ✅ After loop — handle all showTask IDs together
+  // ✅ Process accumulated showTaskIds
   if (showTaskIds.length > 0) {
+    const uniqueShowIds = Array.from(new Set(showTaskIds));
     const updatedTasks = safeTasks.map(q =>
-      showTaskIds.includes(q.question?._id) ? { ...q, isDisplayed: true } : q,
+      uniqueShowIds.includes(q.question?._id) ? { ...q, isDisplayed: true } : q,
     );
-
     const questionsToAdd = safeTasks.filter(
-      t => showTaskIds.includes(t.question?._id) && !t.isDisplayed,
+      t => uniqueShowIds.includes(t.question?._id) && !t.isDisplayed,
     );
-
     if (questionsToAdd.length > 0) {
       dispatch({
         type: 'SET_TARGETS',
-        payload: [...currentState.targets, ...questionsToAdd],
+        payload: mergeUnique(currentState.targets, questionsToAdd),
       });
     }
-
     dispatch({ type: 'SET_TASK', payload: updatedTasks });
+  }
+
+  // ✅ Process accumulated listTaskIds
+  if (listTaskIds.length > 0) {
+    const uniqueListIds = Array.from(new Set(listTaskIds));
+    
+    // Merge new tasks with existing list tasks that are not finished
+    const currentList = currentState.list || [];
+    const newTasksForList = safeTasks.filter(
+      t => uniqueListIds.includes(t.question?._id) && !t.isFinished
+    );
+    
+    const mergedList = mergeUnique(currentList, newTasksForList);
+    
+    console.log('📋 Updating list tasks:', {
+      uniqueListIds,
+      newListCount: newTasksForList.length,
+      mergedListCount: mergedList.length
+    });
+    
+    dispatch({
+      type: 'SET_LIST',
+      payload: mergedList,
+    });
+    
+    // Also ensure these tasks are marked as displayed and added to targets
+    const updatedTasks = safeTasks.map(q =>
+      uniqueListIds.includes(q.question?._id) ? { ...q, isDisplayed: true } : q,
+    );
+    dispatch({ type: 'SET_TASK', payload: updatedTasks });
+    
+    const questionsToAdd = safeTasks.filter(
+      t => uniqueListIds.includes(t.question?._id) && !t.isDisplayed,
+    );
+    if (questionsToAdd.length > 0) {
+      dispatch({
+        type: 'SET_TARGETS',
+        payload: mergeUnique(currentState.targets, questionsToAdd),
+      });
+    }
   }
 
   if (playgroundTaskIds.length > 0) {
