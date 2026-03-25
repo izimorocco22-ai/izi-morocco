@@ -28,24 +28,24 @@ const ListShowButton = ({ onPress, count }: { onPress: any; count: number }) => 
         source={require('../../../assets/images/map/list.png')}
       />
 
-      {/* Counter Badge */}
-      {count > 0 && (
-        <View
-          style={{
-            position: 'absolute',
-            top: -5,
-            right: -5,
-            backgroundColor: 'red',
-            paddingHorizontal: 6,
-            paddingVertical: 2,
-            borderRadius: 20,
-          }}
-        >
-          <Text style={{ color: '#fff', fontSize: RFValue(10), fontWeight: '700' }}>
-            {count}
-          </Text>
-        </View>
-      )}
+      {/* Counter Badge - always visible */}
+      <View
+        style={{
+          position: 'absolute',
+          top: -5,
+          right: -5,
+          backgroundColor: count > 0 ? 'red' : '#888',
+          paddingHorizontal: 6,
+          paddingVertical: 2,
+          borderRadius: 20,
+          minWidth: 20,
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: '#fff', fontSize: RFValue(10), fontWeight: '700' }}>
+          {count}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };

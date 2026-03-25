@@ -1,8 +1,7 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { Text, TouchableOpacity, View, BackHandler, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { Text, TouchableOpacity, View, BackHandler, Alert, StyleSheet } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 import { MAPBOX_ACCESS_TOKEN } from '@env';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import commonStyles from '../../styles/commonStyles';
 import QuestionModal from './Components/QuestionModal';
 import CustomMarker from './Components/CustomMarker';
@@ -26,7 +25,7 @@ import IntroMessage from './Components/IntroMessage';
 import FinishMessage from './Components/FinishMessage';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store/store';
-import { finishGame, gameLogin } from '../../store/gameSlice';
+import { finishGame } from '../../store/gameSlice';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import { getTimerAfterFinished } from './utils/ruleEngine';
 import ListShowButton from './Components/ListShow';
@@ -48,7 +47,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   const [showList, setShowList] = useState(false);
   const [mapStyleJson, setMapStyleJson] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'map' | string>('map');
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const backAction = () => {
@@ -273,14 +271,14 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
 
   // Run markerGets when triggerMarker changes (for manual triggers after completing tasks)
   useEffect(() => {
-    if (blocklyJson && state.task && state.task.length > 0 && state.triggerMarker !== initialState.triggerMarker) {
+    if (blocklyJson && stateRef.current.task && stateRef.current.task.length > 0 && state.triggerMarker !== initialState.triggerMarker) {
       console.log('🔄 Manual markerGets trigger after task completion');
       markerGets(
-        state.task,
+        stateRef.current.task,
         blocklyJson,
         dispatch,
-        state,
-        state.time,
+        stateRef.current,
+        stateRef.current.time,
       );
     }
   }, [state.triggerMarker]);
@@ -555,12 +553,16 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
       
       // Update the list to remove completed tasks
-      // ✅ Using stateRef.current.list instead of state.list to avoid stale closure
       const currentList = stateRef.current.list || [];
       const updatedList = currentList.filter(item => 
         !questionQueue.some(q => q._id === item.question?._id)
       );
       dispatch({ type: 'SET_LIST', payload: updatedList });
+      
+      // Re-evaluate rules with updated task state so new list/map tasks appear immediately
+      const latestTasks = newTasks; // use newTasks directly — stateRef hasn't updated yet
+      const latestState = { ...stateRef.current, task: newTasks, completedTargets: [...stateRef.current.completedTargets, ...questionQueue.map(q => q._id)] };
+      markerGets(latestTasks, blocklyJson, dispatch, latestState, latestState.time);
     }
   };
 
@@ -580,79 +582,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       gameId,
       score: state.score,
     });
-  };
-
-  const handleRefreshGame = async () => {
-    if (isRefreshing) return;
-    
-    setIsRefreshing(true);
-    
-    try {
-      // Re-fetch game data from server
-      const result = await dispatchForApis(
-        gameLogin({ activeCode, gameId })
-      ).unwrap();
-      
-      if (result?.data) {
-        const refreshedGame = result.data;
-        const refreshedQuestions = refreshedGame.questions || [];
-        
-        console.log('Refreshed game data:', {
-          questionsCount: refreshedQuestions.length,
-          score: refreshedGame.score
-        });
-        
-        // Clear existing state
-        dispatch({ type: 'SET_TARGETS', payload: [] });
-        dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: [] });
-        dispatch({ type: 'ADD_SHOWN_TARGETS', payload: [] });
-        
-        // Update tasks with fresh data
-        dispatch({ type: 'SET_TASK', payload: refreshedQuestions });
-        
-        // Recalculate targets based on fresh data
-        const newTargets = refreshedQuestions.filter(
-          t => t.isDisplayed || t.isFinished || t.isShownOnPlayground
-        );
-        const newCompleted = refreshedQuestions
-          .filter(t => t.isFinished)
-          .map(t => t.question?._id);
-        const newShown = refreshedQuestions
-          .filter(t => t.isDisplayed || t.isFinished)
-          .map(t => t.question?._id);
-        
-        dispatch({ type: 'SET_TARGETS', payload: newTargets });
-        dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: newCompleted });
-        dispatch({ type: 'ADD_SHOWN_TARGETS', payload: newShown });
-        
-        // Update score
-        const refreshedScore = refreshedGame.score || 0;
-        dispatch({ type: 'SET_SCORE', payload: { replace: true, value: refreshedScore } });
-        
-        // Update blockly rules if changed
-        if (refreshedGame.blocklyJsonRules) {
-          setBlocklyJson(refreshedGame.blocklyJsonRules);
-        }
-        
-        // Trigger marker logic to re-evaluate and display tasks
-        setTimeout(() => {
-          markerGets(
-            refreshedQuestions,
-            refreshedGame.blocklyJsonRules || blocklyJson,
-            dispatch,
-            stateRef.current,
-            state.time,
-          );
-        }, 100);
-        
-        console.log('Game refreshed successfully');
-      }
-    } catch (error) {
-      console.error('Failed to refresh game:', error);
-      Alert.alert('Refresh Failed', 'Could not refresh game data. Please try again.');
-    } finally {
-      setIsRefreshing(false);
-    }
   };
 
   // Render gating for GPS blocker (unchanged)
@@ -818,35 +747,17 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           isModalOpen={state.modalVisible || state.resultModalVisible || showList}
         />
 
-        {/* Refresh Button */}
-        {!state.modalVisible && !state.resultModalVisible && !showList && (
-          <TouchableOpacity
-            style={styles.refreshButton}
-            onPress={handleRefreshGame}
-            disabled={isRefreshing}
-            activeOpacity={0.7}
-          >
-            {isRefreshing ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <MaterialIcons name="refresh" size={28} color="#FFFFFF" />
-            )}
-          </TouchableOpacity>
-        )}
-
         <GPSStatusIndicator 
           gpsEnabled={state.gpsEnabled} 
           visible={!(state.modalVisible || state.resultModalVisible || showList)} 
         />
 
-        {/* Only show list button when there are actual tasks in the list */}
-        {listItems.length > 0 && (
-          <ListShowButton
-            key={`list-button-${listItems.length}`}
-            onPress={() => setShowList(!showList)}
-            count={listItems.length}
-          />
-        )}
+        {/* Always show list button - shows 0 when no tasks */}
+        <ListShowButton
+          key={`list-button-${listItems.length}`}
+          onPress={() => setShowList(!showList)}
+          count={listItems.length}
+        />
         {showList && (
           <ListModal
             state={{ ...stateRef.current, list: listItems }}
@@ -901,26 +812,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
-  refreshButton: {
-    position: 'absolute',
-    top: 120,
-    left: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    zIndex: 999,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-});
+const styles = StyleSheet.create({});
 
 export default LiveLocationScreen;

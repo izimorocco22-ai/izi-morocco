@@ -137,13 +137,14 @@ export const handleSubmitAnswer = async (
     payload: [currentQuestion._id],
   });
   
-  console.log('🚀 Calling markerGets with completed task state for activate rules');
+  // Build updated state with the completed task so markerGets sees fresh data
   const updatedState = { 
     ...stateRef.current, 
     task: updatedTasks, 
     completedTargets: [...stateRef.current.completedTargets, currentQuestion._id] 
   };
   
+  console.log('🚀 Calling markerGets with completed task state for activate/list rules');
   markerGets(
     updatedTasks,
     blocklyJson,
@@ -152,16 +153,8 @@ export const handleSubmitAnswer = async (
     stateRef.current.time,
   );
   
-  // Wait a bit to see if activate rule opened a new modal
-  setTimeout(() => {
-    // If modal is still showing the same question, call onComplete to proceed
-    if (stateRef.current.currentQuestion?._id === currentQuestion._id) {
-      console.log('✅ No activate rule fired, proceeding with normal flow');
-      if (onComplete) onComplete();
-    } else {
-      console.log('✅ Activate rule opened new question, skipping normal flow');
-    }
-  }, 200);
+  // Call onComplete immediately — markerGets already dispatched any new tasks/list updates
+  if (onComplete) onComplete();
   
   if (
     currentQuestion?.settings?.behaviorOption === 'keep_until_correct' &&
