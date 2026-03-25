@@ -229,18 +229,20 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   }, [stateRef.current.timerData]);
 
   // Only show tasks that are specifically added to the list via admin rules
-  const listItems = state.list || [];
-  
-  // Debug logging to track list items
-  console.log('List items debug:', {
-    stateListLength: state.list?.length || 0,
-    listItems: listItems.map(item => ({
-      id: item.question?._id,
-      name: item.question?.questionName,
-      isFinished: item.isFinished
-    })),
-    showListButton: listItems.length > 0
-  });
+  // ✅ Use useMemo to ensure React tracks changes to state.list
+  const listItems = React.useMemo(() => {
+    const items = state.list || [];
+    console.log('📋 List items recalculated:', {
+      stateListLength: state.list?.length || 0,
+      items: items.map(item => ({
+        id: item.question?._id,
+        name: item.question?.questionName,
+        isFinished: item.isFinished
+      })),
+      showListButton: items.length > 0
+    });
+    return items;
+  }, [state.list]);
 
   // show overlay on mount
   useEffect(() => {
@@ -840,6 +842,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         {/* Only show list button when there are actual tasks in the list */}
         {listItems.length > 0 && (
           <ListShowButton
+            key={`list-button-${listItems.length}`}
             onPress={() => setShowList(!showList)}
             count={listItems.length}
           />

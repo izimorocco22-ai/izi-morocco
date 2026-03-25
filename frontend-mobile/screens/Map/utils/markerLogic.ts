@@ -192,16 +192,24 @@ export const markerGets = (
     
     const mergedList = mergeUnique(currentList, newTasksForList);
     
-    console.log('📋 Updating list tasks:', {
+    console.log('🔥 BEFORE DISPATCHING SET_LIST:', {
       uniqueListIds,
-      newListCount: newTasksForList.length,
-      mergedListCount: mergedList.length
+      currentListLength: currentList.length,
+      newTasksForListCount: newTasksForList.length,
+      mergedListCount: mergedList.length,
+      mergedListTasks: mergedList.map(t => ({
+        id: t.question?._id,
+        name: t.question?.questionName,
+        isFinished: t.isFinished
+      }))
     });
     
+    console.log('🚀 DISPATCHING SET_LIST with', mergedList.length, 'tasks');
     dispatch({
       type: 'SET_LIST',
       payload: mergedList,
     });
+    console.log('✅ SET_LIST dispatched successfully');
     
     // Also ensure these tasks are marked as displayed and added to targets
     const updatedTasks = safeTasks.map(q =>
