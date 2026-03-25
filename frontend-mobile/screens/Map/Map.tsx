@@ -1,7 +1,8 @@
 import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { Text, TouchableOpacity, View, BackHandler, Alert } from 'react-native';
+import { Text, TouchableOpacity, View, BackHandler, Alert, StyleSheet } from 'react-native';
 import MapboxGL from '@rnmapbox/maps';
 import { MAPBOX_ACCESS_TOKEN } from '@env';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import commonStyles from '../../styles/commonStyles';
 import QuestionModal from './Components/QuestionModal';
 import CustomMarker from './Components/CustomMarker';
@@ -25,7 +26,7 @@ import IntroMessage from './Components/IntroMessage';
 import FinishMessage from './Components/FinishMessage';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store/store';
-import { finishGame } from '../../store/gameSlice';
+import { finishGame, gameLogin } from '../../store/gameSlice';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import { getTimerAfterFinished } from './utils/ruleEngine';
 import ListShowButton from './Components/ListShow';
@@ -47,6 +48,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   const [showList, setShowList] = useState(false);
   const [mapStyleJson, setMapStyleJson] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'map' | string>('map');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const backAction = () => {
@@ -568,6 +570,57 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     });
   };
 
+  const handleRefreshGame = async () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
+    dispatch({ type: 'SET_LOADING', payload: true });
+    
+    try {
+      // Re-fetch game data
+      const result = await dispatchForApis(
+        gameLogin({ activeCode, gameId })
+      ).unwrap();
+      
+      if (result?.data) {
+        const refreshedGame = result.data;
+        const refreshedQuestions = refreshedGame.questions || [];
+        
+        // Update tasks with refreshed data
+        dispatch({ type: 'SET_TASK', payload: refreshedQuestions });
+        
+        // Update targets and completed targets
+        const refreshedTargets = refreshedQuestions.filter(
+          t => t.isDisplayed || t.isFinished || t.isShownOnPlayground
+        );
+        const refreshedCompleted = refreshedQuestions
+          .filter(t => t.isFinished)
+          .map(t => t.question?._id);
+        const refreshedShown = refreshedQuestions
+          .filter(t => t.isDisplayed || t.isFinished)
+          .map(t => t.question?._id);
+        
+        dispatch({ type: 'SET_TARGETS', payload: refreshedTargets });
+        dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: refreshedCompleted });
+        dispatch({ type: 'ADD_SHOWN_TARGETS', payload: refreshedShown });
+        
+        // Update score
+        const refreshedScore = refreshedGame.score || 0;
+        dispatch({ type: 'SET_SCORE', payload: { replace: true, value: refreshedScore } });
+        
+        // Trigger marker logic to show new tasks
+        dispatch({ type: 'TRIGGER_MARKER_GETS' });
+        
+        console.log('Game refreshed successfully');
+      }
+    } catch (error) {
+      console.error('Failed to refresh game:', error);
+    } finally {
+      setIsRefreshing(false);
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
   // Render gating for GPS blocker (unchanged)
   if (!state.gpsEnabled) {
     return (
@@ -731,6 +784,17 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           isModalOpen={state.modalVisible || state.resultModalVisible || showList}
         />
 
+        {/* Refresh Button */}
+        {!state.modalVisible && !state.resultModalVisible && !showList && (
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={handleRefreshGame}
+            disabled={isRefreshing}
+          >
+            <Icon name="refresh" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
+
         <GPSStatusIndicator 
           gpsEnabled={state.gpsEnabled} 
           visible={!(state.modalVisible || state.resultModalVisible || showList)} 
@@ -766,38 +830,10 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             setInputAnswer={(val: string) =>
               dispatch({ type: 'SET_INPUT_ANSWER', payload: val })
             }
-            onSubmit={() => {
-              // ✅ Check answer correctness before submitting
-              const currentQuestion = state.currentQuestion;
-              let isCorrect = false;
-              
-              if (currentQuestion?.answerType === 'mcq' || currentQuestion?.answerType === 'multiple') {
-                const selectedTexts = state.selectedOption.map(
-                  (index: number) => currentQuestion.options[index]?.text,
-                );
-                isCorrect =
-                  JSON.stringify([...selectedTexts].sort()) ===
-                  JSON.stringify([...currentQuestion.correctAnswers].sort());
-              } else if (currentQuestion?.answerType === 'number') {
-                isCorrect =
-                  state.inputAnswer.trim() === currentQuestion.correctAnswers[0]?.trim();
-              } else if (currentQuestion?.answerType === 'text' || currentQuestion?.answerType === 'code_box') {
-                isCorrect =
-                  state.inputAnswer.trim().toLowerCase() ===
-                  currentQuestion.correctAnswers[0]?.trim().toLowerCase();
-              } else {
-                isCorrect = true; // For media types, assume correct
-              }
-              
-              handleSubmitAnswer({ current: state }, dispatch, blocklyJson);
-              
-              // ✅ For correct answers, automatically proceed to next question
-              // For incorrect answers, result modal will show with OK button
-              if (isCorrect) {
-                setTimeout(() => {
-                  handleNextQuestion();
-                }, 500); // Small delay to ensure state updates
-              }
+              onSubmit={() => {
+              handleSubmitAnswer({ current: state }, dispatch, blocklyJson, () => {
+                handleNextQuestion();
+              });
             }}
             backgroundImage={game?.game?.backGroundImage}
           />
@@ -824,5 +860,25 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     </ScreenWrapper>
   );
 };
+
+const styles = StyleSheet.create({
+  refreshButton: {
+    position: 'absolute',
+    top: 120,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(0, 122, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 999,
+  },
+});
 
 export default LiveLocationScreen;

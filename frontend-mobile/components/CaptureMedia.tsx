@@ -100,23 +100,6 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
             return false;
           }
         }
-
-        // Request storage permission for saving to gallery
-        if (Platform.Version >= 33) {
-          const storagePermission = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
-          );
-          if (storagePermission !== PermissionsAndroid.RESULTS.GRANTED) {
-            console.warn('Storage permission denied');
-          }
-        } else {
-          const storagePermission = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
-          );
-          if (storagePermission !== PermissionsAndroid.RESULTS.GRANTED) {
-            console.warn('Storage permission denied');
-          }
-        }
         
         return true;
       } catch (err) {
@@ -146,10 +129,38 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
       }
       setCameraType(RNCamera.Constants.Type.back);
       setShowCamera(true);
-    } else {
+    } else if (type === 'photo') {
+      // For regular photos, directly open camera without picker
       const options: any = {
-        mediaType: type === 'video' ? 'video' : 'photo',
-        saveToPhotos: true,
+        mediaType: 'photo',
+        saveToPhotos: false,
+        quality: 0.8,
+        includeBase64: false,
+        cameraType: 'back',
+      };
+
+      setLoading(true);
+      launchCamera(options, async (response) => {
+        setLoading(false);
+        if (response.didCancel) {
+          console.log('User cancelled camera picker');
+        } else if (response.errorCode) {
+          console.log('ImagePicker Error: ', response.errorMessage);
+          Alert.alert('Error', response.errorMessage || 'Failed to capture media');
+        } else if (response.assets && response.assets.length > 0) {
+          const asset = response.assets[0];
+          const uri = asset.uri;
+          
+          if (uri) {
+            onChange(uri);
+          }
+        }
+      });
+    } else {
+      // For video
+      const options: any = {
+        mediaType: 'video',
+        saveToPhotos: false,
         quality: 0.8,
         videoQuality: 'medium',
         durationLimit: 30,
