@@ -33,7 +33,7 @@ const QuillRenderer = ({ questionName }) => {
                   style={{
                     width: '100%',
                     height: undefined,
-                    aspectRatio: 0.5,
+                    aspectRatio: 0.65,
                     resizeMode: 'contain',
                     borderRadius: RFValue(8),
                   }}

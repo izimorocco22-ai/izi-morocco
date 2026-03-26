@@ -116,9 +116,8 @@ export const handleSubmitAnswer = async (
   });
 
   dispatch({ type: 'SET_IS_ANSWER_CORRECT', payload: isCorrect });
-  
+
   if (!isCorrect) {
-    dispatch({ type: 'SET_RESULT_MODAL', payload: true });
     if (onComplete) onComplete();
     return;
   }

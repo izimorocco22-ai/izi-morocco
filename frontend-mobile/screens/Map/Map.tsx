@@ -452,9 +452,21 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     }
   };
 
+  const ANSWER_CHECK_TYPES = ['multiple', 'code_box', 'number', 'text'];
+
   const handleNextQuestion = () => {
     const currentQuestion = stateRef.current.currentQuestion;
     const isCorrect = stateRef.current.isAnswerCorrect;
+    const needsCheck = ANSWER_CHECK_TYPES.includes(currentQuestion?.answerType);
+
+    // For checked types with wrong answer: close result modal, re-show question
+    if (!isCorrect && needsCheck) {
+      dispatch({ type: 'SET_RESULT_MODAL', payload: false });
+      dispatch({ type: 'SET_INPUT_ANSWER', payload: '' });
+      dispatch({ type: 'SET_SELECTED_OPTION', payload: [] });
+      dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
+      return;
+    }
 
     if (isCorrect) {
       const gained = currentQuestion?.points || 0;
@@ -783,12 +795,21 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             }
               onSubmit={() => {
               handleSubmitAnswer({ current: state }, dispatch, blocklyJson, () => {
-                handleNextQuestion();
+                dispatch({ type: 'SET_MODAL_VISIBLE', payload: false });
+                dispatch({ type: 'SET_RESULT_MODAL', payload: true });
+                setTimeout(() => handleNextQuestion(), 3000);
               });
             }}
             backgroundImage={game?.game?.backGroundImage}
           />
         )}
+
+        <AnswerResultModal
+          visible={state.resultModalVisible}
+          isCorrect={state.isAnswerCorrect}
+          onNext={handleNextQuestion}
+          commentsAfterFinishingQuestion={state.currentQuestion?.comments}
+        />
 
 
 

@@ -1,17 +1,11 @@
-// components/AnswerResultModal.js
 import React from 'react';
 import {
   Modal,
   View,
-  Text,
-  TouchableOpacity,
+  ScrollView,
   StyleSheet,
-  Image,
 } from 'react-native';
-import colors from '../../../styles/colors'; // adjust import path if needed
-import { RFValue } from '../../../utils/responsive'; // optional if you use it elsewhere
-import SplashButton from '../../../components/SplashButton';
-import commonStyles from '../../../styles/commonStyles';
+import { RFValue } from '../../../utils/responsive';
 import QuillRenderer from '../../../components/QuillRenderer';
 
 const AnswerResultModal = ({
@@ -24,6 +18,7 @@ const AnswerResultModal = ({
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.container}>
+          <ScrollView showsVerticalScrollIndicator={false} style={{ width: '100%' }}>
           
           {isCorrect ? (
             <>
@@ -40,8 +35,7 @@ const AnswerResultModal = ({
               >
                 <QuillRenderer
                   questionName={
-                    commentsAfterFinishingQuestion?.comments
-                      ?.commentsAfterCorrection
+                    commentsAfterFinishingQuestion?.commentsAfterCorrection
                   }
                 />
               </View>
@@ -61,8 +55,7 @@ const AnswerResultModal = ({
               >
                 <QuillRenderer
                   questionName={
-                    commentsAfterFinishingQuestion?.comments
-                      ?.commentsAfterRejection
+                    commentsAfterFinishingQuestion?.commentsAfterRejection
                   }
                 />
               </View>
@@ -70,6 +63,7 @@ const AnswerResultModal = ({
           )}
 
 
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -87,10 +81,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#faf6ed',
     borderColor: '#d8b443',
     borderWidth: 2,
-    paddingVertical: 30,
-    paddingHorizontal: 25,
+    paddingVertical: 20,
+    paddingHorizontal: 15,
     borderRadius: 16,
-    width: '80%',
+    width: '92%',
+    maxHeight: '90%',
     alignItems: 'center',
     elevation: 10,
   },
