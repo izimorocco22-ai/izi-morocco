@@ -224,8 +224,8 @@ export const getPlayerGameWithQuestions = async (
   req: Request,
   res: Response
 ) => {
-  const playerId = res.locals.user.playerId
-  const { gameId } = req.params
+  const playerId = res.locals.user.playerId as string
+  const gameId = (req.params.gameId ?? req.query.gameId) as string
   console.log(playerId, gameId)
 
   const gameLogData = await GameLogs.aggregate(getPlayerGameWithQuestionsPipeline(playerId, gameId))
