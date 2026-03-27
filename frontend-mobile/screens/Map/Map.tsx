@@ -226,21 +226,9 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     });
   }, [stateRef.current.timerData]);
 
-  // Only show tasks that are specifically added to the list via admin rules
-  // ✅ Use useMemo to ensure React tracks changes to state.list
   const listItems = React.useMemo(() => {
-    const items = state.list || [];
-    console.log('📋 List items recalculated:', {
-      stateListLength: state.list?.length || 0,
-      items: items.map(item => ({
-        id: item.question?._id,
-        name: item.question?.questionName,
-        isFinished: item.isFinished
-      })),
-      showListButton: items.length > 0
-    });
-    return items;
-  }, [state.list]);
+    return (state.list || []).filter((item: any) => !item.isFinished);
+  }, [state.list, state.task]);
 
   // show overlay on mount
   useEffect(() => {
@@ -567,13 +555,13 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       // Update the list to remove completed tasks
       const currentList = stateRef.current.list || [];
       const updatedList = currentList.filter(item => 
-        !questionQueue.some(q => q._id === item.question?._id)
+        !questionQueue.some(q => q._id === item.question?._id) && !item.isFinished
       );
       dispatch({ type: 'SET_LIST', payload: updatedList });
       
       // Re-evaluate rules with updated task state so new list/map tasks appear immediately
       const latestTasks = newTasks; // use newTasks directly — stateRef hasn't updated yet
-      const latestState = { ...stateRef.current, task: newTasks, completedTargets: [...stateRef.current.completedTargets, ...questionQueue.map(q => q._id)] };
+      const latestState = { ...stateRef.current, task: newTasks, list: (stateRef.current.list || []).filter((item: any) => !questionQueue.some((q: any) => q._id === item.question?._id)), completedTargets: [...stateRef.current.completedTargets, ...questionQueue.map(q => q._id)] };
       markerGets(latestTasks, blocklyJson, dispatch, latestState, latestState.time);
     }
   };

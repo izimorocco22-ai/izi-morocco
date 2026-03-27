@@ -1,12 +1,12 @@
 {
   "name": "izi-player-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "node scripts/start.js",
     "dev:local": "ts-node-dev --respawn --transpile-only scripts/dev.js",
     "build": "tsc",
-    "start": "node scripts/start.js",
+    "start": "node dist/index.js",
     "lint": "eslint ."
   },
   "author": "",

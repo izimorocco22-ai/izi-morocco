@@ -139,7 +139,8 @@ export const handleSubmitAnswer = async (
   // Build updated state with the completed task so markerGets sees fresh data
   const updatedState = { 
     ...stateRef.current, 
-    task: updatedTasks, 
+    task: updatedTasks,
+    list: (stateRef.current.list || []).filter((t: any) => t.question?._id !== currentQuestion._id),
     completedTargets: [...stateRef.current.completedTargets, currentQuestion._id] 
   };
   

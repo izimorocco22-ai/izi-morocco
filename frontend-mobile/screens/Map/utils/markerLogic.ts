@@ -38,6 +38,15 @@ export const markerGets = (
 
   if (!Array.isArray(result)) return;
 
+  // Always purge finished tasks from the list using latest safeTasks state
+  if (currentState.list && currentState.list.length > 0) {
+    const finishedIds = new Set(safeTasks.filter(t => t.isFinished).map(t => t.question?._id));
+    const cleanedList = currentState.list.filter((t: any) => !finishedIds.has(t.question?._id));
+    if (cleanedList.length !== currentState.list.length) {
+      dispatch({ type: 'SET_LIST', payload: cleanedList });
+    }
+  }
+
   // ✅ Collect all tasks to show in one go
   const showTaskIds: string[] = [];
   const playgroundTaskIds: string[] = [];
@@ -183,33 +192,25 @@ export const markerGets = (
   // ✅ Process accumulated listTaskIds
   if (listTaskIds.length > 0) {
     const uniqueListIds = Array.from(new Set(listTaskIds));
-    
-    // Merge new tasks with existing list tasks that are not finished
-    const currentList = currentState.list || [];
+
+    // Build a map of latest task state from safeTasks for O(1) lookup
+    const latestTaskMap = new Map(safeTasks.map(t => [t.question?._id, t]));
+
+    // Get existing list items, refreshed with latest isFinished from safeTasks
+    const currentList = (currentState.list || [])
+      .map((t: any) => latestTaskMap.get(t.question?._id) || t)
+      .filter((t: any) => !t.isFinished);
+
     const newTasksForList = safeTasks.filter(
       t => uniqueListIds.includes(t.question?._id) && !t.isFinished
     );
-    
+
     const mergedList = mergeUnique(currentList, newTasksForList);
-    
-    console.log('🔥 BEFORE DISPATCHING SET_LIST:', {
-      uniqueListIds,
-      currentListLength: currentList.length,
-      newTasksForListCount: newTasksForList.length,
-      mergedListCount: mergedList.length,
-      mergedListTasks: mergedList.map(t => ({
-        id: t.question?._id,
-        name: t.question?.questionName,
-        isFinished: t.isFinished
-      }))
-    });
-    
-    console.log('🚀 DISPATCHING SET_LIST with', mergedList.length, 'tasks');
+
     dispatch({
       type: 'SET_LIST',
       payload: mergedList,
     });
-    console.log('✅ SET_LIST dispatched successfully');
     
     // Also ensure these tasks are marked as displayed and added to targets
     const updatedTasks = safeTasks.map(q =>
