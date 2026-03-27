@@ -22,17 +22,7 @@ const AnswerResultModal = ({
           
           {isCorrect ? (
             <>
-              <View
-                style={[
-                  {
-                    borderWidth: 1,
-                    borderColor: '#deca88',
-                    borderRadius: RFValue(8),
-                    borderStyle: 'dashed',
-                    marginBottom: RFValue(10),
-                  },
-                ]}
-              >
+              <View style={{ marginBottom: RFValue(10) }}>
                 <QuillRenderer
                   questionName={
                     commentsAfterFinishingQuestion?.commentsAfterCorrection
@@ -42,17 +32,7 @@ const AnswerResultModal = ({
             </>
           ) : (
             <>
-              <View
-                style={[
-                  {
-                    borderWidth: 1,
-                    borderColor: '#deca88',
-                    borderRadius: RFValue(8),
-                    borderStyle: 'dashed',
-                    marginBottom: RFValue(10),
-                  },
-                ]}
-              >
+              <View style={{ marginBottom: RFValue(10) }}>
                 <QuillRenderer
                   questionName={
                     commentsAfterFinishingQuestion?.commentsAfterRejection
@@ -78,16 +58,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   container: {
-    backgroundColor: '#faf6ed',
-    borderColor: '#d8b443',
-    borderWidth: 2,
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+    borderWidth: 0,
     paddingVertical: 20,
     paddingHorizontal: 15,
     borderRadius: 16,
     width: '92%',
     maxHeight: '90%',
     alignItems: 'center',
-    elevation: 10,
+    elevation: 0,
   },
 });
 

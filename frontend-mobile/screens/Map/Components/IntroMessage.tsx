@@ -29,17 +29,7 @@ const IntroMessage = ({ visible, onContinue, message }: any) => {
                     styles.scrollInner,
                   ]}
                 >
-                  <View
-                    style={[
-                      {
-                        borderWidth: 1,
-                        borderColor: '#deca88',
-                        borderRadius: RFValue(8),
-                        borderStyle: 'dashed',
-                        marginBottom: RFValue(10),
-                      },
-                    ]}
-                  >
+                  <View style={{ marginBottom: RFValue(10) }}>
                     <QuillRenderer questionName={message} />
                   </View>
                 </ScrollView>
@@ -70,6 +60,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: RFValue(20),
+    paddingTop: RFValue(120),
   },
   modalContainer: {
     width: '100%',
@@ -78,18 +69,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   whiteBox: {
-    backgroundColor: '#faf6ed',
-    borderWidth: 2,
-    borderColor: '#d8b443',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
     borderRadius: RFValue(10),
     padding: RFValue(15),
     width: '100%',
     flex: 1,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
   },
   footer: {
     width: '100%',
