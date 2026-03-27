@@ -81,21 +81,9 @@ export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: nu
         console.log('Duration timer setup:', { unit, value, totalSeconds });
 
         if (storedTimer) {
-          // Resume from stored elapsed time
-          const currentTime = Date.now();
-          const timeSinceLastUpdate = Math.floor((currentTime - storedTimer.lastUpdateTime) / 1000);
-          const totalElapsed = storedTimer.elapsedTime + timeSinceLastUpdate;
-          const remainingTime = Math.max(0, totalSeconds - totalElapsed);
-          
-          console.log('Resuming countdown timer:', {
-            totalSeconds,
-            storedElapsed: storedTimer.elapsedTime,
-            timeSinceLastUpdate,
-            totalElapsed,
-            remainingTime
-          });
-          
-          setElapsedTime(totalElapsed);
+          // Resume from stored elapsed time — do NOT add offline time (timer pauses when user exits)
+          const remainingTime = Math.max(0, totalSeconds - storedTimer.elapsedTime);
+          setElapsedTime(storedTimer.elapsedTime);
           setTimeLeft(remainingTime);
           setGameStartTime(storedTimer.startTime);
         } else {
@@ -134,17 +122,8 @@ export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: nu
         // No time limit - just track elapsed time
         setTimeLeft(null);
         if (storedTimer) {
-          const currentTime = Date.now();
-          const timeSinceLastUpdate = Math.floor((currentTime - storedTimer.lastUpdateTime) / 1000);
-          const totalElapsed = storedTimer.elapsedTime + timeSinceLastUpdate;
-          
-          console.log('Resuming no-limit timer:', {
-            storedElapsed: storedTimer.elapsedTime,
-            timeSinceLastUpdate,
-            totalElapsed
-          });
-          
-          setElapsedTime(totalElapsed);
+          // Resume from stored elapsed time — do NOT add offline time (timer pauses when user exits)
+          setElapsedTime(storedTimer.elapsedTime);
           setGameStartTime(storedTimer.startTime);
         } else {
           setElapsedTime(currentElapsedTime || 0);
