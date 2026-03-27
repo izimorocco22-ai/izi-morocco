@@ -50,7 +50,7 @@ export const Congratulation = ({ navigation, route }) => {
       
       // Clear timer data when game is finished
       if (gameId) {
-        await clearGameTimer(gameId);
+        await clearGameTimer(gameId, activeCode);
       }
     };
     

@@ -4,8 +4,8 @@ import { ConvertGameTime, useGameTimer } from '../utils/gameTimer';
 import { RFValue } from '../../../utils/responsive';
 import colors from '../../../styles/colors';
 
-const MapHeader = ({ game, state, gameId }: { game: any; state: any; gameId?: string }) => {
-  const [timeLeft, formattedTime, elapsedTime] = useGameTimer(game, gameId, state.time);
+const MapHeader = ({ game, state, gameId, activeCode }: { game: any; state: any; gameId?: string; activeCode?: string }) => {
+  const [timeLeft, formattedTime, elapsedTime] = useGameTimer(game, gameId, state.time, activeCode);
 
   console.log('MapHeader timer values:', {
     timeLeft,

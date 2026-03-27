@@ -54,7 +54,8 @@ export const ConvertGameTime = (type: any, zoneTime: any, duration: any) => {
  * Custom hook to handle countdown timer with persistence
  * Returns [timeLeft, formattedTime, elapsedTime]
  */
-export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: number) => {
+export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: number, activeCode?: string) => {
+  const timerKey = gameId && activeCode ? `${gameId}_${activeCode}` : gameId;
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState<number>(currentElapsedTime || 0);
   const [gameStartTime, setGameStartTime] = useState<number | null>(null);
@@ -65,9 +66,9 @@ export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: nu
       let totalSeconds = 0;
       let storedTimer = null;
 
-      // Try to get stored timer data if gameId is provided
-      if (gameId) {
-        storedTimer = await storage.getGameTimer(gameId);
+      // Try to get stored timer data if timerKey is provided
+      if (timerKey) {
+        storedTimer = await storage.getGameTimer(timerKey);
         console.log('Stored timer data:', storedTimer);
       }
 
@@ -114,8 +115,8 @@ export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: nu
           setGameStartTime(startTime);
           
           // Store initial timer data
-          if (gameId) {
-            await storage.setGameTimer(gameId, {
+          if (timerKey) {
+            await storage.setGameTimer(timerKey, {
               startTime,
               elapsedTime: initialElapsed,
               lastUpdateTime: startTime,
@@ -150,8 +151,8 @@ export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: nu
           const startTime = Date.now();
           setGameStartTime(startTime);
           
-          if (gameId) {
-            await storage.setGameTimer(gameId, {
+          if (timerKey) {
+            await storage.setGameTimer(timerKey, {
               startTime,
               elapsedTime: currentElapsedTime || 0,
               lastUpdateTime: startTime
@@ -173,8 +174,8 @@ export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: nu
         const newElapsed = prev + 1;
         
         // Persist to storage every second to ensure no data loss
-        if (gameId) {
-          storage.setGameTimer(gameId, {
+        if (timerKey) {
+          storage.setGameTimer(timerKey, {
             startTime: gameStartTime || currentTime,
             elapsedTime: newElapsed,
             lastUpdateTime: currentTime
@@ -229,6 +230,7 @@ export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: nu
 /**
  * Clear timer data when game is completed
  */
-export const clearGameTimer = async (gameId: string) => {
-  await storage.clearGameTimer(gameId);
+export const clearGameTimer = async (gameId: string, activeCode?: string) => {
+  const timerKey = activeCode ? `${gameId}_${activeCode}` : gameId;
+  await storage.clearGameTimer(timerKey);
 };

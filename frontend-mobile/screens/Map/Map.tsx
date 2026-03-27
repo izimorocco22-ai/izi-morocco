@@ -284,7 +284,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   }, [state.triggerMarker]);
 
   // Get timer data from the header component
-  const [, , elapsedTime] = useGameTimer(game, gameId, state.time);
+  const [, , elapsedTime] = useGameTimer(game, gameId, state.time, activeCode);
 
   // ✅ Effect: Sync state changes to backend whenever tasks are updated
   useEffect(() => {
@@ -588,6 +588,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
 
   const handleFinishContinue = async () => {
     dispatch({ type: 'SET_FINISH_VISIBLE', payload: false });
+    if (gameId) await clearGameTimer(gameId, activeCode);
     navigation.navigate('Congratulation', {
       task: stateRef.current.task,
       activeCode,
@@ -613,7 +614,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   return (
     <ScreenWrapper>
       <View style={[commonStyles.fullFlex, { position: 'relative' }]}>
-        {game && <MapHeader game={game} state={state} gameId={gameId} />}
+        {game && <MapHeader game={game} state={state} gameId={gameId} activeCode={activeCode} />}
 
         {state.showOverlay && game && (
           <GameStartOverlay
