@@ -110,7 +110,7 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
           // Calculate position - use playgroundPosition if available, otherwise default
           let xPos, yPos;
           
-          // Default icon size to match admin (40)
+          // Use iconSize from backend (set by admin), no RFValue scaling so positions match
           const iconSize = target?.question?.iconSize || 40;
 
           if (playgroundPos && typeof playgroundPos.x === 'number' && typeof playgroundPos.y === 'number') {
@@ -172,7 +172,7 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                 },
               ]}
             >
-              <CustomMarker icon={target?.question?.icon} size={iconSize} />
+              <CustomMarker icon={target?.question?.icon} size={iconSize} useRawSize />
             </View>
           );
         } catch (error) {

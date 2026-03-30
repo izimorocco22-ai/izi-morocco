@@ -384,6 +384,7 @@ const createPipelineForGameLogs = (
                     puzzle: '$$q.puzzle',
                     icon: { $ifNull: ['$$q.settings.icon', null] },
                     iconName: { $ifNull: ['$$q.settings.iconName', null] },
+                    iconSize: { $ifNull: ['$$q.iconSize', 40] },
                     locationRadius: {
                       $ifNull: ['$$q.settings.locationRadius', null]
                     },
@@ -731,6 +732,7 @@ export const joinGameController = async (req: Request, res: Response) => {
                     puzzle: '$$q.puzzle',
                     icon: { $ifNull: ['$$q.settings.icon', null] },
                     iconName: { $ifNull: ['$$q.settings.iconName', null] },
+                    iconSize: { $ifNull: ['$$q.iconSize', 40] },
                     locationRadius: {
                       $ifNull: ['$$q.settings.locationRadius', null]
                     },
