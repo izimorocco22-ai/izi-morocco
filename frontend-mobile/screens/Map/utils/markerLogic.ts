@@ -231,11 +231,15 @@ export const markerGets = (
 
   if (playgroundTaskIds.length > 0) {
     const uniquePlaygroundIds = Array.from(new Set(playgroundTaskIds));
-    const updatedTasks = safeTasks.map(q =>
-      uniquePlaygroundIds.includes(q.question?._id)
-        ? { ...q, isShownOnPlayground: true }
-        : q,
-    );
+    const updatedTasks = safeTasks.map(q => {
+      if (!uniquePlaygroundIds.includes(q.question?._id)) return q;
+      // Find the matching result to get the correct playgroundId
+      const matchingResult = result.find(
+        (r: any) => r?.playground && Array.isArray(r.taskId) && r.taskId.includes(q.question?._id)
+      );
+      const playgroundIndex = matchingResult?.playgroundId || q.playgroundIndex || 1;
+      return { ...q, isShownOnPlayground: true, playgroundIndex };
+    });
     dispatch({ type: 'SET_TASK', payload: updatedTasks });
   }
 };

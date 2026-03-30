@@ -62,16 +62,10 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   
   const playgroundTargets = targets.filter(t => {
     try {
-      // Only show tasks that are marked to be shown on playground
       if (!t?.isShownOnPlayground) return false;
-      
-      // Filter by playground index - only show tasks assigned to current playground
-      if (currentPlaygroundIndex && t?.playgroundIndex) {
-        return t.playgroundIndex === currentPlaygroundIndex;
-      }
-      
-      // If no playground index specified, show on playground 1 by default
-      return currentPlaygroundIndex === 1;
+      // playgroundIndex defaults to 1 if missing/0
+      const taskPlaygroundIndex = t?.playgroundIndex || 1;
+      return taskPlaygroundIndex === (currentPlaygroundIndex || 1);
     } catch (error) {
       console.error('Error filtering playground target:', error, t);
       return false;
