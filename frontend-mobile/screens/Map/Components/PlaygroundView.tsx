@@ -62,10 +62,16 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
   
   const playgroundTargets = targets.filter(t => {
     try {
+      // Only show tasks that are marked to be shown on playground
       if (!t?.isShownOnPlayground) return false;
-      // playgroundIndex defaults to 1 if missing/0
-      const taskPlaygroundIndex = t?.playgroundIndex || 1;
-      return taskPlaygroundIndex === (currentPlaygroundIndex || 1);
+      
+      // Filter by playground index - only show tasks assigned to current playground
+      if (currentPlaygroundIndex && t?.playgroundIndex) {
+        return t.playgroundIndex === currentPlaygroundIndex;
+      }
+      
+      // If no playground index specified, show on playground 1 by default
+      return currentPlaygroundIndex === 1;
     } catch (error) {
       console.error('Error filtering playground target:', error, t);
       return false;
@@ -104,7 +110,7 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
           // Calculate position - use playgroundPosition if available, otherwise default
           let xPos, yPos;
           
-          // Use iconSize from backend (set by admin), no RFValue scaling so positions match
+          // Default icon size to match admin (40)
           const iconSize = target?.question?.iconSize || 40;
 
           if (playgroundPos && typeof playgroundPos.x === 'number' && typeof playgroundPos.y === 'number') {
@@ -166,7 +172,7 @@ const PlaygroundView: React.FC<PlaygroundViewProps> = ({
                 },
               ]}
             >
-              <CustomMarker icon={target?.question?.icon} size={iconSize} useRawSize />
+              <CustomMarker icon={target?.question?.icon} size={iconSize} />
             </View>
           );
         } catch (error) {

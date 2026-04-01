@@ -60,12 +60,12 @@ const AnswerResultModal = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
-    backgroundColor: 'white',
+    backgroundColor: 'transparent',
     borderRadius: RFValue(16),
     paddingVertical: RFValue(20),
     paddingHorizontal: RFValue(15),

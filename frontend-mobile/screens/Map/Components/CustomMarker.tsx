@@ -4,10 +4,9 @@ import commonStyles from '../../../styles/commonStyles';
 import { RFValue } from '../../../utils/responsive';
 import { getCleanImageUrl } from '../../../utils/imageUtils';
 
-const CustomMarker = ({ icon, size = 60, useRawSize = false }) => {
+const CustomMarker = ({ icon, size = 60 }) => {
   try {
     const uri = typeof icon === 'string' ? getCleanImageUrl(icon) : null;
-    const resolvedSize = useRawSize ? size : RFValue(size);
 
     if (!uri) {
       return (
@@ -16,9 +15,9 @@ const CustomMarker = ({ icon, size = 60, useRawSize = false }) => {
             commonStyles.alignCenter,
             commonStyles.justifyCenter,
             {
-              width: resolvedSize,
-              height: resolvedSize,
-              borderRadius: resolvedSize / 3,
+              width: RFValue(size),
+              height: RFValue(size),
+              borderRadius: size / 3,
               backgroundColor: '#ddd',
             },
           ]}
@@ -30,7 +29,7 @@ const CustomMarker = ({ icon, size = 60, useRawSize = false }) => {
       <View style={[commonStyles.alignCenter, commonStyles.justifyCenter]}>
         <Image
           source={{ uri }}
-          style={{ width: resolvedSize, height: resolvedSize, borderRadius: resolvedSize / 3 }}
+          style={{ width: RFValue(size), height: RFValue(size), borderRadius: size / 3 }}
           resizeMode="contain"
           onError={(error) => {
             console.error('CustomMarker image load error:', error);
@@ -46,8 +45,8 @@ const CustomMarker = ({ icon, size = 60, useRawSize = false }) => {
           commonStyles.alignCenter,
           commonStyles.justifyCenter,
           {
-            width: useRawSize ? size : RFValue(size),
-            height: useRawSize ? size : RFValue(size),
+            width: RFValue(size),
+            height: RFValue(size),
             borderRadius: size / 3,
             backgroundColor: '#ff6b6b',
           },
