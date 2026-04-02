@@ -51,7 +51,7 @@ async function sendViaSendGridAPI(apiKey: string, emailbody: DynamicObjectType) 
     
     // Use a verified sender email for SendGrid
     if (fromEmail === 'apikey' || !fromEmail.includes('@')) {
-      fromEmail = 'mspidey035@gmail.com'; // Verified sender email
+      fromEmail = 'maxxxxboyyy@gmail.com'; // Verified sender email
     }
     
     console.log('[EMAIL] Sending to:', toEmail, 'from:', fromEmail);
