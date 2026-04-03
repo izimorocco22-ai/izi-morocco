@@ -113,16 +113,22 @@ export const handleSubmitAnswer = async (
       }, item.seconds * 1000);
     });
 
-    // Run rule engine with updated state
+    // Call onComplete FIRST (shows result modal / advances)
+    // Then run rule engine AFTER so activate rules don't conflict with modal close
+    onComplete();
+
     const updatedState = {
       ...stateRef.current,
       task: updatedTasks,
       list: (stateRef.current.list || []).filter((t: any) => t.question?._id !== currentQuestion._id),
       completedTargets: [...stateRef.current.completedTargets, currentQuestion._id],
     };
-    markerGets(updatedTasks, blocklyJson, dispatch, updatedState, stateRef.current.time);
+    // Delay markerGets so activate modal opens after result modal is dismissed
+    setTimeout(() => {
+      markerGets(updatedTasks, blocklyJson, dispatch, updatedState, stateRef.current.time);
+    }, 600);
+  } else {
+    // Wrong answer — just show result
+    onComplete();
   }
-
-  // Always show result modal (correct or wrong)
-  onComplete();
 };

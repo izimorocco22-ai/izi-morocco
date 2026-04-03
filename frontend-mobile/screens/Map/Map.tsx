@@ -504,6 +504,15 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           ),
       );
       dispatch({ type: 'SET_LIST', payload: updatedList });
+
+        // Re-run rule engine after a short delay so modal close dispatches settle first
+      const latestState = {
+        ...stateRef.current,
+        list: updatedList,
+      };
+      setTimeout(() => {
+        markerGets(latestTasks, blocklyJson, dispatch, latestState, latestState.time);
+      }, 400);
     }
   };
 

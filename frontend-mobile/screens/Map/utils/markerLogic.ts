@@ -84,25 +84,20 @@ export const markerGets = (
         });
       }
     } else if (r?.activate && r?.taskId) {
-      console.log('🎯 Activate rule triggered for task:', r.taskId);
       const questionToOpen = safeTasks.find(
-        t => t?.question?._id === r.taskId && !t.isDisplayed && !t.isFinished,
+        t => t?.question?._id === r.taskId && !t.isFinished,
       );
       if (questionToOpen) {
-        console.log('✅ Opening task immediately:', {
-          taskId: r.taskId,
-          taskName: questionToOpen.question?.questionName,
-          currentDisplayedTasks: safeTasks.filter(t => t.isDisplayed).length,
-          currentFinishedTasks: safeTasks.filter(t => t.isFinished).length
-        });
-        
-        // Update task as displayed
+        // Mark task as displayed
         const updatedTasks = safeTasks.map(q =>
           q.question?._id === r.taskId ? { ...q, isDisplayed: true } : q,
         );
         dispatch({ type: 'SET_TASK', payload: updatedTasks });
-        
-        // Set up question queue with single question
+        dispatch({
+          type: 'SET_TARGETS',
+          payload: mergeUnique(currentState.targets, [questionToOpen]),
+        });
+
         const questionData = {
           _id: questionToOpen.question?._id,
           question: questionToOpen?.question?.questionDescription,
@@ -119,43 +114,19 @@ export const markerGets = (
           codeBoxConfig: questionToOpen?.question?.codeBoxConfig,
           augmentedPhotoImage: questionToOpen?.question?.augmentedPhotoImage,
         };
-        
-        // Clear result modal but don't reset modal visibility to avoid race condition
+
         dispatch({ type: 'SET_RESULT_MODAL', payload: false });
-        
-        // Set up the question queue and current question
+        dispatch({ type: 'SET_IS_ANSWER_CORRECT', payload: false });
         dispatch({ type: 'SET_QUESTION_QUEUE', payload: [questionData] });
         dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
         dispatch({ type: 'SET_CURRENT_QUESTION', payload: questionData });
         dispatch({ type: 'SET_SELECTED_OPTION', payload: [] });
         dispatch({ type: 'SET_INPUT_ANSWER', payload: '' });
-        
-        // Add to shown targets
         dispatch({
           type: 'ADD_SHOWN_TARGETS',
           payload: [questionToOpen.question?._id],
         });
-        
-        // Add to targets for display
-        dispatch({
-          type: 'SET_TARGETS',
-          payload: mergeUnique(currentState.targets, [questionToOpen]),
-        });
-        
-        // 🔥 CRITICAL: Open modal immediately - no setTimeout to avoid race with handleNextQuestion
-        console.log('🚀 Opening modal for activated task:', r.taskId);
         dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
-        
-      } else {
-        console.log('❌ Task not found, already displayed, or already finished:', {
-          taskId: r.taskId,
-          availableTasks: safeTasks.map(t => ({
-            id: t.question?._id,
-            name: t.question?.questionName,
-            isDisplayed: t.isDisplayed,
-            isFinished: t.isFinished
-          }))
-        });
       }
     }
     // 🔹 Collect all showTask ids
