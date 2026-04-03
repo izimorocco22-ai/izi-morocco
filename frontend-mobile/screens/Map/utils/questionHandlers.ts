@@ -66,40 +66,41 @@ export const handleSubmitAnswer = async (
     if (!localUri) {
       return Alert.alert('Error', `Please capture a ${answerType.replace('_', ' ')} before submitting.`);
     }
+
     try {
+      console.log('[handleSubmitAnswer] Starting upload for:', localUri);
+
       dispatch({ type: 'SET_LOADING', payload: true });
+      
       const uploadResult = await uploadFile(localUri);
+      console.log('[handleSubmitAnswer] Upload successful:', uploadResult);
+      
       if (!uploadResult || !uploadResult.url) {
         throw new Error('Upload succeeded but no URL returned');
       }
+      
       dispatch({ type: 'SET_INPUT_ANSWER', payload: uploadResult.url });
       isCorrect = true;
     } catch (error: any) {
+      console.error('[handleSubmitAnswer] Upload error:', error);
       dispatch({ type: 'SET_LOADING', payload: false });
-      Alert.alert('Upload Failed', error.message || 'Failed to upload media');
+      
+      const errorMsg = error.message || 'Failed to upload media';
+      Alert.alert('Upload Failed', errorMsg);
       return;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  } else {
-    // no-answer types (info, none) — always correct
-    isCorrect = true;
-  }
-
-  dispatch({ type: 'SET_IS_ANSWER_CORRECT', payload: isCorrect });
-
-  // Wrong answer: show result modal with admin's rejection image/text, task stays incomplete
-  if (!isCorrect) {
-    if (onComplete) onComplete();
-    return;
-  }
-
-  // Correct answer only: fire timers, mark task finished, update map & list
+  } else isCorrect = true;
+  console.log({ submit: stateRef.current });
+  console.log({ questionId: currentQuestion._id });
   const sortedTimers = stateRef.current.timerData.filter(
-    (t: any) => t.type === 'timer_after_finished' && t.task.id === currentQuestion._id,
+    t => t.type === 'timer_after_finished' && t.task.id === currentQuestion._id,
   );
-  sortedTimers.forEach((item: any) => {
+  console.log({ sortedTimers });
+  sortedTimers.forEach(item => {
     setTimeout(() => {
+      console.log(item.seconds);
       markerGets(
         stateRef.current.task,
         blocklyJson,
@@ -107,36 +108,62 @@ export const handleSubmitAnswer = async (
         stateRef.current,
         item.seconds,
       );
-      dispatch({ type: 'UPDATE_TIMER_FINISHED', payload: item.seconds });
+      dispatch({
+        type: 'UPDATE_TIMER_FINISHED',
+        payload: item.seconds,
+      });
     }, item.seconds * 1000);
   });
 
-  const updatedTasks = stateRef.current.task.map((t: any) =>
-    t.question?._id === currentQuestion._id
+  dispatch({ type: 'SET_IS_ANSWER_CORRECT', payload: isCorrect });
+
+  if (!isCorrect) {
+    if (onComplete) onComplete();
+    return;
+  }
+  
+  console.log('Answer is correct, marking task as completed for activate rules:', currentQuestion._id);
+  const updatedTasks = stateRef.current.task.map(t => 
+    t.question?._id === currentQuestion._id 
       ? { ...t, isFinished: true, isCorrect: true, isDisplayed: true, userAnswer: stateRef.current.inputAnswer }
-      : t,
+      : t
   );
-
+  
   dispatch({ type: 'SET_TASK', payload: updatedTasks });
-  dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: [currentQuestion._id] });
-
-  const updatedState = {
-    ...stateRef.current,
+  
+  dispatch({
+    type: 'ADD_COMPLETED_TARGETS',
+    payload: [currentQuestion._id],
+  });
+  
+  // Build updated state with the completed task so markerGets sees fresh data
+  const updatedState = { 
+    ...stateRef.current, 
     task: updatedTasks,
     list: (stateRef.current.list || []).filter((t: any) => t.question?._id !== currentQuestion._id),
-    completedTargets: [...stateRef.current.completedTargets, currentQuestion._id],
+    completedTargets: [...stateRef.current.completedTargets, currentQuestion._id] 
   };
-
-  markerGets(updatedTasks, blocklyJson, dispatch, updatedState, stateRef.current.time);
-
-  // onComplete fires only on correct answer — shows result modal and auto-advances
+  
+  console.log('🚀 Calling markerGets with completed task state for activate/list rules');
+  markerGets(
+    updatedTasks,
+    blocklyJson,
+    dispatch,
+    updatedState,
+    stateRef.current.time,
+  );
+  
+  // Call onComplete immediately — markerGets already dispatched any new tasks/list updates
   if (onComplete) onComplete();
-
-  if (currentQuestion?.settings?.behaviorOption === 'keep_until_correct') {
+  
+  if (
+    currentQuestion?.settings?.behaviorOption === 'keep_until_correct' &&
+    isCorrect
+  ) {
     dispatch({
       type: 'SET_TARGETS',
       payload: stateRef.current.targets.filter(
-        (t: any) => t.question._id !== currentQuestion._id,
+        t => t.question._id !== currentQuestion._id,
       ),
     });
   }

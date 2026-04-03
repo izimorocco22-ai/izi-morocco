@@ -440,14 +440,14 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     }
   };
 
-  const ANSWER_CHECK_TYPES = ['mcq', 'multiple', 'code_box', 'number', 'text', 'puzzle'];
+  const ANSWER_CHECK_TYPES = ['multiple', 'code_box', 'number', 'text'];
 
   const handleNextQuestion = () => {
     const currentQuestion = stateRef.current.currentQuestion;
     const isCorrect = stateRef.current.isAnswerCorrect;
     const needsCheck = ANSWER_CHECK_TYPES.includes(currentQuestion?.answerType);
 
-    // Wrong answer: close result modal, re-open question modal so user can retry
+    // For checked types with wrong answer: close result modal, re-show question
     if (!isCorrect && needsCheck) {
       dispatch({ type: 'SET_RESULT_MODAL', payload: false });
       dispatch({ type: 'SET_INPUT_ANSWER', payload: '' });
@@ -456,27 +456,41 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       return;
     }
 
-    // Correct answer: add points
     if (isCorrect) {
-      dispatch({ type: 'SET_SCORE', payload: currentQuestion?.points || 0 });
+      const gained = currentQuestion?.points || 0;
+      // Update total score
+      dispatch({
+        type: 'SET_SCORE',
+        payload: gained,
+      });
     }
 
-    // Only mark task finished/correct if answer is correct
+    // ✅ Update task after pressing Next button
     const newTasks = stateRef.current.task.map(t => {
       if (t.question?._id === currentQuestion?._id) {
-        return isCorrect
-          ? { ...t, isFinished: true, isCorrect: true, userAnswer: stateRef.current.inputAnswer }
-          : t;
+        return {
+          ...t,
+          isFinished: true,
+          isCorrect: isCorrect,
+          userAnswer: stateRef.current.inputAnswer,
+        };
       }
       return t;
     });
 
     dispatch({ type: 'SET_TASK', payload: newTasks });
-
+    
+    // ✅ Add completed task to completedTargets immediately
     if (isCorrect) {
-      dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: [currentQuestion?._id] });
+      dispatch({
+        type: 'ADD_COMPLETED_TARGETS',
+        payload: [currentQuestion?._id],
+      });
     }
-
+    
+    // ✅ Check for activate rules AFTER state is updated - but don't duplicate the call from questionHandlers
+    // The markerGets call in questionHandlers.ts should handle auto-opening
+    
     const filteredQuestions = newTasks.map(q => ({
       _id: q?.question?._id,
       latitude: q?.latitude,
@@ -493,10 +507,12 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       points: q?.question?.points || 0,
     }));
 
-    const totalScore = filteredQuestions.reduce(
-      (acc, q) => (q.isFinished && q.isCorrect ? acc + (q.points || 0) : acc),
-      0,
-    );
+    const totalScore = filteredQuestions.reduce((acc, q) => {
+      if (q.isFinished && q.isCorrect) {
+        return acc + (q.points || 0);
+      }
+      return acc;
+    }, 0);
 
     dispatchForApis(
       finishGame({
@@ -510,6 +526,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       }),
     );
 
+    // continue to next question logic
     dispatch({ type: 'SET_RESULT_MODAL', payload: false });
     dispatch({ type: 'SET_SELECTED_OPTION', payload: [] });
     dispatch({ type: 'SET_INPUT_ANSWER', payload: '' });
@@ -520,32 +537,32 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     if (currentIndex + 1 < questionQueue.length) {
       const nextIndex = currentIndex + 1;
       dispatch({ type: 'SET_CURRENT_INDEX', payload: nextIndex });
-      dispatch({ type: 'SET_CURRENT_QUESTION', payload: questionQueue[nextIndex] });
+      dispatch({
+        type: 'SET_CURRENT_QUESTION',
+        payload: questionQueue[nextIndex],
+      });
     } else {
-      // Only add to completedTargets the ones that were actually answered correctly
-      const correctIds = newTasks
-        .filter(t => questionQueue.some((q: any) => q._id === t.question?._id) && t.isFinished && t.isCorrect)
-        .map(t => t.question?._id);
-      if (correctIds.length > 0) {
-        dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: correctIds });
-      }
+      // Add completed task to completedTargets when finishing the question queue
+      dispatch({
+        type: 'ADD_COMPLETED_TARGETS',
+        payload: questionQueue.map(q => q._id),
+      });
       dispatch({ type: 'SET_MODAL_VISIBLE', payload: false });
       dispatch({ type: 'SET_POPUP_SHOWN', payload: false });
       dispatch({ type: 'SET_QUESTION_QUEUE', payload: [] });
       dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
-
-      const updatedList = (stateRef.current.list || []).filter(
-        (item: any) => !item.isFinished && !questionQueue.some((q: any) => q._id === item.question?._id && newTasks.find((t: any) => t.question?._id === q._id)?.isFinished),
+      
+      // Update the list to remove completed tasks
+      const currentList = stateRef.current.list || [];
+      const updatedList = currentList.filter(item => 
+        !questionQueue.some(q => q._id === item.question?._id) && !item.isFinished
       );
       dispatch({ type: 'SET_LIST', payload: updatedList });
-
-      const latestState = {
-        ...stateRef.current,
-        task: newTasks,
-        list: updatedList,
-        completedTargets: [...stateRef.current.completedTargets, ...correctIds],
-      };
-      markerGets(newTasks, blocklyJson, dispatch, latestState, latestState.time);
+      
+      // Re-evaluate rules with updated task state so new list/map tasks appear immediately
+      const latestTasks = newTasks; // use newTasks directly — stateRef hasn't updated yet
+      const latestState = { ...stateRef.current, task: newTasks, list: (stateRef.current.list || []).filter((item: any) => !questionQueue.some((q: any) => q._id === item.question?._id)), completedTargets: [...stateRef.current.completedTargets, ...questionQueue.map(q => q._id)] };
+      markerGets(latestTasks, blocklyJson, dispatch, latestState, latestState.time);
     }
   };
 
@@ -766,10 +783,10 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
               dispatch({ type: 'SET_INPUT_ANSWER', payload: val })
             }
               onSubmit={() => {
-              handleSubmitAnswer(stateRef, dispatch, blocklyJson, () => {
-                // fires for both correct and wrong — shows admin result image/text
+              handleSubmitAnswer({ current: state }, dispatch, blocklyJson, () => {
                 dispatch({ type: 'SET_MODAL_VISIBLE', payload: false });
                 dispatch({ type: 'SET_RESULT_MODAL', payload: true });
+                setTimeout(() => handleNextQuestion(), 3000);
               });
             }}
             backgroundImage={game?.game?.backGroundImage}

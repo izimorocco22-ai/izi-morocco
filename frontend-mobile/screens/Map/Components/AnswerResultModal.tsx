@@ -4,8 +4,6 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
-  Text,
 } from 'react-native';
 import { RFValue } from '../../../utils/responsive';
 import QuillRenderer from '../../../components/QuillRenderer';
@@ -16,41 +14,36 @@ const AnswerResultModal = ({
   onNext,
   commentsAfterFinishingQuestion = {},
 }) => {
-  const hasCorrectContent =
-    commentsAfterFinishingQuestion?.commentsAfterCorrection &&
-    Object.keys(commentsAfterFinishingQuestion.commentsAfterCorrection).length > 0;
-
-  const hasRejectionContent =
-    commentsAfterFinishingQuestion?.commentsAfterRejection &&
-    Object.keys(commentsAfterFinishingQuestion.commentsAfterRejection).length > 0;
-
-  // If no admin content set for this result, don't show the modal at all
-  const hasContent = isCorrect ? hasCorrectContent : hasRejectionContent;
-  if (!visible || !hasContent) return null;
-
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            style={{ width: '100%' }}
-            contentContainerStyle={{ paddingBottom: RFValue(10) }}
-          >
-            <QuillRenderer
-              questionName={
-                isCorrect
-                  ? commentsAfterFinishingQuestion?.commentsAfterCorrection
-                  : commentsAfterFinishingQuestion?.commentsAfterRejection
-              }
-            />
-          </ScrollView>
+          <ScrollView showsVerticalScrollIndicator={false} style={{ width: '100%' }}>
+          
+          {isCorrect ? (
+            <>
+              <View style={{ marginBottom: RFValue(10) }}>
+                <QuillRenderer
+                  questionName={
+                    commentsAfterFinishingQuestion?.commentsAfterCorrection
+                  }
+                />
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={{ marginBottom: RFValue(10) }}>
+                <QuillRenderer
+                  questionName={
+                    commentsAfterFinishingQuestion?.commentsAfterRejection
+                  }
+                />
+              </View>
+            </>
+          )}
 
-          <TouchableOpacity style={styles.button} onPress={onNext}>
-            <Text style={styles.buttonText}>
-              {isCorrect ? 'Next' : 'Try Again'}
-            </Text>
-          </TouchableOpacity>
+
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -60,31 +53,21 @@ const AnswerResultModal = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
     backgroundColor: 'transparent',
-    borderRadius: RFValue(16),
-    paddingVertical: RFValue(20),
-    paddingHorizontal: RFValue(15),
+    borderColor: 'transparent',
+    borderWidth: 0,
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+    borderRadius: 16,
     width: '92%',
-    maxHeight: '85%',
+    maxHeight: '90%',
     alignItems: 'center',
-  },
-  button: {
-    marginTop: RFValue(14),
-    backgroundColor: '#d8b443',
-    borderRadius: RFValue(8),
-    paddingVertical: RFValue(10),
-    paddingHorizontal: RFValue(40),
-    alignSelf: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: RFValue(14),
+    elevation: 0,
   },
 });
 
