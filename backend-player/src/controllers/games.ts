@@ -387,7 +387,32 @@ const createPipelineForGameLogs = (
                     locationRadius: {
                       $ifNull: ['$$q.settings.locationRadius', null]
                     },
-                    radiusColor: { $ifNull: ['$$q.settings.radiusColor', null] }
+                    radiusColor: { $ifNull: ['$$q.settings.radiusColor', null] },
+                    puzzleAnswerType: {
+                      $cond: {
+                        if: { $and: [
+                          { $eq: ['$$q.questionDetails.answerType', 'puzzle'] },
+                          { $or: [
+                            { $eq: ['$$q.questionDetails.puzzleAnswerType', null] },
+                            { $not: { $ifNull: ['$$q.questionDetails.puzzleAnswerType', false] } }
+                          ]}
+                        ]},
+                        then: {
+                          $cond: {
+                            if: { $gt: [{ $size: { $ifNull: ['$$q.questionDetails.options', []] } }, 0] },
+                            then: 'mcq',
+                            else: {
+                              $cond: {
+                                if: { $ifNull: ['$$q.questionDetails.codeBoxConfig', false] },
+                                then: 'code_box',
+                                else: 'text'
+                              }
+                            }
+                          }
+                        },
+                        else: '$$q.questionDetails.puzzleAnswerType'
+                      }
+                    }
                   }
                 ]
               },
@@ -734,7 +759,32 @@ export const joinGameController = async (req: Request, res: Response) => {
                     locationRadius: {
                       $ifNull: ['$$q.settings.locationRadius', null]
                     },
-                    radiusColor: { $ifNull: ['$$q.settings.radiusColor', null] }
+                    radiusColor: { $ifNull: ['$$q.settings.radiusColor', null] },
+                    puzzleAnswerType: {
+                      $cond: {
+                        if: { $and: [
+                          { $eq: ['$$q.questionDetails.answerType', 'puzzle'] },
+                          { $or: [
+                            { $eq: ['$$q.questionDetails.puzzleAnswerType', null] },
+                            { $not: { $ifNull: ['$$q.questionDetails.puzzleAnswerType', false] } }
+                          ]}
+                        ]},
+                        then: {
+                          $cond: {
+                            if: { $gt: [{ $size: { $ifNull: ['$$q.questionDetails.options', []] } }, 0] },
+                            then: 'mcq',
+                            else: {
+                              $cond: {
+                                if: { $ifNull: ['$$q.questionDetails.codeBoxConfig', false] },
+                                then: 'code_box',
+                                else: 'text'
+                              }
+                            }
+                          }
+                        },
+                        else: '$$q.questionDetails.puzzleAnswerType'
+                      }
+                    }
                   }
                 ]
               },

@@ -70,7 +70,8 @@ const QuestionModal = ({
     questionData?.answerType === 'code_box' ||
     questionData?.answerType === 'take_photo' ||
     questionData?.answerType === 'augmented_photo' ||
-    questionData?.answerType === 'record_video';
+    questionData?.answerType === 'record_video' ||
+    (questionData?.answerType === 'puzzle' && !!questionData?.puzzleAnswerType);
 
   const buttonTitle = isSubmitType ? 'Submit' : 'Next';
 

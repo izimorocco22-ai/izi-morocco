@@ -783,10 +783,9 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
               dispatch({ type: 'SET_INPUT_ANSWER', payload: val })
             }
               onSubmit={() => {
-              handleSubmitAnswer({ current: state }, dispatch, blocklyJson, () => {
+              handleSubmitAnswer(stateRef, dispatch, blocklyJson, () => {
                 dispatch({ type: 'SET_MODAL_VISIBLE', payload: false });
                 dispatch({ type: 'SET_RESULT_MODAL', payload: true });
-                setTimeout(() => handleNextQuestion(), 3000);
               });
             }}
             backgroundImage={game?.game?.backGroundImage}
