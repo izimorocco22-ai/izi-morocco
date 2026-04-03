@@ -460,129 +460,50 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     }
   };
 
-  const ANSWER_CHECK_TYPES = ['multiple', 'code_box', 'number', 'text'];
+  const ANSWER_CHECK_TYPES = ['mcq', 'multiple', 'code_box', 'number', 'text', 'puzzle'];
 
   const handleNextQuestion = () => {
     const currentQuestion = stateRef.current.currentQuestion;
     const isCorrect = stateRef.current.isAnswerCorrect;
-    const needsCheck = ANSWER_CHECK_TYPES.includes(currentQuestion?.answerType);
 
-    // For checked types with wrong answer: close result modal, re-show question
-    if (!isCorrect && needsCheck) {
-      dispatch({ type: 'SET_RESULT_MODAL', payload: false });
-      dispatch({ type: 'SET_INPUT_ANSWER', payload: '' });
-      dispatch({ type: 'SET_SELECTED_OPTION', payload: [] });
+    dispatch({ type: 'SET_RESULT_MODAL', payload: false });
+    dispatch({ type: 'SET_INPUT_ANSWER', payload: '' });
+    dispatch({ type: 'SET_SELECTED_OPTION', payload: [] });
+
+    // Wrong answer — reopen the question so user can retry
+    if (!isCorrect) {
       dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
       return;
     }
 
-    if (isCorrect) {
-      const gained = currentQuestion?.points || 0;
-      // Update total score
-      dispatch({
-        type: 'SET_SCORE',
-        payload: gained,
-      });
-    }
-
-    // ✅ Update task after pressing Next button
-    const newTasks = stateRef.current.task.map(t => {
-      if (t.question?._id === currentQuestion?._id) {
-        return {
-          ...t,
-          isFinished: true,
-          isCorrect: isCorrect,
-          userAnswer: stateRef.current.inputAnswer,
-        };
-      }
-      return t;
-    });
-
-    dispatch({ type: 'SET_TASK', payload: newTasks });
-    
-    // ✅ Add completed task to completedTargets immediately
-    if (isCorrect) {
-      dispatch({
-        type: 'ADD_COMPLETED_TARGETS',
-        payload: [currentQuestion?._id],
-      });
-    }
-    
-    // ✅ Check for activate rules AFTER state is updated - but don't duplicate the call from questionHandlers
-    // The markerGets call in questionHandlers.ts should handle auto-opening
-    
-    const filteredQuestions = newTasks.map(q => ({
-      _id: q?.question?._id,
-      latitude: q?.latitude,
-      longitude: q?.longitude,
-      radius: q?.radius,
-      order: q?.order,
-      isFinished: q?.isFinished || false,
-      isCorrect: q?.isCorrect || false,
-      userAnswer: q?.userAnswer || null,
-      isDisplayed: q?.isDisplayed || false,
-      isShownOnPlayground: q?.isShownOnPlayground || false,
-      playgroundIndex: q?.playgroundIndex || 1,
-      playgroundPosition: q?.playgroundPosition,
-      points: q?.question?.points || 0,
-    }));
-
-    const totalScore = filteredQuestions.reduce((acc, q) => {
-      if (q.isFinished && q.isCorrect) {
-        return acc + (q.points || 0);
-      }
-      return acc;
-    }, 0);
-
-    dispatchForApis(
-      finishGame({
-        activationCode: activeCode,
-        gameId,
-        playerId: user?.playerId,
-        questions: filteredQuestions,
-        status: 'in_progress',
-        score: totalScore,
-        currentTime: elapsedTime || stateRef.current.time,
-      }),
-    );
-
-    // continue to next question logic
-    dispatch({ type: 'SET_RESULT_MODAL', payload: false });
-    dispatch({ type: 'SET_SELECTED_OPTION', payload: [] });
-    dispatch({ type: 'SET_INPUT_ANSWER', payload: '' });
+    // Correct — add score
+    dispatch({ type: 'SET_SCORE', payload: currentQuestion?.points || 0 });
 
     const currentIndex = stateRef.current.currentIndex;
     const questionQueue = stateRef.current.questionQueue;
 
     if (currentIndex + 1 < questionQueue.length) {
+      // More questions in queue
       const nextIndex = currentIndex + 1;
       dispatch({ type: 'SET_CURRENT_INDEX', payload: nextIndex });
-      dispatch({
-        type: 'SET_CURRENT_QUESTION',
-        payload: questionQueue[nextIndex],
-      });
+      dispatch({ type: 'SET_CURRENT_QUESTION', payload: questionQueue[nextIndex] });
+      dispatch({ type: 'SET_IS_ANSWER_CORRECT', payload: false });
+      dispatch({ type: 'SET_MODAL_VISIBLE', payload: true });
     } else {
-      // Add completed task to completedTargets when finishing the question queue
-      dispatch({
-        type: 'ADD_COMPLETED_TARGETS',
-        payload: questionQueue.map(q => q._id),
-      });
+      // Queue done — close everything
       dispatch({ type: 'SET_MODAL_VISIBLE', payload: false });
       dispatch({ type: 'SET_POPUP_SHOWN', payload: false });
       dispatch({ type: 'SET_QUESTION_QUEUE', payload: [] });
       dispatch({ type: 'SET_CURRENT_INDEX', payload: 0 });
-      
-      // Update the list to remove completed tasks
-      const currentList = stateRef.current.list || [];
-      const updatedList = currentList.filter(item => 
-        !questionQueue.some(q => q._id === item.question?._id) && !item.isFinished
+
+      const latestTasks = stateRef.current.task;
+      const updatedList = (stateRef.current.list || []).filter(
+        (item: any) =>
+          !latestTasks.find(
+            (t: any) => t.question?._id === item.question?._id && t.isFinished,
+          ),
       );
       dispatch({ type: 'SET_LIST', payload: updatedList });
-      
-      // Re-evaluate rules with updated task state so new list/map tasks appear immediately
-      const latestTasks = newTasks; // use newTasks directly — stateRef hasn't updated yet
-      const latestState = { ...stateRef.current, task: newTasks, list: (stateRef.current.list || []).filter((item: any) => !questionQueue.some((q: any) => q._id === item.question?._id)), completedTargets: [...stateRef.current.completedTargets, ...questionQueue.map(q => q._id)] };
-      markerGets(latestTasks, blocklyJson, dispatch, latestState, latestState.time);
     }
   };
 
@@ -805,7 +726,19 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
               onSubmit={() => {
               handleSubmitAnswer(stateRef, dispatch, blocklyJson, () => {
                 dispatch({ type: 'SET_MODAL_VISIBLE', payload: false });
-                dispatch({ type: 'SET_RESULT_MODAL', payload: true });
+                // Only show result modal for answer-checked types
+                const answerType = stateRef.current.currentQuestion?.answerType;
+                const puzzleAnswerType = stateRef.current.currentQuestion?.puzzleAnswerType;
+                const checkTypes = ['mcq', 'multiple', 'number', 'text', 'code_box', 'puzzle'];
+                const shouldShowResult =
+                  checkTypes.includes(answerType) &&
+                  (answerType !== 'puzzle' || !!puzzleAnswerType);
+                if (shouldShowResult) {
+                  dispatch({ type: 'SET_RESULT_MODAL', payload: true });
+                } else {
+                  // For no_answer / media types — just advance directly
+                  handleNextQuestion();
+                }
               });
             }}
             backgroundImage={game?.game?.backGroundImage}

@@ -2,11 +2,14 @@ import { Alert } from 'react-native';
 import { markerGets } from './markerLogic';
 import { uploadFile } from '../../../utils/uploadService';
 
+// Answer types that require checking
+const CHECK_TYPES = ['mcq', 'multiple', 'number', 'text', 'code_box', 'puzzle'];
+
 export const handleSubmitAnswer = async (
   stateRef: any,
   dispatch: any,
   blocklyJson: any,
-  onComplete?: () => void,
+  onComplete: () => void,
 ) => {
   const currentQuestion = stateRef.current.currentQuestion;
   if (!currentQuestion) return Alert.alert('Invalid question data');
@@ -18,153 +21,108 @@ export const handleSubmitAnswer = async (
     puzzleAnswerType,
     puzzleAnswerText,
   } = currentQuestion;
+
   let isCorrect = false;
 
+  // ── Determine correctness ────────────────────────────────────────────────
   if (answerType === 'mcq' || answerType === 'multiple') {
     const selectedTexts = stateRef.current.selectedOption.map(
-      (index: number) => options[index]?.text,
+      (i: number) => options[i]?.text,
     );
     isCorrect =
       JSON.stringify([...selectedTexts].sort()) ===
       JSON.stringify([...correctAnswers].sort());
+
   } else if (answerType === 'number') {
     isCorrect =
-      stateRef.current.inputAnswer.trim() === correctAnswers[0]?.trim();
+      stateRef.current.inputAnswer.trim() === (correctAnswers[0] ?? '').trim();
+
   } else if (answerType === 'text' || answerType === 'code_box') {
     isCorrect =
       stateRef.current.inputAnswer.trim().toLowerCase() ===
-      correctAnswers[0]?.trim().toLowerCase();
+      (correctAnswers[0] ?? '').trim().toLowerCase();
+
   } else if (answerType === 'puzzle') {
-    if (puzzleAnswerType === 'mcq') {
+    const effectiveType = puzzleAnswerType || 'text';
+    if (effectiveType === 'mcq') {
       const selectedTexts = stateRef.current.selectedOption.map(
-        (index: number) => options[index]?.text,
+        (i: number) => options[i]?.text,
       );
       isCorrect =
         JSON.stringify([...selectedTexts].sort()) ===
         JSON.stringify([...correctAnswers].sort());
-    } else if (puzzleAnswerType === 'code_box') {
-      const user = stateRef.current.inputAnswer || '';
-      const correct = correctAnswers[0] ?? '';
-      isCorrect =
-        user.trim().toLowerCase() === correct.toString().trim().toLowerCase();
-    } else if (puzzleAnswerType === 'number') {
-      isCorrect =
-        stateRef.current.inputAnswer.trim() ===
-        (puzzleAnswerText || '').trim();
-    } else if (puzzleAnswerType === 'text') {
-      isCorrect =
-        stateRef.current.inputAnswer.trim().toLowerCase() ===
-        (puzzleAnswerText || '').trim().toLowerCase();
+    } else if (effectiveType === 'number') {
+      const correct = (puzzleAnswerText ?? correctAnswers[0] ?? '').toString().trim();
+      isCorrect = stateRef.current.inputAnswer.trim() === correct;
+    } else if (effectiveType === 'text') {
+      const correct = (puzzleAnswerText ?? correctAnswers[0] ?? '').toString().trim().toLowerCase();
+      isCorrect = stateRef.current.inputAnswer.trim().toLowerCase() === correct;
+    } else if (effectiveType === 'code_box') {
+      const correct = (correctAnswers[0] ?? puzzleAnswerText ?? '').toString().trim().toLowerCase();
+      isCorrect = stateRef.current.inputAnswer.trim().toLowerCase() === correct;
     } else {
-      const correctAnswer = currentQuestion.puzzleAnswerText;
-      isCorrect =
-        stateRef.current.inputAnswer.trim().toLowerCase() ===
-        correctAnswer?.trim().toLowerCase();
+      const correct = (puzzleAnswerText ?? correctAnswers[0] ?? '').toString().trim().toLowerCase();
+      isCorrect = stateRef.current.inputAnswer.trim().toLowerCase() === correct;
     }
+
   } else if (['take_photo', 'augmented_photo', 'record_video'].includes(answerType)) {
     const localUri = stateRef.current.inputAnswer;
     if (!localUri) {
-      return Alert.alert('Error', `Please capture a ${answerType.replace('_', ' ')} before submitting.`);
+      return Alert.alert('Error', `Please capture a ${answerType.replace(/_/g, ' ')} before submitting.`);
     }
-
     try {
-      console.log('[handleSubmitAnswer] Starting upload for:', localUri);
-
       dispatch({ type: 'SET_LOADING', payload: true });
-      
       const uploadResult = await uploadFile(localUri);
-      console.log('[handleSubmitAnswer] Upload successful:', uploadResult);
-      
-      if (!uploadResult || !uploadResult.url) {
-        throw new Error('Upload succeeded but no URL returned');
-      }
-      
+      if (!uploadResult?.url) throw new Error('Upload succeeded but no URL returned');
       dispatch({ type: 'SET_INPUT_ANSWER', payload: uploadResult.url });
       isCorrect = true;
     } catch (error: any) {
-      console.error('[handleSubmitAnswer] Upload error:', error);
       dispatch({ type: 'SET_LOADING', payload: false });
-      
-      const errorMsg = error.message || 'Failed to upload media';
-      Alert.alert('Upload Failed', errorMsg);
+      Alert.alert('Upload Failed', error.message || 'Failed to upload media');
       return;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  } else isCorrect = true;
-  console.log({ submit: stateRef.current });
-  console.log({ questionId: currentQuestion._id });
-  const sortedTimers = stateRef.current.timerData.filter(
-    t => t.type === 'timer_after_finished' && t.task.id === currentQuestion._id,
-  );
-  console.log({ sortedTimers });
-  sortedTimers.forEach(item => {
-    setTimeout(() => {
-      console.log(item.seconds);
-      markerGets(
-        stateRef.current.task,
-        blocklyJson,
-        dispatch,
-        stateRef.current,
-        item.seconds,
-      );
-      dispatch({
-        type: 'UPDATE_TIMER_FINISHED',
-        payload: item.seconds,
-      });
-    }, item.seconds * 1000);
-  });
 
+  } else {
+    // no_answer / info types — always correct, just advance
+    isCorrect = true;
+  }
+
+  // ── Save result ──────────────────────────────────────────────────────────
   dispatch({ type: 'SET_IS_ANSWER_CORRECT', payload: isCorrect });
 
-  if (!isCorrect) {
-    if (onComplete) onComplete();
-    return;
-  }
-  
-  console.log('Answer is correct, marking task as completed for activate rules:', currentQuestion._id);
-  const updatedTasks = stateRef.current.task.map(t => 
-    t.question?._id === currentQuestion._id 
-      ? { ...t, isFinished: true, isCorrect: true, isDisplayed: true, userAnswer: stateRef.current.inputAnswer }
-      : t
-  );
-  
-  dispatch({ type: 'SET_TASK', payload: updatedTasks });
-  
-  dispatch({
-    type: 'ADD_COMPLETED_TARGETS',
-    payload: [currentQuestion._id],
-  });
-  
-  // Build updated state with the completed task so markerGets sees fresh data
-  const updatedState = { 
-    ...stateRef.current, 
-    task: updatedTasks,
-    list: (stateRef.current.list || []).filter((t: any) => t.question?._id !== currentQuestion._id),
-    completedTargets: [...stateRef.current.completedTargets, currentQuestion._id] 
-  };
-  
-  console.log('🚀 Calling markerGets with completed task state for activate/list rules');
-  markerGets(
-    updatedTasks,
-    blocklyJson,
-    dispatch,
-    updatedState,
-    stateRef.current.time,
-  );
-  
-  // Call onComplete immediately — markerGets already dispatched any new tasks/list updates
-  if (onComplete) onComplete();
-  
-  if (
-    currentQuestion?.settings?.behaviorOption === 'keep_until_correct' &&
-    isCorrect
-  ) {
-    dispatch({
-      type: 'SET_TARGETS',
-      payload: stateRef.current.targets.filter(
-        t => t.question._id !== currentQuestion._id,
-      ),
+  if (isCorrect) {
+    // Mark task as finished only on correct answer
+    const updatedTasks = stateRef.current.task.map((t: any) =>
+      t.question?._id === currentQuestion._id
+        ? { ...t, isFinished: true, isCorrect: true, isDisplayed: true, userAnswer: stateRef.current.inputAnswer }
+        : t,
+    );
+    dispatch({ type: 'SET_TASK', payload: updatedTasks });
+    dispatch({ type: 'ADD_COMPLETED_TARGETS', payload: [currentQuestion._id] });
+
+    // Fire timer_after_finished rules
+    const sortedTimers = stateRef.current.timerData.filter(
+      (t: any) => t.type === 'timer_after_finished' && t.task?.id === currentQuestion._id,
+    );
+    sortedTimers.forEach((item: any) => {
+      setTimeout(() => {
+        markerGets(stateRef.current.task, blocklyJson, dispatch, stateRef.current, item.seconds);
+        dispatch({ type: 'UPDATE_TIMER_FINISHED', payload: item.seconds });
+      }, item.seconds * 1000);
     });
+
+    // Run rule engine with updated state
+    const updatedState = {
+      ...stateRef.current,
+      task: updatedTasks,
+      list: (stateRef.current.list || []).filter((t: any) => t.question?._id !== currentQuestion._id),
+      completedTargets: [...stateRef.current.completedTargets, currentQuestion._id],
+    };
+    markerGets(updatedTasks, blocklyJson, dispatch, updatedState, stateRef.current.time);
   }
+
+  // Always show result modal (correct or wrong)
+  onComplete();
 };
