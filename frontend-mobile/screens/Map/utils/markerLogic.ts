@@ -2,13 +2,21 @@ import { analyzeDataRule, getQuestionsByTags } from './ruleEngine';
 
 const mergeUnique = (existing, incoming) => {
   const map = new Map();
-
   [...existing, ...incoming].forEach(item => {
     const id = item?.question?._id;
     if (id) map.set(id, item);
   });
-
   return Array.from(map.values());
+};
+
+// Infer puzzleAnswerType when backend sends null (old saved data)
+const inferPuzzleAnswerType = (q: any): string | null => {
+  if (q?.answerType !== 'puzzle') return q?.puzzleAnswerType || null;
+  if (q?.puzzleAnswerType) return q.puzzleAnswerType;
+  if (Array.isArray(q?.options) && q.options.length > 0) return 'mcq';
+  if (q?.codeBoxConfig) return 'code_box';
+  if (q?.puzzleAnswerText) return 'text';
+  return null;
 };
 
 export const markerGets = (
@@ -105,7 +113,7 @@ export const markerGets = (
           comments: questionToOpen?.comments,
           media: questionToOpen?.media || null,
           puzzleAnswerText: questionToOpen?.question?.puzzleAnswerText,
-          puzzleAnswerType: questionToOpen?.question?.puzzleAnswerType,
+          puzzleAnswerType: inferPuzzleAnswerType(questionToOpen?.question),
           puzzleUrl: questionToOpen?.question?.puzzle?.url,
           puzzle: questionToOpen?.question?.puzzle,
           codeBoxConfig: questionToOpen?.question?.codeBoxConfig,

@@ -36,6 +36,33 @@ import { clearGameTimer, useGameTimer } from './utils/gameTimer';
 
 MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
+// Infer puzzleAnswerType when backend sends null (old data)
+const inferPuzzleAnswerType = (q: any): string | null => {
+  if (q?.answerType !== 'puzzle') return q?.puzzleAnswerType || null;
+  if (q?.puzzleAnswerType) return q.puzzleAnswerType;
+  // Infer from data shape
+  if (Array.isArray(q?.options) && q.options.length > 0) return 'mcq';
+  if (q?.codeBoxConfig) return 'code_box';
+  if (q?.puzzleAnswerText) return 'text';
+  return null;
+};
+
+// Build a normalized question data object for the modal
+const buildQuestionData = (q: any) => ({
+  _id: q?._id,
+  question: q?.questionDescription,
+  answerType: q?.answerType,
+  options: q?.options,
+  correctAnswers: q?.correctAnswers,
+  points: q?.points,
+  puzzleAnswerText: q?.puzzleAnswerText,
+  puzzleAnswerType: inferPuzzleAnswerType(q),
+  puzzleUrl: q?.puzzle?.url,
+  puzzle: q?.puzzle,
+  codeBoxConfig: q?.codeBoxConfig,
+  augmentedPhotoImage: q?.augmentedPhotoImage,
+});
+
 const LiveLocationScreen = ({ navigation, route }: any) => {
   const RADIUS_METERS = 500;
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -378,13 +405,6 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           dispatch({ type: 'SET_POPUP_SHOWN', payload: true });
 
           const queuedQuestions = overlapping.map(t => {
-            console.log('Mapping question data:', {
-              questionId: t.question?._id,
-              answerType: t.question?.answerType,
-              puzzle: t.question?.puzzle,
-              puzzleUrl: t?.question?.puzzle?.url
-            });
-            
             return {
               _id: t.question?._id,
               question: t.question?.questionDescription,
@@ -395,7 +415,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
               comments: t?.comments,
               media: t?.media || null,
               puzzleAnswerText: t?.question?.puzzleAnswerText,
-              puzzleAnswerType: t?.question?.puzzleAnswerType,
+              puzzleAnswerType: inferPuzzleAnswerType(t?.question),
               puzzleUrl: t?.question?.puzzle?.url,
               puzzle: t?.question?.puzzle,
               codeBoxConfig: t?.question?.codeBoxConfig,

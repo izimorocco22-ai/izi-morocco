@@ -1,6 +1,16 @@
 import { Alert } from 'react-native';
 const RADIUS_METERS = 500;
 
+// Infer puzzleAnswerType when backend sends null (old saved data)
+const inferPuzzleAnswerType = (q: any): string | null => {
+  if (q?.answerType !== 'puzzle') return q?.puzzleAnswerType || null;
+  if (q?.puzzleAnswerType) return q.puzzleAnswerType;
+  if (Array.isArray(q?.options) && q.options.length > 0) return 'mcq';
+  if (q?.codeBoxConfig) return 'code_box';
+  if (q?.puzzleAnswerText) return 'text';
+  return null;
+};
+
 export const createGeoJSONCircle = (
   center: [number, number],
   radius: number,
@@ -62,6 +72,11 @@ export const handleMapPress = (event: any, stateRef: any, dispatch: any) => {
       comments: target?.comments,
       media: target?.media || null,
       settings: target?.settings || null,
+      puzzleAnswerText: target?.question?.puzzleAnswerText,
+      puzzleAnswerType: inferPuzzleAnswerType(target?.question),
+      puzzleUrl: target?.question?.puzzle?.url,
+      puzzle: target?.question?.puzzle,
+      codeBoxConfig: target?.question?.codeBoxConfig,
       augmentedPhotoImage: target?.question?.augmentedPhotoImage,
     },
   });
@@ -91,7 +106,7 @@ export const handleListQuestionPress = (
     media: question?.media || null,
     settings: question?.settings || null,
     puzzleAnswerText: question?.question?.puzzleAnswerText,
-    puzzleAnswerType: question?.question?.puzzleAnswerType,
+    puzzleAnswerType: inferPuzzleAnswerType(question?.question),
     puzzleUrl: question?.question?.puzzle?.url,
     puzzle: question?.question?.puzzle,
     codeBoxConfig: question?.question?.codeBoxConfig,
