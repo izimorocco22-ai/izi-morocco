@@ -57,16 +57,14 @@ export const Congratulation = ({ navigation, route }) => {
     finishGameAndClearTimer();
   }, []);
 
-  // ✅ Calculate stats
-  console.log({ task });
-  const total =
-    task?.filter(t => t.question?.answerType !== 'no_answer')?.length || 0;
-  const correct =
-    task?.filter(t => t.isCorrect && t.question?.answerType !== 'no_answer')
-      ?.length || 0;
+  // ✅ Calculate stats — only count tasks that require an answer and were actually shown
+  const answerableTypes = ['mcq', 'multiple', 'number', 'text', 'code_box', 'puzzle', 'take_photo', 'augmented_photo', 'record_video'];
+  const answeredTasks = task?.filter(
+    t => answerableTypes.includes(t.question?.answerType) && t.isFinished
+  ) || [];
+  const total = answeredTasks.length;
+  const correct = answeredTasks.filter(t => t.isCorrect).length;
   const wrong = total - correct;
-
-  console.log({total:task?.filter(t => t.question?.answerType !== 'no_answer')})
 
   return (
     <View style={[commonStyles.container, styles.container]}>
