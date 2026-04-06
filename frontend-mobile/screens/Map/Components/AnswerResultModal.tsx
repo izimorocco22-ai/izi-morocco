@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { RFValue } from '../../../utils/responsive';
+import { t } from '../../../utils/translations';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -28,6 +29,7 @@ const AnswerResultModal = ({
   isCorrect,
   onNext,
   commentsAfterFinishingQuestion = {},
+  language,
 }: any) => {
   if (!visible) return null;
 
@@ -54,7 +56,7 @@ const AnswerResultModal = ({
         activeOpacity={0.85}
       >
         <Text style={styles.buttonText}>
-          {isCorrect ? 'Next' : 'Try Again'}
+          {isCorrect ? t(language, 'next') : t(language, 'tryAgain')}
         </Text>
       </TouchableOpacity>
     </View>

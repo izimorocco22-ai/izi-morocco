@@ -6,7 +6,9 @@ import { RFValue } from '../../../utils/responsive';
 import { handleListQuestionPress } from '../utils/mapHandlers';
 import { getCleanImageUrl } from '../../../utils/imageUtils';
 
-const ListModal = ({ state, dispatch, list, onClose }) => {
+import { t } from '../../../utils/translations';
+
+const ListModal = ({ state, dispatch, list, onClose, language }) => {
   return (
     <View
       style={{
@@ -46,7 +48,7 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
 
         {/* List Title */}
         <Text style={[commonStyles.h2Text, { marginBottom: 10 }]}>
-          Task List
+          {t(language, 'taskList')}
         </Text>
 
         {/* List Content */}
@@ -56,7 +58,7 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
               <Text
                 style={[commonStyles.h3Text, { fontSize: 16, opacity: 0.6 }]}
               >
-                No tasks available
+                {t(language, 'noTasksAvailable')}
               </Text>
             </View>
           ) : (
@@ -120,7 +122,7 @@ const ListModal = ({ state, dispatch, list, onClose }) => {
                         { fontSize: 14, opacity: 0.6 },
                       ]}
                     >
-                      Points: {item?.question?.points}
+                      {t(language, 'points')}: {item?.question?.points}
                     </Text>
                   </View>
                 </TouchableOpacity>

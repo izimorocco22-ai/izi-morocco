@@ -7,7 +7,9 @@ import SplashButton from '../../../components/SplashButton';
 import { RFValue } from '../../../utils/responsive';
 import colors from '../../../styles/colors';
 
-const IntroMessage = ({ visible, onContinue, message }: any) => {
+import { t } from '../../../utils/translations';
+
+const IntroMessage = ({ visible, onContinue, message, language }: any) => {
   if (!visible) return null;
 
   return (
@@ -40,7 +42,7 @@ const IntroMessage = ({ visible, onContinue, message }: any) => {
                 <SplashButton
 
                   onPress={onContinue}
-                  title="Continue"
+                  title={t(language, 'continue')}
                   loadingText="Please wait..."
                   buttonStyle={styles.continueButton}
                 />

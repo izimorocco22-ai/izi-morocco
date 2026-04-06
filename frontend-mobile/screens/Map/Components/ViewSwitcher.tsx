@@ -3,10 +3,13 @@ import { View, TouchableOpacity, Text, StyleSheet, ScrollView } from 'react-nati
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import colors from '../../../styles/colors';
 
+import { t } from '../../../utils/translations';
+
 interface ViewSwitcherProps {
   currentView: 'map' | string;
   playgrounds?: Array<{ name: string; image: string }>;
   playgroundName?: string;
+  language?: string;
   onViewChange: (view: 'map' | string) => void;
   isModalOpen?: boolean;
 }
@@ -15,6 +18,7 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
   currentView,
   playgrounds,
   playgroundName,
+  language,
   onViewChange,
   isModalOpen = false,
 }) => {
@@ -28,8 +32,8 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
   if (!hasPlaygrounds && !hasLegacyPlayground) return null;
 
   const views = hasPlaygrounds 
-    ? ['Map', ...playgrounds.map(p => p.name)]
-    : ['Map', playgroundName];
+    ? [t(language, 'map'), ...playgrounds.map(p => p.name)]
+    : [t(language, 'map'), playgroundName];
 
   return (
     <View style={styles.container}>

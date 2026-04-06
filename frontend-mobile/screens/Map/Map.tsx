@@ -33,6 +33,7 @@ import ListModal from './Components/ListModal';
 import PlaygroundView from './Components/PlaygroundView';
 import ViewSwitcher from './Components/ViewSwitcher';
 import { clearGameTimer, useGameTimer } from './utils/gameTimer';
+import { t } from '../../utils/translations';
 
 MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
@@ -75,6 +76,8 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
   const [mapStyleJson, setMapStyleJson] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'map' | string>('map');
 
+  const language = game?.game?.language || 'english';
+
   useEffect(() => {
     const backAction = () => {
       if (state.modalVisible || state.resultModalVisible || showList) {
@@ -91,14 +94,14 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         return true; // handled
       }
       
-      Alert.alert('Exit Game?', 'Are you sure you want to leave the game?', [
+      Alert.alert(t(language, 'exitGame'), t(language, 'exitGameConfirm'), [
         {
-          text: 'Cancel',
+          text: t(language, 'cancel'),
           onPress: () => null,
           style: 'cancel',
         },
         { 
-          text: 'YES', 
+          text: t(language, 'yes'), 
           onPress: () => {
             // Don't clear timer data when temporarily exiting - let it persist
             navigation.goBack();
@@ -534,6 +537,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
       activeCode,
       gameId,
       score: state.score,
+      language,
     });
   };
 
@@ -561,8 +565,8 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             visible={state.showOverlay}
             steps={[
               {
-                title: 'You’re in the game ',
-                content: 'follow the next steps to continue.',
+                title: t(language, 'youreInGame'),
+                content: t(language, 'followSteps'),
               },
             ]}
             onFinish={handleStart}
@@ -693,6 +697,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           currentView={currentView}
           playgrounds={game?.game?.playgrounds}
           playgroundName={game?.game?.playgroundName}
+          language={language}
           onViewChange={(view) => {
             console.log('Switching to view:', view);
             setCurrentView(view);
@@ -716,6 +721,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             state={{ ...stateRef.current, list: listItems }}
             dispatch={dispatch}
             list={listItems}
+            language={language}
             onClose={() => {
               setShowList(false);
             }}
@@ -753,6 +759,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
               });
             }}
             backgroundImage={game?.game?.backGroundImage}
+            language={language}
           />
         )}
 
@@ -761,6 +768,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           isCorrect={state.isAnswerCorrect}
           onNext={handleNextQuestion}
           commentsAfterFinishingQuestion={state.currentQuestion?.comments}
+          language={language}
         />
 
 
@@ -770,6 +778,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
             visible={state.introVisible && game?.status !== 'in_progress'}
             onContinue={handleIntroContinue}
             message={game?.game?.introMessage}
+            language={language}
           />
         )}
 
@@ -777,6 +786,7 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           visible={state.finishVisible}
           onContinue={handleFinishContinue}
           message={game?.game?.finishMessage}
+          language={language}
         />
 
         {state.loading && <LoadingMap visible={state.loading} />}

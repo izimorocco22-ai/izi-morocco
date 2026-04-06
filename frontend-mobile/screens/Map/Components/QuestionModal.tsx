@@ -21,6 +21,7 @@ import SplashButton from '../../../components/SplashButton';
 import { RFValue } from '../../../utils/responsive';
 import QuestionRenderer from './QuestionRender';
 import MediaRenderer from './MediaRenderer';
+import { t } from '../../../utils/translations';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const statusBarHeight = StatusBar.currentHeight || 0;
@@ -34,6 +35,7 @@ const QuestionModal = ({
   setInputAnswer,
   onSubmit,
   backgroundImage,
+  language,
 }) => {
   const soundRef = useRef(null);
   const insets = useSafeAreaInsets();
@@ -73,7 +75,7 @@ const QuestionModal = ({
     questionData?.answerType === 'record_video' ||
     (questionData?.answerType === 'puzzle' && !!questionData?.puzzleAnswerType);
 
-  const buttonTitle = isSubmitType ? 'Submit' : 'Next';
+  const buttonTitle = isSubmitType ? t(language, 'submit') : t(language, 'next');
 
   // -------------------------------
   // FUNCTION → Play Starting Audios Sequentially
@@ -274,7 +276,7 @@ const QuestionModal = ({
                     paddingHorizontal: RFValue(10),
                   }}
                 >
-                  <Text style={[commonStyles.h2Text]}>Puzzle</Text>
+                  <Text style={[commonStyles.h2Text]}>{t(language, 'puzzle')}</Text>
                   <SplashButton
                     buttonStyle={{
                       paddingHorizontal: RFValue(12),
@@ -282,7 +284,7 @@ const QuestionModal = ({
                       borderRadius: RFValue(6),
                       backgroundColor: '#d8b443',
                     }}
-                    title="Back"
+                    title={t(language, 'back')}
                     onPress={() => setShowPuzzleFull(false)}
                   />
                 </View>
@@ -369,7 +371,7 @@ const QuestionModal = ({
                           borderRadius: RFValue(8),
                           backgroundColor: '#d8b443',
                         }}
-                        title="Open Puzzle"
+                        title={t(language, 'openPuzzle')}
                         onPress={() => setShowPuzzleFull(true)}
                       />
                     </View>
