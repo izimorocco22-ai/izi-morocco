@@ -198,7 +198,7 @@ const QuestionModal = ({
         document.head.appendChild(style);
 
         var existing = document.querySelector('meta[name="viewport"]');
-        var content = 'width=device-width, initial-scale=0.5, minimum-scale=0.3, maximum-scale=4, user-scalable=1';
+         var content = 'width=device-width, initial-scale=0.5, minimum-scale=0.3, maximum-scale=4, user-scalable=no';
         if (existing) {
           existing.setAttribute('content', content);
         } else {
@@ -207,6 +207,16 @@ const QuestionModal = ({
           meta.setAttribute('content', content);
           document.head.appendChild(meta);
         }
+
+        // Disable double-tap zoom
+        var lastTap = 0;
+        document.addEventListener('touchend', function(e) {
+          var now = Date.now();
+          if (now - lastTap < 300) {
+            e.preventDefault();
+          }
+          lastTap = now;
+        }, { passive: false });
       } catch (e) {}
     })();
     true;
