@@ -381,6 +381,8 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     for (const target of targets) {
       const alreadyShown = shownTargets.includes(target.question?._id);
       if (alreadyShown) continue;
+      // Skip playground-only tasks — they don't trigger on GPS proximity
+      if (target.isShownOnPlayground && !target.isDisplayed) continue;
 
       if (
         isWithinRadius(
@@ -608,11 +610,11 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
                 androidRenderMode={'compass'}
               />
 
-              {/* Target zones */}
+              {/* Target zones - only show map tasks, not playground-only tasks */}
               {state.targets.length >= 0 &&
                 state.targets
                   .filter(
-                    t => !state.completedTargets.includes(t.question?._id),
+                    t => !state.completedTargets.includes(t.question?._id) && !t.isShownOnPlayground,
                   )
                   .map((target, index) => {
                     const geojson = createGeoJSONCircle(
@@ -653,11 +655,11 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
                     );
                   })}
 
-              {/* Markers */}
+              {/* Markers - only show map tasks, not playground-only tasks */}
               {state.targets.length >= 0 &&
                 state.targets
                   .filter(
-                    t => !state.completedTargets.includes(t.question?._id),
+                    t => !state.completedTargets.includes(t.question?._id) && !t.isShownOnPlayground,
                   )
                   .map((target, index) => {
                     const markerKey = `marker_${target.question?._id}_${index}`;
