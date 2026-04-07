@@ -82,7 +82,7 @@ android {
         applicationId "com.myapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode 3
         versionName "1.0"
         missingDimensionStrategy 'react-native-camera', 'general'
         resValue "string", "MAPBOX_ACCESS_TOKEN", "pk.eyJ1IjoieWFzaDExMDIiLCJhIjoiY21meG14Y21tMGRmdzJpc2Y2dTJqZ3hpNiJ9.Q2iF5usYCFwILvwDNIZkjA"
@@ -95,15 +95,19 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            storeFile file('my-release-key.keystore')
+            storePassword 'mypassword123'
+            keyAlias 'my-key-alias'
+            keyPassword 'mypassword123'
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

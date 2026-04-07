@@ -32,8 +32,8 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
   if (!hasPlaygrounds && !hasLegacyPlayground) return null;
 
   const views = hasPlaygrounds 
-    ? [t(language, 'map'), ...playgrounds.map(p => p.name)]
-    : [t(language, 'map'), playgroundName];
+    ? [{ key: 'map', label: t(language, 'map') }, ...playgrounds.map(p => ({ key: p.name.toLowerCase(), label: p.name }))]
+    : [{ key: 'map', label: t(language, 'map') }, { key: (playgroundName as string).toLowerCase(), label: playgroundName as string }];
 
   return (
     <View style={styles.container}>
@@ -42,21 +42,20 @@ const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {views.map((view) => {
-          const viewKey = view.toLowerCase();
-          const isActive = currentView === viewKey;
+        {views.map(({ key, label }) => {
+          const isActive = currentView === key;
           
           return (
             <TouchableOpacity
-              key={viewKey}
+              key={key}
               style={[
                 styles.button,
                 isActive && styles.activeButton,
               ]}
-              onPress={() => onViewChange(viewKey)}
+              onPress={() => onViewChange(key)}
             >
               <Text style={[styles.buttonText, isActive && styles.activeButtonText]}>
-                {view}
+                {label}
               </Text>
             </TouchableOpacity>
           );
