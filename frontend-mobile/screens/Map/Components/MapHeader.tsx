@@ -16,6 +16,16 @@ const MapHeader = ({ game, state, gameId, activeCode }: { game: any; state: any;
     gameDuration: game?.game?.duration
   });
 
+  // Format score to handle large numbers
+  const formatScore = (score: number) => {
+    if (score >= 1000000) {
+      return `${(score / 1000000).toFixed(1)}M`;
+    } else if (score >= 1000) {
+      return `${(score / 1000).toFixed(1)}K`;
+    }
+    return score.toString();
+  };
+
   return (
     <View
       style={[
@@ -30,9 +40,10 @@ const MapHeader = ({ game, state, gameId, activeCode }: { game: any; state: any;
         },
       ]}
     >
-      <View style={[commonStyles.fullFlex]}>
+      <View style={[{ flex: 1, minWidth: 0 }]}>
         <Text
           numberOfLines={1}
+          ellipsizeMode="tail"
           style={[
             commonStyles.h3Text,
             { fontSize: RFValue(14), color: colors.black },
@@ -45,10 +56,14 @@ const MapHeader = ({ game, state, gameId, activeCode }: { game: any; state: any;
         style={[
           commonStyles.row,
           commonStyles.alignCenter,
-          { gap: RFValue(5), width: RFValue(100) },
+          { gap: RFValue(10), flexShrink: 0, minWidth: RFValue(140) },
         ]}
       >
-        <Text style={[commonStyles.h3Text, { fontSize: RFValue(14) }]}>
+        <Text 
+          numberOfLines={1}
+          ellipsizeMode="clip"
+          style={[commonStyles.h3Text, { fontSize: RFValue(13), minWidth: RFValue(70) }]}
+        >
           ⏰{' '}
           {formattedTime ||
             ConvertGameTime(
@@ -57,8 +72,12 @@ const MapHeader = ({ game, state, gameId, activeCode }: { game: any; state: any;
               game?.game?.duration,
             )}
         </Text>
-        <Text style={[commonStyles.h3Text, { fontSize: RFValue(14) }]}>
-          🏆 {state.score}
+        <Text 
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          style={[commonStyles.h3Text, { fontSize: RFValue(13), minWidth: RFValue(50) }]}
+        >
+          🏆 {formatScore(state.score)}
         </Text>
       </View>
     </View>
