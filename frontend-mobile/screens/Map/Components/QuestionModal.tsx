@@ -11,6 +11,7 @@ import {
   StatusBar,
   Platform,
   KeyboardAvoidingView,
+  TouchableOpacity,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import Sound from 'react-native-sound';
@@ -39,8 +40,13 @@ const QuestionModal = ({
   language,
 }) => {
   const soundRef = useRef(null);
+  const backgroundSoundRef = useRef(null);
+  const progressInterval = useRef(null);
   const insets = useSafeAreaInsets();
   const [hasNavigationBar, setHasNavigationBar] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
 
   // Check if device has navigation bar
   useEffect(() => {
@@ -79,45 +85,31 @@ const QuestionModal = ({
   const buttonTitle = isSubmitType ? t(language, 'submit') : t(language, 'next');
 
   // -------------------------------
-  // FUNCTION → Play Starting Audios Sequentially
+  // FUNCTION → Setup Starting Audio (Don't Auto-Play)
   // -------------------------------
-  const playStartingAudios = (startingAudios, onComplete) => {
-    if (!startingAudios.length) return onComplete(); // no starting → go to background
+  const setupStartingAudio = startingAudios => {
+    if (!startingAudios || !startingAudios.length) return;
+    
+    // Use first starting audio for manual control
+    const firstAudio = startingAudios[0];
+    const fullUrl = (firstAudio.url && (firstAudio.url.startsWith('http') || firstAudio.url.startsWith('file:'))) 
+      ? firstAudio.url 
+      : `https://res.cloudinary.com/dxoipnmx0/video/upload/v1759483737/${firstAudio.url}`;
 
-    isPlayingStartAudios.current = true;
-    startAudioIndex.current = 0;
+    const sound = new Sound(fullUrl, null, error => {
+      if (error) return;
+      
+      sound.setVolume(0.6);
+      setAudioDuration(sound.getDuration());
+    });
 
-    const playNext = () => {
-      const current = startingAudios[startAudioIndex.current];
-      if (!current) {
-        isPlayingStartAudios.current = false;
-        return onComplete(); // finish → start background
-      }
-
-      const fullUrl = (current.url && (current.url.startsWith('http') || current.url.startsWith('file:'))) 
-        ? current.url 
-        : `https://res.cloudinary.com/dxoipnmx0/video/upload/v1759483737/${current.url}`;
-
-      const sound = new Sound(fullUrl, null, error => {
-        if (error) return playNext(); // skip invalid audio
-
-        sound.play(success => {
-          sound.release();
-          startAudioIndex.current += 1;
-          playNext(); // play next in sequence
-        });
-      });
-
-      soundRef.current = sound;
-    };
-
-    playNext();
+    backgroundSoundRef.current = sound;
   };
 
   // -------------------------------
-  // FUNCTION → Play Background Audio Loop
+  // FUNCTION → Setup Background Audio (Don't Auto-Play)
   // -------------------------------
-  const playBackgroundAudio = backgroundAudio => {
+  const setupBackgroundAudio = backgroundAudio => {
     if (!backgroundAudio) return;
 
     const fullUrl = (backgroundAudio.url && (backgroundAudio.url.startsWith('http') || backgroundAudio.url.startsWith('file:'))) 
@@ -126,13 +118,49 @@ const QuestionModal = ({
 
     const sound = new Sound(fullUrl, null, error => {
       if (error) return;
-
+      
       sound.setVolume(0.6);
-      sound.setNumberOfLoops(-1); // loop
-      sound.play();
+      sound.setNumberOfLoops(-1);
+      setAudioDuration(sound.getDuration());
     });
 
-    soundRef.current = sound;
+    backgroundSoundRef.current = sound;
+  };
+
+  // -------------------------------
+  // FUNCTION → Toggle Audio (Works for both starting and background)
+  // -------------------------------
+  const toggleAudio = () => {
+    if (!backgroundSoundRef.current) return;
+
+    if (isPlaying) {
+      backgroundSoundRef.current.pause();
+      setIsPlaying(false);
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+    } else {
+      backgroundSoundRef.current.play();
+      setIsPlaying(true);
+      startProgressTracking();
+    }
+  };
+
+  // -------------------------------
+  // FUNCTION → Track Audio Progress
+  // -------------------------------
+  const startProgressTracking = () => {
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+    }
+    
+    progressInterval.current = setInterval(() => {
+      if (backgroundSoundRef.current) {
+        backgroundSoundRef.current.getCurrentTime((seconds) => {
+          setAudioProgress(seconds);
+        });
+      }
+    }, 100);
   };
 
   // -------------------------------
@@ -145,11 +173,12 @@ const QuestionModal = ({
     const startingAudios = audios.filter(a => a.type === 'starting');
     const backgroundAudio = audios.find(a => a.type === 'background');
 
-    // Step 1 → Play all starting audios in order
-    playStartingAudios(startingAudios, () => {
-      // Step 2 → After finishing → play loop background audio
-      playBackgroundAudio(backgroundAudio);
-    });
+    // Setup audio for manual control (prioritize starting audio if available)
+    if (startingAudios.length > 0) {
+      setupStartingAudio(startingAudios);
+    } else if (backgroundAudio) {
+      setupBackgroundAudio(backgroundAudio);
+    }
 
     // AppState Stop Audio
     const appListener = AppState.addEventListener('change', nextState => {
@@ -165,6 +194,15 @@ const QuestionModal = ({
         soundRef?.current?.stop(() => soundRef?.current?.release());
         soundRef.current = null;
       }
+      if (backgroundSoundRef.current) {
+        backgroundSoundRef?.current?.stop(() => backgroundSoundRef?.current?.release());
+        backgroundSoundRef.current = null;
+      }
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+      setIsPlaying(false);
+      setAudioProgress(0);
       appListener.remove();
     };
   }, [visible, questionData]);
@@ -257,6 +295,31 @@ const QuestionModal = ({
       <View style={[styles.overlay, { 
         paddingBottom: hasNavigationBar ? Math.max(insets.bottom + 20, 60) : Math.max(insets.bottom, 20) 
       }]}>
+        {/* Audio Control Header */}
+        {backgroundSoundRef.current && (
+          <View style={styles.audioControlHeader}>
+            <TouchableOpacity 
+              style={styles.playPauseButton} 
+              onPress={toggleAudio}
+            >
+              <Text style={styles.playPauseText}>
+                {isPlaying ? '⏸️' : '▶️'}
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View 
+                  style={[styles.progressFill, { 
+                    width: audioDuration > 0 ? `${(audioProgress / audioDuration) * 100}%` : '0%' 
+                  }]} 
+                />
+              </View>
+              <Text style={styles.timeText}>
+                {Math.floor(audioProgress)}s / {Math.floor(audioDuration)}s
+              </Text>
+            </View>
+          </View>
+        )}
         <View style={styles.modalContainer}>
           {/* Scrollable Question Area */}
           <View style={styles.whiteBox}>
@@ -430,7 +493,48 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: RFValue(20),
-    paddingTop: RFValue(120),
+    paddingTop: RFValue(80),
+  },
+  audioControlHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: RFValue(25),
+    paddingHorizontal: RFValue(15),
+    paddingVertical: RFValue(8),
+    marginBottom: RFValue(15),
+    width: '100%',
+  },
+  playPauseButton: {
+    width: RFValue(40),
+    height: RFValue(40),
+    borderRadius: RFValue(20),
+    backgroundColor: '#d8b443',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: RFValue(12),
+  },
+  playPauseText: {
+    fontSize: RFValue(16),
+  },
+  progressContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  progressBar: {
+    height: RFValue(4),
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderRadius: RFValue(2),
+    marginBottom: RFValue(4),
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#d8b443',
+    borderRadius: RFValue(2),
+  },
+  timeText: {
+    fontSize: RFValue(10),
+    color: '#666',
+    textAlign: 'center',
   },
   modalContainer: {
     width: '100%',
