@@ -10,6 +10,7 @@ import {
   Dimensions,
   StatusBar,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import Sound from 'react-native-sound';
@@ -230,7 +231,7 @@ const QuestionModal = ({
   }
 
   return (
-    <View
+    <KeyboardAvoidingView
       style={[{ 
         position: 'absolute', 
         top: 0,
@@ -241,6 +242,8 @@ const QuestionModal = ({
         height: screenHeight,
         zIndex: 99 
       }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       {backgroundUri && (
         <ImageBackground
@@ -416,7 +419,7 @@ const QuestionModal = ({
           </View>
         </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -427,11 +430,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: RFValue(20),
-    paddingTop: RFValue(120), // Add top padding to start below Map/Playground buttons
+    paddingTop: RFValue(120),
   },
   modalContainer: {
     width: '100%',
-    maxHeight: '95%',
+    maxHeight: '85%',
     alignItems: 'center',
     flex: 1,
   },
