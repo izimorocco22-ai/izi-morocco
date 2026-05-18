@@ -210,13 +210,8 @@ const CaptureMedia: React.FC<CaptureMediaProps> = ({
     if (!value) return;
 
     try {
-      if (Platform.OS === 'android') {
-        const permission =
-          Platform.Version >= 33
-            ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
-            : PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
-
-        const result = await PermissionsAndroid.request(permission);
+      if (Platform.OS === 'android' && Platform.Version < 33) {
+        const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
         if (result !== PermissionsAndroid.RESULTS.GRANTED) {
           Alert.alert('Permission Denied', 'Storage permission is required to download image.');
           return;
