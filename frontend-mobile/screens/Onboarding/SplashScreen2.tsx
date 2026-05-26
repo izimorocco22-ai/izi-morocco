@@ -197,11 +197,12 @@ const SplashScreen2 = ({ navigation }) => {
           <View style={styles.modalOverlay}>
             <View style={styles.modalBox}>
               <Text style={[commonStyles.h2Text, { textAlign: 'center' }]}>
-                Permission Required
+                Location Permission Required
               </Text>
-              <Text style={[commonStyles.pText, { textAlign: 'center' }]}>
-                You need to allow location access to continue your treasure
-                hunt!
+              <Text style={[commonStyles.pText, { textAlign: 'center', fontSize: RFValue(12), marginTop: RFValue(10) }]}>
+                Izi Morocco collects location data to enable tracking your progress on the treasure hunt map, 
+                discovering nearby points of interest, and calculating your distance from hidden treasures. 
+                This data is used even when the app is in use to provide the core gameplay experience.
               </Text>
 
               <View style={styles.modalActions}>

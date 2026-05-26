@@ -6,9 +6,11 @@ const GPSBlocker = ({ onEnableLocation, onEnableGPS }) => {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={commonStyles.h2Text}>Location Services Required</Text>
-        <Text style={commonStyles.pText}>
-          This application requires Location Services (GPS) to function properly.
+        <Text style={commonStyles.h2Text}>Location Permission Required</Text>
+        <Text style={[commonStyles.pText, { textAlign: 'center', marginTop: 10 }]}>
+          Izi Morocco collects location data to enable tracking your progress on the treasure hunt map, 
+          discovering nearby points of interest, and calculating your distance from hidden treasures. 
+          This data is used even when the app is in use to provide the core gameplay experience.
         </Text>
 
         <View style={styles.buttons}>

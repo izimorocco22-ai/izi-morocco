@@ -52,7 +52,7 @@ const GPSPermissions = ({
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
             title: 'Location Permission Required',
-            message: 'This app needs access to your location to function properly.',
+            message: 'Izi Morocco collects location data to enable tracking your progress on the treasure hunt map and discovering hidden treasures even when the app is in use.',
             buttonNeutral: 'Ask Me Later',
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
@@ -175,10 +175,11 @@ const GPSPermissions = ({
     return (
       <View style={styles.blockingContainer}>
         <View style={styles.blockingContent}>
-          <Text style={styles.blockingTitle}>Location Services Required</Text>
+          <Text style={styles.blockingTitle}>Location Permission Required</Text>
           <Text style={styles.blockingMessage}>
-            This application requires Location Services (GPS) to function properly. 
-            Please enable location services to continue.
+            Izi Morocco collects location data to enable tracking your progress on the treasure hunt map, 
+            discovering nearby points of interest, and calculating your distance from hidden treasures. 
+            This data is used even when the app is in use to provide the core gameplay experience.
           </Text>
           
           {checking && (

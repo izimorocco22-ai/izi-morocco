@@ -56,7 +56,7 @@ export const requestLocationPermission = async (dispatch: any) => {
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       {
         title: 'Location Permission Required',
-        message: 'This app needs access to your location to function properly.',
+        message: 'Izi Morocco collects location data to enable tracking your progress on the treasure hunt map and discovering hidden treasures even when the app is in use.',
         buttonPositive: 'OK',
       },
     );
