@@ -48,7 +48,7 @@ export default function SettingsScreen({ navigation }) {
   );
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper backgroundColor="#ffffff">
       <View style={[commonStyles.container]}>
         <ScrollView
           showsVerticalScrollIndicator={false}

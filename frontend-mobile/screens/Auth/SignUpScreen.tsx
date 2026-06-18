@@ -71,7 +71,7 @@ export default function SignUpScreen({ navigation }) {
               colors.primaryLight,
               colors.primary,
             ]}
-            style={[commonStyles.containerPadded, { position: 'relative' }]}
+            style={[commonStyles.containerPadded, { flex: 1 }]}
           >
             <ScrollView
               contentContainerStyle={[commonStyles.scrollContainer]}

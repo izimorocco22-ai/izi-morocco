@@ -63,14 +63,15 @@ const GameStartOverlay: React.FC<GameStartOverlayProps> = ({
           </View>
           <SplashButton
             onPress={handleNext}
-            loadingText="Signing In..."
+            loadingText="Loading..."
             buttonStyle={{
               position: 'absolute',
               bottom: RFValue(50),
+              left: RFValue(20),
+              right: RFValue(20),
               backgroundColor: colors.primarydark,
               borderRadius: 8,
               height: RFValue(50),
-              marginTop: RFValue(20),
             }}
             title="Continue"
           />

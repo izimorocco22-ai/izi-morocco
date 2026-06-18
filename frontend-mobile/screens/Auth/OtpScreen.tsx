@@ -138,7 +138,7 @@ export default function OtpScreen({ navigation, route }: any) {
             ]}
             style={[
               commonStyles.containerPadded,
-              { position: 'relative', minHeight: height },
+              { flex: 1 },
             ]}
           >
             <View

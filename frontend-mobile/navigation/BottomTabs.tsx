@@ -154,7 +154,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
           state={state}
           navigation={navigation}
           image={profile}
-          index={3}
+          index={2}
         />
       </View>
     </View>

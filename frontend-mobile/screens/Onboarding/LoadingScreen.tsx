@@ -52,7 +52,7 @@ const LoadingScreen = () => {
           commonStyles.col,
           commonStyles.justifyCenter,
           commonStyles.alignCenter,
-          { position: 'relative' },
+          { flex: 1 },
         ]}
       >
         {/* Logo */}

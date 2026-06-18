@@ -126,7 +126,7 @@ export default function GameLogin({ navigation, route }) {
         ]}
         style={[
           commonStyles.containerPadded,
-          { position: 'relative', minHeight: height },
+          { flex: 1 },
         ]}
       >
         <View

@@ -91,7 +91,7 @@ export default function TeamManagementScreen() {
   };
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper backgroundColor="#ffffff">
       <View style={[commonStyles.container, styles.container]}>
         <Text style={styles.title}>Team Management</Text>
 

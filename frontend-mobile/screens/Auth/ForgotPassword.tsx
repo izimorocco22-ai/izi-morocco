@@ -62,7 +62,7 @@ export default function ForgotPassword({ navigation }: any) {
             ]}
             style={[
               commonStyles.containerPadded,
-              { position: 'relative', minHeight: height },
+              { flex: 1 },
             ]}
           >
             <View

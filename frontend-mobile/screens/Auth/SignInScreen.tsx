@@ -79,7 +79,7 @@ export default function SignInScreen({ navigation }) {
             ]}
             style={[
               commonStyles.containerPadded,
-              { position: 'relative', minHeight: height },
+              { flex: 1 },
             ]}
           >
             <View

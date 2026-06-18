@@ -280,7 +280,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper backgroundColor="#ffffff">
       <LinearGradient
         colors={[
           colors.white,
@@ -294,99 +294,94 @@ const HomeScreen = ({ navigation }) => {
         ]}
       >
         <FlatList
-        data={filteredGames}
-  keyExtractor={(item: any) => item._id}
-  renderItem={({ item }) => <Card {...item} />}
-  ListHeaderComponent={
-    <>
-      <View>
-        <Text style={commonStyles.h1Text}>
-          Hi, {user?.name}
-        </Text>
-        <Text style={[commonStyles.pText, { marginTop: 0 }]}>
-          Good Morning!
-        </Text>
-      </View>
-
-      {/* Search Bar */}
-      <View
-        style={[
-          commonStyles.row,
-          commonStyles.alignCenter,
-          commonStyles.justifyBetween,
-          { gap: RFValue(10), marginTop: RFValue(10) },
-        ]}
-      >
-        <View
-          style={[
-            commonStyles.row,
-            {
-              gap: RFValue(5),
-              borderWidth: 1,
-              borderColor: colors.black,
-              borderRadius: 10,
-              paddingHorizontal: RFValue(15),
-              flex: 1,
-            },
-          ]}
-        >
-          <SearchIcon />
-          <TextInput
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholder="Search"
-            placeholderTextColor={"#565656"}
-            style={[commonStyles.fullFlex,{color:colors.black,paddingHorizontal:RFValue(5)}]}
-          />
-        </View>
-        <TouchableOpacity onPress={() => navigation.navigate('QRCode')}>
-          <Image
-            style={{
-              height: RFValue(45),
-              width: RFValue(45),
-              resizeMode: 'contain',
-            }}
-            source={require('../../assets/images/icon/qrcode.png')}
-          />
-        </TouchableOpacity>
-      </View>
-    </>
-  }
-  ListFooterComponent={
-    isGameLoading && page > 1 ? (
-      <LottieView
-        source={require('../../assets/animation/cardLoading.json')}
-        autoPlay
-        loop
-        style={{
-          width: RFValue(100),
-          height: RFValue(80),
-          alignSelf: 'center',
-        }}
-      />
-    ) : null
-  }
-  onEndReached={() => {
-    if (!isGameLoading && hasMore) {
-      handleLoadMore();
-    }
-  }}
-  onEndReachedThreshold={0.5} // triggers when 50% before reaching bottom
-  refreshControl={
-    <RefreshControl
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      colors={[colors.primary]}
-      tintColor={colors.primary}
-    />
-  }
-  showsVerticalScrollIndicator={false}
-  contentContainerStyle={{
-    paddingBottom: RFValue(Platform.OS === 'ios' ? 80 : 60),
-    paddingTop: RFValue(20),
-    gap: RFValue(15),
-  }}
-/>
+          data={filteredGames}
+          keyExtractor={(item: any) => item._id}
+          numColumns={2}
+          columnWrapperStyle={{ gap: RFValue(12) }}
+          renderItem={({ item }) => (
+            <View style={{ flex: 1 }}>
+              <Card {...item} />
+            </View>
+          )}
+          ListHeaderComponent={
+            <>
+              <View>
+                <Text style={commonStyles.h1Text}>Hi, {user?.name}</Text>
+                <Text style={[commonStyles.pText, { marginTop: 0 }]}>Good Morning!</Text>
+              </View>
+              <View
+                style={[
+                  commonStyles.row,
+                  commonStyles.alignCenter,
+                  commonStyles.justifyBetween,
+                  { gap: RFValue(10), marginTop: RFValue(10), marginBottom: RFValue(10) },
+                ]}
+              >
+                <View
+                  style={[
+                    commonStyles.row,
+                    {
+                      gap: RFValue(5),
+                      borderWidth: 1,
+                      borderColor: colors.black,
+                      borderRadius: 10,
+                      paddingHorizontal: RFValue(15),
+                      flex: 1,
+                    },
+                  ]}
+                >
+                  <SearchIcon />
+                  <TextInput
+                    value={searchText}
+                    onChangeText={setSearchText}
+                    placeholder="Search"
+                    placeholderTextColor="#565656"
+                    style={[commonStyles.fullFlex, { color: colors.black, paddingHorizontal: RFValue(5) }]}
+                  />
+                </View>
+                <TouchableOpacity onPress={() => navigation.navigate('QRCode')}>
+                  <Image
+                    style={{ height: RFValue(45), width: RFValue(45), resizeMode: 'contain' }}
+                    source={require('../../assets/images/icon/qrcode.png')}
+                  />
+                </TouchableOpacity>
+              </View>
+            </>
+          }
+          ListEmptyComponent={
+            !isGameLoading ? (
+              <View style={{ alignItems: 'center', marginTop: RFValue(40) }}>
+                <Text style={[commonStyles.pText, { textAlign: 'center' }]}>No games available</Text>
+              </View>
+            ) : null
+          }
+          ListFooterComponent={
+            isGameLoading ? (
+              <LottieView
+                source={require('../../assets/animation/cardLoading.json')}
+                autoPlay
+                loop
+                style={{ width: RFValue(100), height: RFValue(80), alignSelf: 'center' }}
+              />
+            ) : null
+          }
+          onEndReached={() => { if (!isGameLoading && hasMore) handleLoadMore(); }}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: RFValue(Platform.OS === 'ios' ? 80 : 60),
+            paddingTop: RFValue(20),
+            gap: RFValue(12),
+          }}
+        />
       </LinearGradient>
     </ScreenWrapper>
   );

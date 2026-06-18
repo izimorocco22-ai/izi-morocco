@@ -149,7 +149,7 @@ const QRCode = ({ navigation }) => {
   };
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper backgroundColor="#ffffff">
       <Animated.View
         style={{
           flex: 1,
