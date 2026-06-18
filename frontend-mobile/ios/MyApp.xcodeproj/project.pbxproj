@@ -8,12 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		0C80B921A6F3F58F76C31292 /* libPods-MyApp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-MyApp.a */; };
+		0FAFC1C6C3C580F495DBFE1E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		2D9DD80E1F224D81A5CF0B15 /* Neue-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 385520712FC04FC591EB9A39 /* Neue-Bold.ttf */; };
+		2EFFD588DF03404A805F5339 /* Neue-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2DA0AC07A5A544EA83A11003 /* Neue-Light.ttf */; };
+		4EF52D859AC5427BA0CD312A /* Neue-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B8827CC7FCA84E28BE5214AD /* Neue-ExtraBold.ttf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		2D9DD80E1F224D81A5CF0B15 /* Neue-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 385520712FC04FC591EB9A39 /* Neue-Bold.ttf */; };
-		4EF52D859AC5427BA0CD312A /* Neue-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B8827CC7FCA84E28BE5214AD /* Neue-ExtraBold.ttf */; };
-		2EFFD588DF03404A805F5339 /* Neue-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2DA0AC07A5A544EA83A11003 /* Neue-Light.ttf */; };
 		CB1E0870FC054A358FDBB06C /* Neue-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D2DFD54155FD453ABEDD30E4 /* Neue-Regular.ttf */; };
 /* End PBXBuildFile section */
 
@@ -22,16 +23,16 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MyApp/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MyApp/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = MyApp/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		2DA0AC07A5A544EA83A11003 /* Neue-Light.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Neue-Light.ttf"; path = "../assets/fonts/Neue-Light.ttf"; sourceTree = "<group>"; };
+		385520712FC04FC591EB9A39 /* Neue-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Neue-Bold.ttf"; path = "../assets/fonts/Neue-Bold.ttf"; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-MyApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MyApp.debug.xcconfig"; path = "Target Support Files/Pods-MyApp/Pods-MyApp.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-MyApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MyApp.release.xcconfig"; path = "Target Support Files/Pods-MyApp/Pods-MyApp.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-MyApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MyApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MyApp/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = MyApp/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		B8827CC7FCA84E28BE5214AD /* Neue-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Neue-ExtraBold.ttf"; path = "../assets/fonts/Neue-ExtraBold.ttf"; sourceTree = "<group>"; };
+		D2DFD54155FD453ABEDD30E4 /* Neue-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Neue-Regular.ttf"; path = "../assets/fonts/Neue-Regular.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		385520712FC04FC591EB9A39 /* Neue-Bold.ttf */ = {isa = PBXFileReference; name = "Neue-Bold.ttf"; path = "../assets/fonts/Neue-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		B8827CC7FCA84E28BE5214AD /* Neue-ExtraBold.ttf */ = {isa = PBXFileReference; name = "Neue-ExtraBold.ttf"; path = "../assets/fonts/Neue-ExtraBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		2DA0AC07A5A544EA83A11003 /* Neue-Light.ttf */ = {isa = PBXFileReference; name = "Neue-Light.ttf"; path = "../assets/fonts/Neue-Light.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		D2DFD54155FD453ABEDD30E4 /* Neue-Regular.ttf */ = {isa = PBXFileReference; name = "Neue-Regular.ttf"; path = "../assets/fonts/Neue-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +57,17 @@
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
 			);
 			name = MyApp;
+			sourceTree = "<group>";
+		};
+		1FA50BC60DAC4EC18F349B13 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				385520712FC04FC591EB9A39 /* Neue-Bold.ttf */,
+				B8827CC7FCA84E28BE5214AD /* Neue-ExtraBold.ttf */,
+				2DA0AC07A5A544EA83A11003 /* Neue-Light.ttf */,
+				D2DFD54155FD453ABEDD30E4 /* Neue-Regular.ttf */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
@@ -105,18 +117,6 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
-		};
-		1FA50BC60DAC4EC18F349B13 /* Resources */ = {
-			isa = "PBXGroup";
-			children = (
-				385520712FC04FC591EB9A39 /* Neue-Bold.ttf */,
-				B8827CC7FCA84E28BE5214AD /* Neue-ExtraBold.ttf */,
-				2DA0AC07A5A544EA83A11003 /* Neue-Light.ttf */,
-				D2DFD54155FD453ABEDD30E4 /* Neue-Regular.ttf */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-			path = "";
 		};
 /* End PBXGroup section */
 
@@ -184,6 +184,7 @@
 				4EF52D859AC5427BA0CD312A /* Neue-ExtraBold.ttf in Resources */,
 				2EFFD588DF03404A805F5339 /* Neue-Light.ttf in Resources */,
 				CB1E0870FC054A358FDBB06C /* Neue-Regular.ttf in Resources */,
+				0FAFC1C6C3C580F495DBFE1E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -214,9 +215,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-MyApp/Pods-MyApp-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-MyApp/Pods-MyApp-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -253,9 +258,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-MyApp/Pods-MyApp-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-MyApp/Pods-MyApp-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -283,6 +292,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 425VUQXQJ7;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = MyApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -290,14 +300,14 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = MyApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.izi.moroccoapp;
+				PRODUCT_NAME = "Izi Morocco";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -311,20 +321,22 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 425VUQXQJ7;
 				INFOPLIST_FILE = MyApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = MyApp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.izi.moroccoapp;
+				PRODUCT_NAME = "Izi Morocco";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -399,7 +411,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				USE_HERMES = true;
 			};
 			name = Debug;
 		};
@@ -464,7 +479,9 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
