@@ -320,12 +320,14 @@ const HomeScreen = ({ navigation }) => {
                 <View
                   style={[
                     commonStyles.row,
+                    commonStyles.alignCenter,
                     {
                       gap: RFValue(5),
                       borderWidth: 1,
                       borderColor: colors.black,
                       borderRadius: 10,
                       paddingHorizontal: RFValue(15),
+                      height: RFValue(48),
                       flex: 1,
                     },
                   ]}
@@ -336,7 +338,15 @@ const HomeScreen = ({ navigation }) => {
                     onChangeText={setSearchText}
                     placeholder="Search"
                     placeholderTextColor="#565656"
-                    style={[commonStyles.fullFlex, { color: colors.black, paddingHorizontal: RFValue(5) }]}
+                    style={[
+                      commonStyles.fullFlex,
+                      {
+                        color: colors.black,
+                        paddingHorizontal: RFValue(5),
+                        paddingVertical: 0,
+                        height: '100%',
+                      },
+                    ]}
                   />
                 </View>
                 <TouchableOpacity onPress={() => navigation.navigate('QRCode')}>
