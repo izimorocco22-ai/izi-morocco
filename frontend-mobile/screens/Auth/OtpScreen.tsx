@@ -123,24 +123,22 @@ export default function OtpScreen({ navigation, route }: any) {
   };
 
   return (
-    <ScreenWrapper>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <LinearGradient
-            colors={[
-              colors.white,
-              colors.white,
-              colors.primaryLight,
-              colors.primary,
-            ]}
-            style={[
-              commonStyles.containerPadded,
-              { flex: 1 },
-            ]}
-          >
+    <LinearGradient
+      colors={[
+        colors.white,
+        colors.white,
+        colors.primaryLight,
+        colors.primary,
+      ]}
+      style={{ flex: 1 }}
+    >
+      <ScreenWrapper>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={[commonStyles.containerPadded, { flex: 1, backgroundColor: 'transparent' }]}>
             <View
               style={[
                 commonStyles.fullFlex,
@@ -249,9 +247,10 @@ export default function OtpScreen({ navigation, route }: any) {
                 </Text>
               </View>
             </View>
-          </LinearGradient>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-    </ScreenWrapper>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </ScreenWrapper>
+    </LinearGradient>
   );
 }

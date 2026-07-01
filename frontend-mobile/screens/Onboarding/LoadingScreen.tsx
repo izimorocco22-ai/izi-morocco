@@ -39,22 +39,25 @@ const LoadingScreen = () => {
   });
 
   return (
-    <ScreenWrapper>
-      <LinearGradient
-        colors={[
-          colors.white,
-          colors.white,
-          colors.primaryLight,
-          colors.primary,
-        ]}
-        style={[
-          commonStyles.containerPadded,
-          commonStyles.col,
-          commonStyles.justifyCenter,
-          commonStyles.alignCenter,
-          { flex: 1 },
-        ]}
-      >
+    <LinearGradient
+      colors={[
+        colors.white,
+        colors.white,
+        colors.primaryLight,
+        colors.primary,
+      ]}
+      style={{ flex: 1 }}
+    >
+      <ScreenWrapper>
+        <View
+          style={[
+            commonStyles.containerPadded,
+            commonStyles.col,
+            commonStyles.justifyCenter,
+            commonStyles.alignCenter,
+            { flex: 1, backgroundColor: 'transparent' },
+          ]}
+        >
         {/* Logo */}
         <Image
           source={require('../../assets/images/logo/logo.png')}
@@ -70,8 +73,9 @@ const LoadingScreen = () => {
           style={[{ height: 70, width: 240 }]}
           resizeMode="cover"
         />
-      </LinearGradient>
-    </ScreenWrapper>
+        </View>
+      </ScreenWrapper>
+    </LinearGradient>
   );
 };
 

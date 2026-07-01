@@ -41,11 +41,12 @@ const SplashScreen1 = ({ navigation }) => {
   }, []);
 
   return (
-    <ScreenWrapper>
-      <LinearGradient
-        colors={['#ffffff', '#ffffff', colors.primaryLight, colors.primary]}
-        style={styles.gradient}
-      >
+    <LinearGradient
+      colors={['#ffffff', '#ffffff', colors.primaryLight, colors.primary]}
+      style={styles.fill}
+    >
+      <ScreenWrapper>
+        <View style={styles.gradient}>
         {/* Center Content */}
         <Animated.View
           style={[
@@ -78,12 +79,16 @@ const SplashScreen1 = ({ navigation }) => {
             onPress={() => navigation.navigate('Splash2')}
           />
         </Animated.View>
-      </LinearGradient>
-    </ScreenWrapper>
+        </View>
+      </ScreenWrapper>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
+  fill: {
+    flex: 1,
+  },
   gradient: {
     flex: 1,
     justifyContent: 'space-between',

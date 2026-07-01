@@ -29,16 +29,17 @@ const ChooseAvatar = ({ navigation }) => {
   const [selectedAvatar, setSelectedAvatar] = useState<number | null>(0);
 
   return (
-    <ScreenWrapper>
-      <LinearGradient
-        colors={[
-          colors.white,
-          colors.white,
-          colors.primaryLight,
-          colors.primary,
-        ]}
-        style={[commonStyles.containerPadded]}
-      >
+    <LinearGradient
+      colors={[
+        colors.white,
+        colors.white,
+        colors.primaryLight,
+        colors.primary,
+      ]}
+      style={{ flex: 1 }}
+    >
+      <ScreenWrapper>
+        <View style={[commonStyles.containerPadded, { backgroundColor: 'transparent' }]}>
         <View
           style={[
             commonStyles.col,
@@ -105,8 +106,9 @@ const ChooseAvatar = ({ navigation }) => {
             }}
           />
         </View>
-      </LinearGradient>
-    </ScreenWrapper>
+        </View>
+      </ScreenWrapper>
+    </LinearGradient>
   );
 };
 

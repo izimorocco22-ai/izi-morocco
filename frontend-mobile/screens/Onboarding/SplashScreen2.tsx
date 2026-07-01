@@ -108,16 +108,17 @@ const SplashScreen2 = ({ navigation }) => {
   }, []);
 
   return (
-    <ScreenWrapper>
-      <LinearGradient
-        colors={[
-          colors.white,
-          colors.white,
-          colors.primaryLight,
-          colors.primary,
-        ]}
-        style={[commonStyles.containerPadded, { flex: 1 }]}
-      >
+    <LinearGradient
+      colors={[
+        colors.white,
+        colors.white,
+        colors.primaryLight,
+        colors.primary,
+      ]}
+      style={{ flex: 1 }}
+    >
+      <ScreenWrapper>
+        <View style={[commonStyles.containerPadded, { flex: 1, backgroundColor: 'transparent' }]}>
         <View style={[commonStyles.fullFlex, commonStyles.justifyBetween]}>
           {/* Main content */}
           <Animated.View
@@ -236,8 +237,9 @@ const SplashScreen2 = ({ navigation }) => {
             </View>
           </View>
         </Modal>
-      </LinearGradient>
-    </ScreenWrapper>
+        </View>
+      </ScreenWrapper>
+    </LinearGradient>
   );
 };
 

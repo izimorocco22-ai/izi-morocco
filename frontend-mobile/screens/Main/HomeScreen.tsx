@@ -280,19 +280,25 @@ const HomeScreen = ({ navigation }) => {
   };
 
   return (
-    <ScreenWrapper backgroundColor="#ffffff">
-      <LinearGradient
-        colors={[
-          colors.white,
-          colors.white,
-          colors.primaryLight,
-          colors.primary,
-        ]}
-        style={[
-          commonStyles.container,
-          { paddingBottom: Platform.OS === 'ios' ? RFValue(80) : RFValue(60) },
-        ]}
-      >
+    <LinearGradient
+      colors={[
+        colors.white,
+        colors.white,
+        colors.primaryLight,
+        colors.primary,
+      ]}
+      style={{ flex: 1 }}
+    >
+      <ScreenWrapper backgroundColor="transparent">
+        <View
+          style={[
+            commonStyles.container,
+            {
+              paddingBottom: Platform.OS === 'ios' ? RFValue(80) : RFValue(60),
+              backgroundColor: 'transparent',
+            },
+          ]}
+        >
         <FlatList
           data={filteredGames}
           keyExtractor={(item: any) => item._id}
@@ -392,8 +398,9 @@ const HomeScreen = ({ navigation }) => {
             gap: RFValue(12),
           }}
         />
-      </LinearGradient>
-    </ScreenWrapper>
+        </View>
+      </ScreenWrapper>
+    </LinearGradient>
   );
 };
 

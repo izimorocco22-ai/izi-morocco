@@ -116,19 +116,17 @@ export default function GameLogin({ navigation, route }) {
   // sample steps - this array would come from backend in real app
 
   return (
-    <ScreenWrapper>
-      <LinearGradient
-        colors={[
-          colors.white,
-          colors.white,
-          colors.primaryLight,
-          colors.primary,
-        ]}
-        style={[
-          commonStyles.containerPadded,
-          { flex: 1 },
-        ]}
-      >
+    <LinearGradient
+      colors={[
+        colors.white,
+        colors.white,
+        colors.primaryLight,
+        colors.primary,
+      ]}
+      style={{ flex: 1 }}
+    >
+      <ScreenWrapper>
+        <View style={[commonStyles.containerPadded, { flex: 1, backgroundColor: 'transparent' }]}>
         <View
           style={[
             commonStyles.fullFlex,
@@ -330,7 +328,8 @@ export default function GameLogin({ navigation, route }) {
             </View>
           </View>
         </View>
-      </LinearGradient>
-    </ScreenWrapper>
+        </View>
+      </ScreenWrapper>
+    </LinearGradient>
   );
 }

@@ -31,5 +31,18 @@ target 'MyApp' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Fix fmt 11.0.2 "consteval is not a constant expression" compile error on
+    # Xcode 16+/newer clang. fmt is pinned to 11.0.2 by Folly, so we disable its
+    # consteval usage instead of bumping the version.
+    fmt_base = File.join(installer.sandbox.root, 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      contents = File.read(fmt_base)
+      patched = contents.gsub('#  define FMT_USE_CONSTEVAL 1', '#  define FMT_USE_CONSTEVAL 0')
+      if patched != contents
+        File.write(fmt_base, patched)
+        Pod::UI.puts "[fmt patch] Disabled FMT_USE_CONSTEVAL in #{fmt_base}".green
+      end
+    end
   end
 end
