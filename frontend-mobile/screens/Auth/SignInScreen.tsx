@@ -37,7 +37,7 @@ export default function SignInScreen({ navigation }) {
   const handleSignIn = async () => {
     setErrors({}); // reset old errors
     try {
-      await dispatch(signIn({ email, password })).unwrap();
+      await dispatch(signIn({ email: email.trim().toLowerCase(), password })).unwrap();
       await dispatch(init())
     } catch (error: any) {
       if (error?.errors) {
@@ -59,7 +59,7 @@ export default function SignInScreen({ navigation }) {
     if (loginResponse?.step === 'homeScreen') {
       navigation.navigate('BottomTabs');
     } else if (loginResponse?.step === 'otpScreen') {
-      navigation.navigate('Otp', { email: email, from: 'SignIn' });
+      navigation.navigate('Otp', { email: email.trim().toLowerCase(), from: 'SignIn' });
     }
   }, [loginResponse]);
 
@@ -111,6 +111,8 @@ export default function SignInScreen({ navigation }) {
                   onChangeText={setEmail}
                   placeholder="Enter your email/user id"
                   keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
                   error={errors?.email || errors?.userId || errors?.general}
                 />
 

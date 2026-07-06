@@ -13,6 +13,8 @@ const CustomInput = ({
   keyboardType = 'default',
   label = '',
   error,
+  autoCapitalize = 'sentences',
+  autoCorrect = true,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -45,6 +47,8 @@ const CustomInput = ({
           secureTextEntry={isPasswordField && !showPassword}
           placeholderTextColor={colors.textSecondary}
           keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          autoCorrect={autoCorrect}
           style={[
             commonStyles.input,
             style,

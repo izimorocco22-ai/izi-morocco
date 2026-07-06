@@ -35,11 +35,12 @@ export default function ForgotPassword({ navigation }: any) {
       return;
     }
 
+    const normalizedEmail = email.trim().toLowerCase();
     try {
-      await dispatch(forgetPassword({ email: email.toLowerCase() })).unwrap();
+      await dispatch(forgetPassword({ email: normalizedEmail })).unwrap();
       navigation.navigate('Otp', {
         from: 'ForgotPassword',
-        email: email.toLowerCase(),
+        email: normalizedEmail,
       });
     } catch (error: any) {
       Alert.alert('Error', error?.message || 'Something went wrong');
@@ -94,6 +95,8 @@ export default function ForgotPassword({ navigation }: any) {
                   onChangeText={setEmail}
                   placeholder="Enter your email"
                   keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
                   error={null}
                 />
 

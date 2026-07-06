@@ -35,13 +35,14 @@ export default function SignUpScreen({ navigation }) {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleSignUp = async () => {
-    const payload = { name, email: email.toLowerCase(), password, phone };
+    const normalizedEmail = email.trim().toLowerCase();
+    const payload = { name: name.trim(), email: normalizedEmail, password, phone: phone.trim() };
 
     try {
       await dispatch(signUp(payload)).unwrap();
       navigation.navigate('Otp', {
         from: 'SignUp',
-        email: email.toLowerCase(),
+        email: normalizedEmail,
       });
     } catch (error: any) {
       if (error?.errors) {
@@ -119,6 +120,8 @@ export default function SignUpScreen({ navigation }) {
                     onChangeText={setEmail}
                     placeholder="Enter your email"
                     keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
                     error={errors.email}
                   />
 

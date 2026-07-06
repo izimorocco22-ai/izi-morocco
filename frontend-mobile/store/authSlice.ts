@@ -97,7 +97,7 @@ export const signIn = createAsyncThunk(
       const res = await ApiService({
         method: 'POST',
         endpoint: apiPaths.login,
-        data: { email:email.toLowerCase(), password },
+        data: { email: email.trim().toLowerCase(), password },
       });
       await storage.setTokens(res?.token);
       // return {
@@ -128,7 +128,7 @@ export const signUp = createAsyncThunk(
       const res = await ApiService({
         method: 'POST',
         endpoint: apiPaths.signup,
-        data: payload,
+        data: { ...payload, email: payload.email.trim().toLowerCase() },
       });
       await storage.setTokens(res?.token);
 
@@ -175,7 +175,7 @@ export const forgetPassword = createAsyncThunk(
       const response = await ApiService({
         method: 'POST',
         endpoint: apiPaths.forgetPassword,
-        data: { email },
+        data: { email: email.trim().toLowerCase() },
       });
       return response;
     } catch (err: any) {
@@ -216,7 +216,7 @@ export const resendOtp = createAsyncThunk(
       const response = await ApiService({
         method: 'POST',
         endpoint: apiPaths.resendOtp,
-        data: { email, reqFor },
+        data: { email: email.trim().toLowerCase(), reqFor },
       });
       return response;
     } catch (err: any) {
