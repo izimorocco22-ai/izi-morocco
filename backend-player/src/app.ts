@@ -41,6 +41,7 @@ app.use('/team', teamRoutes)
 
 app.use(errorHandler)
 
-app.listen(port, () => {
+// Bind to 0.0.0.0 so the hosting platform (Render) can detect the open port.
+app.listen(Number(port), '0.0.0.0', () => {
   console.log('server started on port:', port)
 })
