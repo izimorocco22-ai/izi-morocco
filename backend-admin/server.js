@@ -34,8 +34,8 @@ const rateLimit = expressRateLimit({
   windowMs: 10 * 60 * 1000,
 })
 
-init().then((dbStatus) => {
- 
+const startServer = (dbStatus) => {
+
 
   // verifyAWSConnection()
 
@@ -96,7 +96,8 @@ init().then((dbStatus) => {
       .json(buildErrorObject(httpStatus.NOT_FOUND, 'URL_NOT_FOUND')),
   )
 
-  const server = api.listen(process.env.PORT, () => {
+  const PORT = process.env.PORT || 8080
+  const server = api.listen(PORT, '0.0.0.0', () => {
     const port = server.address().port
     console.log(chalk.cyan.bold('********************************'))
     console.log(chalk.green.bold('   🚀 Server Information 🚀'))
@@ -108,7 +109,15 @@ init().then((dbStatus) => {
     console.log(chalk.green.bold('🚀 Server is up and running! 🚀'))
     console.log(chalk.cyan.bold('********************************'))
   })
-})
+}
+
+// Open the HTTP port immediately so the platform (Render) always detects it,
+// then connect to the DB in the background. A DB failure is logged, not fatal.
+startServer('connecting...')
+
+init()
+  .then((dbStatus) => console.log(chalk.yellow.bold(`Database:    ${dbStatus}`)))
+  .catch((err) => console.log('Database init failed:', err))
 
 // For testing
 export default api
