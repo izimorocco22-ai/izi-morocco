@@ -9,7 +9,10 @@ import config from '../config'
 import { generateOTP } from '../utils/otp'
 
 export const signup = async (req: Request, res: Response) => {
-  const { name, email, password } = req.body
+  const { name, password } = req.body
+  // Normalize email: iOS keyboards can inject trailing spaces / capitals which
+  // break the OTP email recipient. Always trim + lowercase before use.
+  const email = String(req.body.email || '').trim().toLowerCase()
 
   const hashedPassword = await bcrypt.hash(password, 10)
   const playerId = generateUUID()
