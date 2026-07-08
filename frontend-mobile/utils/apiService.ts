@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { AxiosRequestConfig } from 'axios';
 import { API_URL, APP_NAME } from '@env';
 
-const API_BASE_URL: string = API_URL || 'https://izi-morocco-1.onrender.com';
+const API_BASE_URL: string = API_URL || 'https://izi-morocco-1-epjo.onrender.com';
 
 console.log('API_BASE_URL loaded:', API_BASE_URL);
 

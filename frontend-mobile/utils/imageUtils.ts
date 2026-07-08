@@ -33,7 +33,7 @@ export const getCleanMediaUrl = (url: string | undefined | null, type: 'image' |
   }
 
   // Default fallback
-  const base = (API_URL || 'https://izi-morocco-1.onrender.com').replace(/\/$/, '');
+  const base = (API_URL || 'https://izi-morocco-1-epjo.onrender.com').replace(/\/$/, '');
   const path = cleanUrl.startsWith('uploads/') ? cleanUrl : `uploads/${cleanUrl}`;
   return `${base}/public/${path}`;
 };
