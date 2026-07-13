@@ -43,10 +43,16 @@ export const signup = async (req: Request, res: Response) => {
     })
   ])
 
-  sendEmail('ACCOUNT_VERIFICATION', {
+  // Await the send. If this is fire-and-forget, the request finishes first and
+  // the host (Render free tier) can suspend the instance mid-flight, silently
+  // dropping the OTP email. Awaiting guarantees it is dispatched before we reply.
+  const emailResponse: any = await sendEmail('ACCOUNT_VERIFICATION', {
     email: playerDetails.email,
     name: playerDetails.name,
     otp
+  }).catch((e) => {
+    console.error('[EMAIL] Signup verification email failed:', e)
+    return { success: false }
   })
 
   const token = createJWT(
@@ -58,7 +64,10 @@ export const signup = async (req: Request, res: Response) => {
 
   return res.json({
     success: true,
-    message: 'Signup successful',
+    message: emailResponse?.success
+      ? 'Signup successful'
+      : 'Signup successful, but the verification email could not be sent. Please use Resend OTP.',
+    emailSent: !!emailResponse?.success,
     token,
     step: 'otpScreen'
   })
