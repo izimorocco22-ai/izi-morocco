@@ -1,6 +1,7 @@
 import config from '../config'
 import mongoose from 'mongoose'
 import loadModels from './helper/loadModals'
+import { ensureReviewAccount } from '../utils/reviewAccount'
 
 const mongoURL = config.mongodb.MONGO_URI
 
@@ -14,6 +15,9 @@ if (!mongoURL) {
     .then(() => {
       loadModels()
       console.log('mongoDb Connected')
+      // Make sure the App Store review account exists so it shows up in the
+      // admin player dropdown (for assigning a game ticket) right away.
+      ensureReviewAccount()
     })
     .catch((e) => {
       console.log(e)

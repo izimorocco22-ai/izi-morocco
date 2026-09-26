@@ -7,6 +7,7 @@ import { createJWT } from '../utils/token'
 import sendEmail from '../utils/email'
 import config from '../config'
 import { generateOTP } from '../utils/otp'
+import { REVIEW_ACCOUNT, isReviewEmail, ensureReviewAccount } from '../utils/reviewAccount'
 
 export const signup = async (req: Request, res: Response) => {
   const { name, password } = req.body
@@ -76,6 +77,16 @@ export const signup = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body
 
+  // App Store / Play Store review account: fixed login, always goes straight
+  // to the home screen (no OTP). Scoped to this one email + password only.
+  if (isReviewEmail(email) && password === REVIEW_ACCOUNT.password) {
+    const playerId = await ensureReviewAccount()
+    if (playerId) {
+      const token = createJWT({ id: playerId }, process.env.JWT_SECRET || '')
+      return res.json({ success: true, message: 'Login successful', token, step: 'homeScreen' })
+    }
+  }
+
   const player = await Players.findOne({ email }).lean()
 
   if (!player) {
@@ -139,6 +150,16 @@ export const verifyAccount = async (req: Request, res: Response) => {
     return res.status(400).json({
       success: false,
       message: 'Invalid OTP'
+    })
+  }
+
+  // App Store / Play Store review account: fixed OTP so a reviewer can clear
+  // the OTP screen without a real inbox. Scoped to this one email only.
+  if (isReviewEmail(email) && String(otp) === REVIEW_ACCOUNT.otp) {
+    await ensureReviewAccount()
+    return res.json({
+      success: true,
+      message: 'Account verified successfully. You can now login.'
     })
   }
 
