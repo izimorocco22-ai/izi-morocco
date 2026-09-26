@@ -37,9 +37,9 @@ const QuestionSchema = new mongoose.Schema({
     }
   ],
 
-  correctAnswers: { 
-    type: [mongoose.Schema.Types.Mixed], 
-    required: function() {
+  correctAnswers: {
+    type: [mongoose.Schema.Types.Mixed],
+    required: function(this: any): boolean {
       return !['no_answer', 'puzzle', 'take_photo', 'record_video', 'augmented_photo'].includes(this.answerType);
     },
     default: []
@@ -48,7 +48,7 @@ const QuestionSchema = new mongoose.Schema({
   puzzle: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Puzzles",
-    required: function() {
+    required: function(this: any): boolean {
       return this.answerType === 'puzzle';
     }
   },
