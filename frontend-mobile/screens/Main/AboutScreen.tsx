@@ -6,6 +6,7 @@ import BackHeader from '../../components/BackHeader';
 import commonStyles from '../../styles/commonStyles';
 import { RFValue } from '../../utils/responsive';
 import colors from '../../styles/colors';
+import DeviceInfo from 'react-native-device-info';
 
 const AboutScreen = () => {
   return (
@@ -23,7 +24,7 @@ const AboutScreen = () => {
             resizeMode="contain"
           />
           <Text style={styles.appName}>IZI Morocco</Text>
-          <Text style={styles.version}>Version 1.1.0</Text>
+          <Text style={styles.version}>Version {DeviceInfo.getVersion()} ({DeviceInfo.getBuildNumber()})</Text>
         </View>
 
         <View style={styles.card}>
