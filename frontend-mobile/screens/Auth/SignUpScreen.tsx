@@ -127,10 +127,10 @@ export default function SignUpScreen({ navigation }) {
 
                   <CustomInput
                     keyboardType="number-pad"
-                    label="Phone Number"
+                    label="Phone Number (Optional)"
                     value={phone}
                     onChangeText={setPhone}
-                    placeholder="Enter your phone number"
+                    placeholder="Enter your phone number (optional)"
                     error={errors.phone}
                   />
 

@@ -121,7 +121,7 @@ export const signIn = createAsyncThunk(
 export const signUp = createAsyncThunk(
   'auth/signUp',
   async (
-    payload: { name: string; email: string; password: string; phone: string },
+    payload: { name: string; email: string; password: string; phone?: string },
     { rejectWithValue },
   ) => {
     try {

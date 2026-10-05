@@ -18,9 +18,8 @@ export const signupSchema: ValidationChain[] = [
   body('email').isEmail().withMessage('Invalid email address'),
 
   body('phone')
+    .optional({ values: 'falsy' })
     .trim()
-    .notEmpty()
-    .withMessage('Mobile number is required.')
     .isMobilePhone('any')
     .withMessage('Please enter a valid mobile number.'),
 
