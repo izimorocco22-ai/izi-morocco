@@ -1,6 +1,6 @@
 // screens/GameLogin/GameLogin.tsx
 import React, { useRef, useState } from 'react';
-import { View, Text, Dimensions, TouchableOpacity, Image, Animated } from 'react-native';
+import { View, Text, Dimensions, TouchableOpacity, Image, Animated, Alert, Platform } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import colors from '../../styles/colors';
 import commonStyles from '../../styles/commonStyles';
@@ -17,6 +17,15 @@ import { apiPaths } from '../../utils/apiPaths';
 
 const { height } = Dimensions.get('window');
 
+// ToastAndroid is a no-op on iOS, so fall back to an Alert there.
+const showMessage = (message: string) => {
+  if (Platform.OS === 'android') {
+    ToastAndroid.show(message, ToastAndroid.LONG);
+  } else {
+    Alert.alert('Game Login', message);
+  }
+};
+
 export default function GameLogin({ navigation, route }) {
   const { activationCode, game, qrGameID } = route.params || {};
   const gameId = qrGameID ? qrGameID : game?._id;
@@ -24,6 +33,7 @@ export default function GameLogin({ navigation, route }) {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'single' | 'team'>('single');
   const [teamName, setTeamName] = useState('');
+  const [errors, setErrors] = useState<{ code?: string; team?: string }>({});
   const tabAnim = useRef(new Animated.Value(0)).current;
   const dispatch = useDispatch<any>();
 
@@ -38,19 +48,16 @@ export default function GameLogin({ navigation, route }) {
   };
 
   const handleSignIn = async () => {
+    const code = activeCode.trim();
+    const nextErrors: { code?: string; team?: string } = {};
+    if (!code) nextErrors.code = 'Please enter activation code';
+    if (mode === 'team' && !teamName.trim()) nextErrors.team = 'Please enter team name';
+    setErrors(nextErrors);
+    if (nextErrors.code || nextErrors.team) return;
+
     setLoading(true);
-    if (!activeCode.length) {
-      ToastAndroid.show('Please enter activation code', ToastAndroid.SHORT);
-      setLoading(false);
-      return;
-    }
 
     if (mode === 'team') {
-      if (!teamName.trim()) {
-        ToastAndroid.show('Please enter team name', ToastAndroid.SHORT);
-        setLoading(false);
-        return;
-      }
 
       try {
         await ApiService({
@@ -63,19 +70,19 @@ export default function GameLogin({ navigation, route }) {
           error?.response?.data?.message ||
           error?.message ||
           'Unable to join team';
-        ToastAndroid.show(msg, ToastAndroid.LONG);
+        showMessage(msg);
         setLoading(false);
         return;
       }
     }
 
     try {
-      const result = await dispatch(gameLogin({ activeCode, gameId })).unwrap();
+      const result = await dispatch(gameLogin({ activeCode: code, gameId })).unwrap();
       console.log({result})
       navigation.navigate('Map', {
         questions: result?.game?.questions || [],
         game: result?.game,
-        activeCode,
+        activeCode: code,
         gameId,
       });
     } catch (error) {
@@ -89,11 +96,11 @@ export default function GameLogin({ navigation, route }) {
             ? offlineCore.questions
             : [];
 
-          ToastAndroid.show('Playing in Offline Mode', ToastAndroid.LONG);
+          showMessage('Playing in Offline Mode');
           navigation.navigate('Map', {
             questions: offlineQuestions,
             game: offlineCore,
-            activeCode,
+            activeCode: code,
             gameId,
           });
           setLoading(false);
@@ -107,8 +114,7 @@ export default function GameLogin({ navigation, route }) {
       const errorMessage = error?.message || 'Login failed. Please try again.';
       console.log({ error });
 
-      // Show toast on Android
-      ToastAndroid.show(errorMessage, ToastAndroid.LONG);
+      showMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -232,20 +238,26 @@ export default function GameLogin({ navigation, route }) {
             </View>
 
             <CustomInput
-              error={null}
+              error={errors.code}
               label="Activation Code"
               value={activeCode}
-              onChangeText={setActiveCode}
+              onChangeText={(text: string) => {
+                setActiveCode(text);
+                if (errors.code) setErrors(prev => ({ ...prev, code: undefined }));
+              }}
               placeholder="Enter your Game ID"
             />
 
             {mode === 'team' && (
               <View style={{ marginTop: RFValue(12), width: '100%' }}>
                 <CustomInput
-                  error={null}
+                  error={errors.team}
                   label="Team Name"
                   value={teamName}
-                  onChangeText={setTeamName}
+                  onChangeText={(text: string) => {
+                    setTeamName(text);
+                    if (errors.team) setErrors(prev => ({ ...prev, team: undefined }));
+                  }}
                   placeholder="Enter your Team Name"
                 />
               </View>
