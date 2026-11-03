@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { storage } from '../../../utils/storage';
 
@@ -59,6 +59,7 @@ export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: nu
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState<number>(currentElapsedTime || 0);
   const [gameStartTime, setGameStartTime] = useState<number | null>(null);
+  const timeUpAlertShown = useRef(false);
 
   // Initialize timer based on game type and restore from storage if available
   useEffect(() => {
@@ -169,7 +170,11 @@ export const useGameTimer = (game: any, gameId?: string, currentElapsedTime?: nu
           if (prev && prev > 0) {
             return prev - 1;
           } else if (prev === 0) {
-            Alert.alert('Time\'s up!', 'Your game time has ended.');
+            // Ticks keep running at 0; alert only once
+            if (!timeUpAlertShown.current) {
+              timeUpAlertShown.current = true;
+              Alert.alert('Time\'s up!', 'Your game time has ended.');
+            }
             return 0;
           }
           return prev;

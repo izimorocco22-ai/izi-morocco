@@ -32,7 +32,7 @@ import ListShowButton from './Components/ListShow';
 import ListModal from './Components/ListModal';
 import PlaygroundView from './Components/PlaygroundView';
 import ViewSwitcher from './Components/ViewSwitcher';
-import { clearGameTimer, useGameTimer } from './utils/gameTimer';
+import { clearGameTimer } from './utils/gameTimer';
 import { t } from '../../utils/translations';
 
 MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
@@ -301,8 +301,9 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
     }
   }, [state.triggerMarker]);
 
-  // Get timer data from the header component
-  const [, , elapsedTime] = useGameTimer(game, gameId, state.time, activeCode);
+  // Last progress the server accepted, so identical saves are skipped
+  const lastSyncedRef = useRef<string | null>(null);
+  const [syncRetry, setSyncRetry] = useState(0);
 
   // ✅ Effect: Sync state changes to backend whenever tasks are updated
   useEffect(() => {
@@ -330,6 +331,10 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
         return acc;
       }, 0);
 
+      const syncKey = JSON.stringify([filteredQuestions, totalScore]);
+      if (syncKey === lastSyncedRef.current) return;
+
+      let retryTimer: ReturnType<typeof setTimeout> | undefined;
       dispatchForApis(
         finishGame({
           activationCode: activeCode,
@@ -338,11 +343,22 @@ const LiveLocationScreen = ({ navigation, route }: any) => {
           questions: filteredQuestions,
           status: 'in_progress',
           score: totalScore,
-          currentTime: elapsedTime || state.time,
         }),
-      );
+      )
+        .unwrap()
+        .then(() => {
+          lastSyncedRef.current = syncKey;
+        })
+        .catch((err: any) => {
+          // Retry network failures; don't retry what the server refused
+          if (err?.success === false) return;
+          retryTimer = setTimeout(() => setSyncRetry(n => n + 1), 5000);
+        });
+      return () => {
+        if (retryTimer) clearTimeout(retryTimer);
+      };
     }
-  }, [state.task, elapsedTime, activeCode, gameId, user?.playerId, dispatchForApis]);
+  }, [state.task, syncRetry, activeCode, gameId, user?.playerId, dispatchForApis]);
 
 
 
