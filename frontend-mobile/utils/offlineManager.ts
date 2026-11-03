@@ -310,7 +310,12 @@ export const offlineManager = {
       } catch(error) {
           console.error('Failed to remove pending results', error);
       }
-  }
+  },
+
+  /**
+   * Drop all pending results (e.g. after the account is deleted).
+   */
+  clearPendingResults: () => AsyncStorage.removeItem(PENDING_RESULTS_KEY),
 };
 
 // Helper: Download Media

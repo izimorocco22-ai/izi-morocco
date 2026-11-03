@@ -1,26 +1,19 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import BackHeader from '../../components/BackHeader';
 import commonStyles from '../../styles/commonStyles';
 import { RFValue } from '../../utils/responsive';
 import colors from '../../styles/colors';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import { signOut } from '../../store/authSlice';
 
-const ProfileScreen = ({ navigation }: any) => {
+const ProfileScreen = () => {
   const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch<any>();
-
-  const handleSignOut = async () => {
-    await dispatch(signOut());
-    navigation.reset({ index: 0, routes: [{ name: 'SignIn' }] });
-  };
 
   return (
     <ScreenWrapper backgroundColor="#ffffff">
-      <BackHeader title="Profile" />
+      <BackHeader title="Personal Info" />
       <ScrollView
         style={commonStyles.container}
         contentContainerStyle={styles.content}
@@ -42,13 +35,8 @@ const ProfileScreen = ({ navigation }: any) => {
         {/* Info Cards */}
         <View style={styles.infoCard}>
           <InfoRow label="Player ID" value={user?.playerId || '-'} />
-          <InfoRow label="Phone" value={user?.phone || '-'} />
           <InfoRow label="Email" value={user?.email || '-'} />
         </View>
-
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleSignOut}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
       </ScrollView>
     </ScreenWrapper>
   );
@@ -120,17 +108,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Neue-Bold',
     maxWidth: '60%',
     textAlign: 'right',
-  },
-  logoutBtn: {
-    backgroundColor: '#fff2f2',
-    borderRadius: RFValue(10),
-    paddingVertical: RFValue(14),
-    alignItems: 'center',
-  },
-  logoutText: {
-    fontSize: RFValue(15),
-    color: '#FF3B30',
-    fontFamily: 'Neue-Bold',
   },
 });
 

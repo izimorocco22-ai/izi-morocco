@@ -8,6 +8,7 @@ import CustomInput from '../../components/CustomInput';
 import { RFValue } from '../../utils/responsive';
 import SplashButton from '../../components/SplashButton';
 import ScreenWrapper from '../../components/ScreenWrapper';
+import BackHeader from '../../components/BackHeader';
 import { useDispatch } from 'react-redux';
 import { gameLogin } from '../../store/gameSlice';
 import { ToastAndroid } from 'react-native';
@@ -34,6 +35,7 @@ export default function GameLogin({ navigation, route }) {
   const [mode, setMode] = useState<'single' | 'team'>('single');
   const [teamName, setTeamName] = useState('');
   const [errors, setErrors] = useState<{ code?: string; team?: string }>({});
+  const [tabWidth, setTabWidth] = useState(0);
   const tabAnim = useRef(new Animated.Value(0)).current;
   const dispatch = useDispatch<any>();
 
@@ -132,6 +134,7 @@ export default function GameLogin({ navigation, route }) {
       style={{ flex: 1 }}
     >
       <ScreenWrapper>
+        <BackHeader />
         <View style={[commonStyles.containerPadded, { flex: 1, backgroundColor: 'transparent' }]}>
         <View
           style={[
@@ -169,34 +172,43 @@ export default function GameLogin({ navigation, route }) {
             </View>
 
             <View
+              onLayout={e => setTabWidth((e.nativeEvent.layout.width - 8) / 2)}
               style={{
                 flexDirection: 'row',
                 borderRadius: 999,
-                backgroundColor: 'rgba(255,255,255,0.6)',
+                backgroundColor: colors.cardBackground,
                 padding: 4,
                 marginBottom: RFValue(20),
                 overflow: 'hidden',
               }}
             >
-              <Animated.View
-                pointerEvents="none"
-                style={{
-                  position: 'absolute',
-                  top: 4,
-                  bottom: 4,
-                  width: '50%',
-                  borderRadius: 999,
-                  backgroundColor: 'white',
-                  transform: [
-                    {
-                      translateX: tabAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 150],
-                      }),
-                    },
-                  ],
-                }}
-              />
+              {tabWidth > 0 && (
+                <Animated.View
+                  pointerEvents="none"
+                  style={{
+                    position: 'absolute',
+                    top: 4,
+                    bottom: 4,
+                    left: 4,
+                    width: tabWidth,
+                    borderRadius: 999,
+                    backgroundColor: colors.white,
+                    shadowColor: colors.black,
+                    shadowOpacity: 0.12,
+                    shadowRadius: 4,
+                    shadowOffset: { width: 0, height: 1 },
+                    elevation: 2,
+                    transform: [
+                      {
+                        translateX: tabAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, tabWidth],
+                        }),
+                      },
+                    ],
+                  }}
+                />
+              )}
               <View style={{ flex: 1 }}>
                 <TouchableOpacity
                   activeOpacity={0.8}

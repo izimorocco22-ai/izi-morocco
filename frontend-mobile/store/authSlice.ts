@@ -3,6 +3,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { storage } from '../utils/storage';
 import ApiService from '../utils/apiService';
 import { apiPaths } from '../utils/apiPaths';
+import { offlineManager } from '../utils/offlineManager';
 
 type AuthState = {
   isLoading: boolean;
@@ -147,6 +148,23 @@ export const signOut = createAsyncThunk('auth/signOut', async () => {
   await storage.clearTokens(); // clear async storage
   return { token: null, user: null };
 });
+
+// Permanently delete the account on the server, then wipe local session data
+export const deleteAccount = createAsyncThunk(
+  'auth/deleteAccount',
+  async (_, { rejectWithValue }) => {
+    try {
+      await ApiService({ method: 'DELETE', endpoint: apiPaths.deleteAccount });
+    } catch (err: any) {
+      return rejectWithValue(
+        err?.response?.data || { message: 'Something went wrong' },
+      );
+    }
+    await storage.clearTokens();
+    await offlineManager.clearPendingResults();
+    return { token: null, user: null };
+  },
+);
 
 export const verifyAccount = createAsyncThunk(
   'auth/verifyAccount',
@@ -326,7 +344,13 @@ const authSlice = createSlice({
         state.error = action.payload || action.error;
       })
 
-      // signOut
+      // signOut / deleteAccount
+      .addCase(deleteAccount.fulfilled, state => {
+        state.token = null;
+        state.user = null;
+        state.loginResponse = null;
+        state.error = null;
+      })
       .addCase(signOut.fulfilled, state => {
         state.isLoading = false;
         state.token = null;

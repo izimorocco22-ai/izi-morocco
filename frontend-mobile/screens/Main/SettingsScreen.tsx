@@ -8,10 +8,11 @@ import {
   StyleSheet,
   Switch,
   Image,
+  Alert,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { ArrowLeft } from 'lucide-react-native';
-import { signOut } from '../../store/authSlice';
+import { deleteAccount, signOut } from '../../store/authSlice';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import { RFValue } from '../../utils/responsive';
 import colors from '../../styles/colors';
@@ -19,6 +20,7 @@ import colors from '../../styles/colors';
 export default function SettingsScreen({ navigation }) {
   const dispatch = useDispatch<any>();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSignOut = async () => {
     await dispatch(signOut());
@@ -26,6 +28,36 @@ export default function SettingsScreen({ navigation }) {
       index: 0,
       routes: [{ name: 'SignIn' }],
     });
+  };
+
+  const performDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteAccount()).unwrap();
+      Alert.alert('Account deleted', 'Your account has been permanently deleted.');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'SignIn' }],
+      });
+    } catch (error: any) {
+      setIsDeleting(false);
+      Alert.alert(
+        'Could not delete account',
+        error?.message || 'Something went wrong. Please try again.',
+      );
+    }
+  };
+
+  const confirmDeleteAccount = () => {
+    if (isDeleting) return;
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account, your team and your game history. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: performDeleteAccount },
+      ],
+    );
   };
 
   const SettingItem = ({
@@ -107,8 +139,8 @@ export default function SettingsScreen({ navigation }) {
               iconBg="#fff7eb"
               iconColor="#fda01c"
               title="Personal Info"
-              subtitle="Name, email & phone"
-              onPress={() => navigation.navigate('EditProfile')}
+              subtitle="Name & email"
+              onPress={() => navigation.navigate('Profile')}
             />
             <SettingItem
               icon={require('../../assets/images/setting/user.png')}
@@ -117,6 +149,15 @@ export default function SettingsScreen({ navigation }) {
               title="Team Management"
               subtitle="Manage your team"
               onPress={() => navigation.navigate('TeamManagement')}
+            />
+            <SettingItem
+              icon={require('../../assets/images/setting/delete.png')}
+              iconBg="#fff2f2"
+              iconColor="#FF3B30"
+              title="Delete Account"
+              subtitle={isDeleting ? 'Deleting...' : 'Permanently delete your account'}
+              onPress={confirmDeleteAccount}
+              isDestructive
               isLast
             />
           </View>

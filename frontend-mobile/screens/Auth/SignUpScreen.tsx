@@ -21,6 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { signUp } from '../../store/authSlice';
 import { RootState } from '../../store/store';
 import ScreenWrapper from '../../components/ScreenWrapper';
+import { links, openLink } from '../../utils/links';
 
 const { height } = Dimensions.get('window');
 
@@ -206,12 +207,11 @@ export default function SignUpScreen({ navigation }) {
                       color: colors.white,
                     }}
                   >
-                    By logging in, you agree to the{' '}
-                    <Text style={{ textDecorationLine: 'underline' }}>
-                      Terms of Use
-                    </Text>{' '}
-                    and{' '}
-                    <Text style={{ textDecorationLine: 'underline' }}>
+                    By signing up, you agree to our{' '}
+                    <Text
+                      style={{ textDecorationLine: 'underline' }}
+                      onPress={() => openLink(links.privacyPolicy)}
+                    >
                       Privacy Policy
                     </Text>
                   </Text>
