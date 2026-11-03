@@ -1,6 +1,11 @@
 import { Request, Response } from 'express'
 import { removeExtraFieldFormObject } from '../utils/funcations'
 import Player from '../db/models/players.schema'
+import Team from '../db/models/team.schema'
+import GameLogs from '../db/models/played-game-status.schema'
+import TempStorage from '../db/models/tempStorage.schema'
+import GameActivation from '../db/models/game-activation.schema'
+import { isReviewEmail } from '../utils/reviewAccount'
 import mongoDB from '../db'
 import { generateUUID } from '../utils/uuid'
 import bcrypt from 'bcrypt'
@@ -62,23 +67,36 @@ export const deleteUser = async (req: Request, res: Response) => {
   })
 }
 
-// export const deleteMyAccount = async (req: Request, res: Response) => {
-//   const { user } = res.locals
+// Permanently delete the signed-in player and the data tied to them
+// (App Store guideline 5.1.1(v)). Activation codes are kept: they are issued
+// by the admin and freeing them would allow a used code to be reused.
+export const deleteMyAccount = async (req: Request, res: Response) => {
+  const { playerId, email } = res.locals.user
 
-//   let condition = {}
+  // Exception: the App Store review account is re-created with a new id on
+  // its next login, so release its codes or the reviewer can't play again.
+  if (isReviewEmail(email)) {
+    await GameActivation.updateMany(
+      { claimedBy: playerId },
+      { $unset: { claimedBy: '' } }
+    )
+  }
 
-//   if (user.role === 'O') {
-//     condition = { famId: user.famId }
-//   } else {
-//     condition = { userId: user.userId }
-//   }
+  await Promise.all([
+    // A team can't outlive its owner; members just leave the team
+    Team.deleteOne({ ownerPlayerId: playerId }),
+    Team.updateMany({ members: playerId }, { $pull: { members: playerId } }),
+    GameLogs.deleteMany({ playerId }),
+    TempStorage.deleteMany({
+      key: {
+        $in: [`accountVerification_${playerId}`, `forgetPassword_${playerId}`]
+      }
+    })
+  ])
+  await Player.deleteOne({ playerId })
 
-//   await userQueries.updateUserByCondition(mongoDB, condition, {
-//     isDeleted: true
-//   })
-
-//   return res.status(200).json({
-//     success: true,
-//     message: 'Account deleted successfully'
-//   })
-// }
+  return res.status(200).json({
+    success: true,
+    message: 'Account deleted successfully'
+  })
+}

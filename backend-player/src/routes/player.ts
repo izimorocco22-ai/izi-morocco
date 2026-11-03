@@ -1,12 +1,14 @@
 import { Router } from 'express'
 import { makeOptionalFields, validateReq } from '../middlewares/validate'
-import { editPlayer, viewPlayer } from '../controllers/player'
+import { deleteMyAccount, editPlayer, viewPlayer } from '../controllers/player'
 import auth from '../middlewares/auth/auth'
 import { playerValidatorsMap } from '../validators/player'
 
 const router = Router()
 
 router.get('/me', auth('P', 'A'), viewPlayer)
+
+router.delete('/me', auth('P', 'A'), deleteMyAccount)
 
 router.put(
   '/update',
