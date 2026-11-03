@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import BackHeader from '../../components/BackHeader';
 import commonStyles from '../../styles/commonStyles';
 import { RFValue } from '../../utils/responsive';
 import colors from '../../styles/colors';
 import DeviceInfo from 'react-native-device-info';
+import { links, openLink } from '../../utils/links';
 
 const AboutScreen = () => {
   return (
@@ -42,6 +43,21 @@ const AboutScreen = () => {
               <Text style={styles.featureText}>{f}</Text>
             </View>
           ))}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Legal</Text>
+          <TouchableOpacity style={styles.linkRow} onPress={() => openLink(links.termsOfUse)}>
+            <Text style={styles.linkText}>Terms of Use</Text>
+            <Text style={styles.linkArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.linkRow, styles.linkRowLast]}
+            onPress={() => openLink(links.privacyPolicy)}
+          >
+            <Text style={styles.linkText}>Privacy Policy</Text>
+            <Text style={styles.linkArrow}>›</Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.copyright}>© 2026 Izi Morocco. All rights reserved.</Text>
@@ -110,6 +126,26 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     color: colors.textSecondary,
     fontFamily: 'Neue-Regular',
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: RFValue(10),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  linkRowLast: {
+    borderBottomWidth: 0,
+  },
+  linkText: {
+    fontSize: RFValue(14),
+    color: colors.textPrimary,
+    fontFamily: 'Neue-Regular',
+  },
+  linkArrow: {
+    fontSize: RFValue(20),
+    color: colors.textSecondary,
   },
   copyright: {
     textAlign: 'center',

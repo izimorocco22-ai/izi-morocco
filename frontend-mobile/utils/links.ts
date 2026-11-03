@@ -6,7 +6,8 @@ import { Alert, Linking } from 'react-native';
 export const links = {
   supportEmail: 'support@izimorocco.com',
   contactPage: 'https://izimorocco.com/fr/contact',
-  privacyPolicy: 'https://morocco-quest-finder.lovable.app/privacy',
+  privacyPolicy: 'https://izi-t-p.vercel.app/',
+  termsOfUse: 'https://izi-t-p.vercel.app/terms',
   phone: '+212663561858',
 };
 

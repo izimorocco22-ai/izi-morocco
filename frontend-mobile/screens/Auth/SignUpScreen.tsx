@@ -210,6 +210,13 @@ export default function SignUpScreen({ navigation }) {
                     By signing up, you agree to our{' '}
                     <Text
                       style={{ textDecorationLine: 'underline' }}
+                      onPress={() => openLink(links.termsOfUse)}
+                    >
+                      Terms of Use
+                    </Text>{' '}
+                    and{' '}
+                    <Text
+                      style={{ textDecorationLine: 'underline' }}
                       onPress={() => openLink(links.privacyPolicy)}
                     >
                       Privacy Policy
