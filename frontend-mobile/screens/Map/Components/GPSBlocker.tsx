@@ -18,15 +18,19 @@ const GPSBlocker = ({ onEnableLocation, onEnableGPS }) => {
             <Text style={styles.primaryButtonText}>Enable Location</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryButton} onPress={onEnableGPS}>
-            <Text style={styles.secondaryButtonText}>Enable GPS</Text>
-          </TouchableOpacity>
+          {Platform.OS === 'android' && (
+            <TouchableOpacity style={styles.secondaryButton} onPress={onEnableGPS}>
+              <Text style={styles.secondaryButtonText}>Enable GPS</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={styles.settingsButton}
             onPress={() => {
               if (Platform.OS === 'android') {
                 Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS');
+              } else {
+                Linking.openSettings();
               }
             }}
           >
